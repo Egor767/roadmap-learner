@@ -1,5 +1,4 @@
 import uuid
-from abc import ABC
 
 from app.repositories.user.interface import IUserRepository
 from app.schemas.user import UserCreateModel, UserBaseModel
