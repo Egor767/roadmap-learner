@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -15,6 +16,15 @@ async def lifespan(app: FastAPI):
     yield
     await db.disconnect()
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        # logging.FileHandler('app.log')
+    ]
+)
 
 app = FastAPI(title="RoadMap Learner API",
               version="1.0",

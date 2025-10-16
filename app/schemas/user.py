@@ -29,6 +29,8 @@ class UserResponse(UserBase):
 
 class UserInDB(UserBase):
     id: uuid.UUID
+    username: str
+    email: str
     hashed_password: str
     created_at: datetime
     updated_at: datetime

@@ -2,13 +2,13 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 
-from app.schemas.user import UserInDB
+from app.schemas.user import UserInDB, UserCreate
 
 
 class IUserRepository(ABC):
 
     @abstractmethod
-    async def create_user(self, user: UserInDB) -> UserInDB:
+    async def create_user(self, user: UserCreate) -> UserInDB:
         ...
 
     @abstractmethod

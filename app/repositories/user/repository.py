@@ -5,9 +5,10 @@ from contextlib import asynccontextmanager
 from sqlalchemy import select, insert, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.logging import user_repo_logger
 from app.models.postgre.user import User
 from app.repositories.user.interface import IUserRepository
-from app.schemas.user import UserInDB
+from app.schemas.user import UserInDB, UserCreate
 from app.core.handlers import repository_handler
 
 
@@ -29,10 +30,10 @@ class UserRepository(IUserRepository):
             raise
 
     @repository_handler
-    async def create_user(self, user: UserInDB) -> UserInDB:
+    async def create_user(self, user: UserCreate) -> UserInDB:
         async with self._transaction():
-            user_data = user.model_dump()
-
+            user_data = user.model_dump(exclude={'password'})
+            user_data['hashed_password'] = user.password
             stmt = insert(User).values(**user_data).returning(User)
             result = await self.session.execute(stmt)
             db_user = result.scalar_one()

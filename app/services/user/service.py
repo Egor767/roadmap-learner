@@ -2,10 +2,10 @@ import uuid
 from typing import Optional
 
 from app.core.handlers import service_handler
-from app.core.logging import user_logger as logger
+from app.core.logging import user_service_logger as logger
 from app.core.security import get_password_hash, verify_password
 from app.repositories.user.interface import IUserRepository
-from app.schemas.user import UserCreate, UserBase, UserInDB
+from app.schemas.user import UserCreate, UserBase, UserInDB, UserResponse
 
 
 class UserService:
@@ -13,7 +13,7 @@ class UserService:
         self.repo = repo
 
     @service_handler
-    async def create_user(self, user_create_model: UserCreate) -> UserBase:
+    async def create_user(self, user_create_model: UserCreate) -> UserResponse:
         # existing_user = await self.repo.get_user_by_email(user_create_model.email)
         # if existing_user:
         #     logger.warning(f"Attempt to create user with existing email: {user_create_model.email}")
@@ -21,14 +21,13 @@ class UserService:
 
         hashed_password = get_password_hash(user_create_model.password)
         user_data = user_create_model.model_dump()
-        user_data["hashed_password"] = hashed_password
-        del user_data["password"]
+        user_data["password"] = hashed_password
 
-        logger.info(f"Creating new user: {user_create_model.email}")
-        created_user = await self.repo.create_user(UserInDB(**user_data))
+        logger.info(f"Creating new user: {user_create_model.username}")
+        created_user = await self.repo.create_user(UserCreate(**user_data))
 
         logger.info(f"User created successfully: {created_user.id}")
-        return UserBase.model_validate(created_user)
+        return UserResponse.model_validate(created_user)
 
     @service_handler
     async def get_user_by_id(self, uid: uuid.UUID) -> UserBase:
