@@ -1,132 +1,102 @@
 import uuid
-from typing import Optional
+from typing import Optional, Dict, Any
+from contextlib import asynccontextmanager
 
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.postgre.user import User
 from app.repositories.user.interface import IUserRepository
 from app.schemas.user import UserInDB
+from app.core.handlers import repository_handler
+
+
+def map_to_schema(db_user: User) -> UserInDB:
+    return UserInDB.model_validate(db_user)
 
 
 class UserRepository(IUserRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_user(self, user: UserInDB) -> UserInDB:
+    @asynccontextmanager
+    async def _transaction(self):
         try:
+            yield
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
+
+    @repository_handler
+    async def create_user(self, user: UserInDB) -> UserInDB:
+        async with self._transaction():
             user_data = user.model_dump()
 
             stmt = insert(User).values(**user_data).returning(User)
             result = await self.session.execute(stmt)
             db_user = result.scalar_one()
 
-            await self.session.commit()
+            return map_to_schema(db_user)
 
-            return UserInDB(
-                id=db_user.id,
-                email=db_user.email,
-                first_name=db_user.first_name,
-                last_name=db_user.last_name,
-                hashed_password=db_user.hashed_password,
-                is_active=db_user.is_active,
-                created_at=db_user.created_at,
-                updated_at=db_user.updated_at
-            )
-
-        except Exception as e:
-            await self.session.rollback()
-            raise e
-
+    @repository_handler
     async def get_user_by_id(self, uid: uuid.UUID) -> Optional[UserInDB]:
-        try:
-            stmt = select(User).where(User.id == uid, User.is_active == True)
-            result = await self.session.execute(stmt)
-            db_user = result.scalar_one_or_none()
+        stmt = select(User).where(User.id == uid)
+        result = await self.session.execute(stmt)
+        db_user = result.scalar_one_or_none()
 
-            if not db_user:
-                return None
+        return map_to_schema(db_user) if db_user else None
 
-            return UserInDB(
-                id=db_user.id,
-                email=db_user.email,
-                first_name=db_user.first_name,
-                last_name=db_user.last_name,
-                hashed_password=db_user.hashed_password,
-                is_active=db_user.is_active,
-                created_at=db_user.created_at,
-                updated_at=db_user.updated_at
-            )
-
-        except Exception as e:
-            raise e
-
+    @repository_handler
     async def get_user_by_email(self, email: str) -> Optional[UserInDB]:
-        try:
-            stmt = select(User).where(User.email == email, User.is_active == True)
+        stmt = select(User).where(User.email == email)
+        result = await self.session.execute(stmt)
+        db_user = result.scalar_one_or_none()
+
+        return map_to_schema(db_user) if db_user else None
+
+    @repository_handler
+    async def get_all_users(self) -> list[UserInDB]:
+        stmt = select(User)
+        result = await self.session.execute(stmt)
+        db_users = result.scalars().all()
+
+        return [map_to_schema(user) for user in db_users]
+
+    @repository_handler
+    async def update_user(self, uid: uuid.UUID, user_update: Dict[str, Any]) -> Optional[UserInDB]:
+        async with self._transaction():
+            stmt = (
+                update(User)
+                .where(User.id == uid)
+                .values(**user_update)
+                .returning(User)
+            )
             result = await self.session.execute(stmt)
             db_user = result.scalar_one_or_none()
 
-            if not db_user:
-                return None
+            return map_to_schema(db_user) if db_user else None
 
-            return UserInDB(
-                id=db_user.id,
-                email=db_user.email,
-                first_name=db_user.first_name,
-                last_name=db_user.last_name,
-                hashed_password=db_user.hashed_password,
-                is_active=db_user.is_active,
-                created_at=db_user.created_at,
-                updated_at=db_user.updated_at
-            )
-
-        except Exception as e:
-            raise e
-
-    async def update_user(self, uid: uuid.UUID, user_update: dict) -> Optional[UserInDB]:
-        try:
-            stmt = select(User).where(User.id == uid)
-            result = await self.session.execute(stmt)
-            db_user = result.scalar_one_or_none()
-
-            if not db_user:
-                return None
-
-            for field, value in user_update.items():
-                setattr(db_user, field, value)
-
-            await self.session.commit()
-
-            return UserInDB(
-                id=db_user.id,
-                email=db_user.email,
-                first_name=db_user.first_name,
-                last_name=db_user.last_name,
-                hashed_password=db_user.hashed_password,
-                is_active=db_user.is_active,
-                created_at=db_user.created_at,
-                updated_at=db_user.updated_at
-            )
-
-        except Exception as e:
-            await self.session.rollback()
-            raise e
-
+    @repository_handler
     async def delete_user(self, uid: uuid.UUID) -> bool:
-        try:
-            stmt = select(User).where(User.id == uid)
+        async with self._transaction():
+            stmt = (
+                update(User)
+                .where(User.id == uid)
+                .values(is_active=False)
+            )
             result = await self.session.execute(stmt)
-            db_user = result.scalar_one_or_none()
 
-            if not db_user:
-                return False
+            return result.rowcount > 0
 
-            db_user.is_active = False
-            await self.session.commit()
-            return True
+    @repository_handler
+    async def hard_delete_user(self, uid: uuid.UUID) -> bool:
+        async with self._transaction():
+            stmt = (
+                update(User)
+                .where(User.id == uid)
+            )
+            result = await self.session.execute(stmt)
 
-        except Exception as e:
-            await self.session.rollback()
-            raise e
+            return result.rowcount > 0
 

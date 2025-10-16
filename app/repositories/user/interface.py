@@ -26,3 +26,8 @@ class IUserRepository(ABC):
     @abstractmethod
     async def delete_user(self, uid: uuid.UUID) -> bool:
         ...
+
+    @abstractmethod
+    async def hard_delete_user(self, uid: uuid.UUID) -> bool:
+        ...
+

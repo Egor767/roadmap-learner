@@ -3,16 +3,19 @@ from pydantic_settings import BaseSettings
 
 
 class DbConfig(BaseSettings):
-    prefix: str = os.getenv("DB_PREFIX", "postgresql+asyncpg")
-    host: str = os.getenv("DB_HOST", "localhost")
-    port: str = os.getenv("DB_PORT", "5432")
-    username: str = os.getenv("DB_USERNAME", "postgres")
-    password: str = os.getenv("DB_PASSWORD", "postgres")
-    db_name: str = os.getenv("DB_NAME", "test_db")
+    DB_HOST: str = "localhost"
+    DB_PORT: str = "5433"
+    DB_USERNAME: str = "postgres"
+    DB_PASSWORD: str = "postgres"
+    DB_NAME: str = "roadmap"
+    echo: bool = False
 
     @property
     def url(self) -> str:
-        return f"{self.prefix}://{self.username}:{self.password}@{self.host}:{self.port}/{self.db_name}"
+        return f"postgresql+asyncpg://{self.DB_USERNAME}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+    class Config:
+        env_file = ".env"
 
 
 db_config = DbConfig()

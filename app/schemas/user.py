@@ -1,33 +1,38 @@
+from pydantic import BaseModel, EmailStr
 import uuid
 from datetime import datetime
-
-from pydantic import BaseModel, EmailStr
-
-
-class UserBaseModel(BaseModel):
-    id: uuid.UUID
+from typing import Optional
 
 
-class UserCreateModel(BaseModel):
+class UserBase(BaseModel):
     username: str
-    email: EmailStr
+    email: str
+
+
+class UserCreate(UserBase):
     password: str
 
 
-class UserUpdateModel(BaseModel):
-    username: str | None = None
-    email: EmailStr | None = None
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
 
 
-class UserPresentModel(UserBaseModel):
-    username: str
-    email: str
-    created_at: datetime
-
-
-class UserInDB(UserBaseModel):
-    hashed_password: str
-    email: EmailStr
+class UserResponse(UserBase):
+    id: uuid.UUID
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class UserInDB(UserBase):
+    id: uuid.UUID
+    hashed_password: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 

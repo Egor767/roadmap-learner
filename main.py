@@ -1,19 +1,36 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI
-from app.api.v1 import router
+from starlette.responses import RedirectResponse
+
+from app.api.v1 import main_router
+from app.core.db import db
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(title="RoadMap Learner API", version="1.0")
-    app.include_router(router, prefix="/api/v1.0")
-    return app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await db.connect()
+    await db.create_tables()
+    yield
+    await db.disconnect()
 
 
-app = create_app()
+app = FastAPI(title="RoadMap Learner API",
+              version="1.0",
+              lifespan=lifespan)
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/docs")
+
+app.include_router(main_router, prefix="/api/v1.0")
+
 
 if __name__ == "__main__":
     uvicorn.run(
-        app="app.main:app",
+        app="main:app",
         host="localhost",
         port=8080,
         reload=True
