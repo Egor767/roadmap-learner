@@ -11,6 +11,9 @@ class IUserRepository(ABC):
     async def create_user(self, user: UserCreate) -> UserInDB:
         ...
 
+    async def get_all_users(self) -> Optional[List[UserInDB]]:
+        pass
+
     @abstractmethod
     async def get_user_by_id(self, uid: uuid.UUID) -> Optional[UserInDB]:
         ...
@@ -20,16 +23,10 @@ class IUserRepository(ABC):
         ...
 
     @abstractmethod
-    async def update_user(self, uid: uuid.UUID, user_update: Dict[str, Any]) -> Optional[UserInDB]:
-        ...
-
-    @abstractmethod
     async def delete_user(self, uid: uuid.UUID) -> bool:
         ...
 
     @abstractmethod
-    async def hard_delete_user(self, uid: uuid.UUID) -> bool:
+    async def update_user(self, uid: uuid.UUID, user_update: Dict[str, Any]) -> Optional[UserInDB]:
         ...
-
-
 

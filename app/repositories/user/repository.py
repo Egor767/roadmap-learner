@@ -2,7 +2,7 @@ import uuid
 from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 
-from sqlalchemy import select, insert, update
+from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import user_repo_logger
@@ -41,6 +41,16 @@ class UserRepository(IUserRepository):
             return map_to_schema(db_user)
 
     @repository_handler
+    async def get_all_users(self) -> Optional[List[UserInDB]]:
+        stmt = select(User)
+        result = await self.session.execute(stmt)
+        users = result.scalars().all()
+
+        if not users:
+            return
+        return [map_to_schema(user) for user in users]
+
+    @repository_handler
     async def get_user_by_id(self, uid: uuid.UUID) -> Optional[UserInDB]:
         stmt = select(User).where(User.id == uid)
         result = await self.session.execute(stmt)
@@ -66,14 +76,6 @@ class UserRepository(IUserRepository):
         return [map_to_schema(user) for user in users]
 
     @repository_handler
-    async def get_all_users(self) -> list[UserInDB]:
-        stmt = select(User)
-        result = await self.session.execute(stmt)
-        db_users = result.scalars().all()
-
-        return [map_to_schema(user) for user in db_users]
-
-    @repository_handler
     async def update_user(self, uid: uuid.UUID, user_update: Dict[str, Any]) -> Optional[UserInDB]:
         async with self._transaction():
             stmt = (
@@ -91,9 +93,8 @@ class UserRepository(IUserRepository):
     async def delete_user(self, uid: uuid.UUID) -> bool:
         async with self._transaction():
             stmt = (
-                update(User)
+                delete(User)
                 .where(User.id == uid)
-                .values(is_active=False)
             )
             result = await self.session.execute(stmt)
 
