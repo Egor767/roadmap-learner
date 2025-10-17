@@ -31,7 +31,12 @@ class RoadMapService:
         return validated_roadmaps
 
     async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> RoadMapResponse:
-        ...
+        roadmap = await self.repo.get_user_roadmap(user_id, roadmap_id)
+        if not roadmap:
+            logger.warning(f"Roadmap not found or access denied")
+            raise ValueError("Roadmap not found or access denied")
+        logger.info(f"Successful get user roadmap")
+        return RoadMapResponse.model_validate(roadmap)
 
     async def delete_roadmap(self, roadmap_id: uuid.UUID) -> bool:
         ...

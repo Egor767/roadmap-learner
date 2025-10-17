@@ -16,7 +16,7 @@ class IRoadMapRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> RoadMapInDB:
+    async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> Optional[RoadMapInDB]:
         ...
 
     @abstractmethod

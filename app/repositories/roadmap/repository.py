@@ -45,8 +45,17 @@ class RoadMapRepository(IRoadMapRepository):
             return
         return [map_to_schema(roadmap) for roadmap in db_roadmaps]
 
-    async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> RoadMapInDB:
-        ...
+    async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> Optional[RoadMapInDB]:
+        stmt = select(RoadMap).where(
+            RoadMap.road_id == roadmap_id,
+            RoadMap.user_id == user_id
+        )
+        result = await self.session.execute(stmt)
+        roadmap = result.scalar_one_or_none()
+
+        if not roadmap:
+            return
+        return map_to_schema(roadmap)
 
     async def delete_roadmap(self, roadmap_id: uuid.UUID) -> bool:
         ...
