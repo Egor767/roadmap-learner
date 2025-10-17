@@ -6,7 +6,7 @@ from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import user_repo_logger
-from app.models.postgre.user import User
+from app.models.postgres.user import User
 from app.repositories.user.interface import IUserRepository
 from app.schemas.user import UserInDB, UserCreate, UserFilters
 from app.core.handlers import repository_handler
@@ -52,7 +52,7 @@ class UserRepository(IUserRepository):
 
     @repository_handler
     async def get_user_by_id(self, uid: uuid.UUID) -> Optional[UserInDB]:
-        stmt = select(User).where(User.id == uid)
+        stmt = select(User).where(User.user_id == uid)
         result = await self.session.execute(stmt)
         db_user = result.scalar_one_or_none()
 
@@ -80,7 +80,7 @@ class UserRepository(IUserRepository):
         async with self._transaction():
             stmt = (
                 update(User)
-                .where(User.id == uid)
+                .where(User.user_id == uid)
                 .values(**user_update)
                 .returning(User)
             )
@@ -94,7 +94,7 @@ class UserRepository(IUserRepository):
         async with self._transaction():
             stmt = (
                 delete(User)
-                .where(User.id == uid)
+                .where(User.user_id == uid)
             )
             result = await self.session.execute(stmt)
 
@@ -105,7 +105,7 @@ class UserRepository(IUserRepository):
         async with self._transaction():
             stmt = (
                 update(User)
-                .where(User.id == uid)
+                .where(User.user_id == uid)
             )
             result = await self.session.execute(stmt)
 

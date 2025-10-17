@@ -3,7 +3,9 @@ from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.repositories.roadmap.repository import RoadMapRepository
 from app.repositories.user.repository import UserRepository
+from app.services.roadmap.service import RoadMapService
 from app.services.user.service import UserService
 from app.core.db import db
 
@@ -13,6 +15,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+# user
 async def get_user_repository(session: AsyncSession = Depends(get_db_session)) -> UserRepository:
     return UserRepository(session)
 
@@ -21,4 +24,13 @@ async def get_user_service(session: AsyncSession = Depends(get_db_session)) -> U
     repo = UserRepository(session)
     return UserService(repo)
 
+
+# roadmap
+async def get_roadmap_repository(session: AsyncSession = Depends(get_db_session)) -> RoadMapRepository:
+    return RoadMapRepository(session)
+
+
+async def get_roadmap_service(session: AsyncSession = Depends(get_db_session)) -> RoadMapService:
+    repo = RoadMapRepository(session)
+    return RoadMapService(repo)
 

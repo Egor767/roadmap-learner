@@ -19,7 +19,7 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    id: uuid.UUID
+    user_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
 
@@ -28,7 +28,7 @@ class UserResponse(UserBase):
 
 
 class UserInDB(UserBase):
-    id: uuid.UUID
+    user_id: uuid.UUID
     username: str
     email: str
     hashed_password: str

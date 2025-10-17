@@ -29,7 +29,7 @@ class UserService:
         logger.info(f"Creating new user: {user_create_model.username}")
         created_user = await self.repo.create_user(UserCreate(**user_data))
 
-        logger.info(f"User created successfully: {created_user.id}")
+        logger.info(f"User created successfully: {created_user.user_id}")
         return UserResponse.model_validate(created_user)
 
     @service_handler
