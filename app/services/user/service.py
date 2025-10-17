@@ -75,13 +75,14 @@ class UserService:
 
     @service_handler
     async def auth_user(self, email: str, password: str) -> Optional[UserBase]:
-        user = await self.repo.get_users_by_filters(UserFilters(email=email))[0]
-        if not user:
+        user = await self.repo.get_users_by_filters(UserFilters(email=email))
+        if not user[0]:
             return None
 
-        if not verify_password(password, user.hashed_password):
+        if not verify_password(password, user[0].hashed_password):
             logger.warning(f"Failed authentication attempt for user: {email}")
             return None
 
         logger.info(f"User authenticated successfully: {email}")
-        return UserBase.model_validate(user)
+        return UserBase.model_validate(user[0])
+

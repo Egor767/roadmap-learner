@@ -20,7 +20,7 @@ class IRoadMapRepository(ABC):
         ...
 
     @abstractmethod
-    async def delete_roadmap(self, roadmap_id: uuid.UUID) -> bool:
+    async def delete_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> bool:
         ...
 
     @abstractmethod

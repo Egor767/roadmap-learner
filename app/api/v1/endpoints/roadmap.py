@@ -44,3 +44,13 @@ async def create_roadmap(
 ):
     return await roadmap_service.create_roadmap(roadmap_data)
 
+
+@router.delete("/{roadmap_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
+async def delete_roadmap(
+    roadmap_id: uuid.UUID,
+    user_id: uuid.UUID,  # = Depends(get_current_user) / access_token.user_id
+    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+):
+    await roadmap_service.delete_roadmap(user_id, roadmap_id)
+    return {"road_id": str(roadmap_id), "status": "deleted"}

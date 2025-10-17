@@ -38,8 +38,13 @@ class RoadMapService:
         logger.info(f"Successful get user roadmap")
         return RoadMapResponse.model_validate(roadmap)
 
-    async def delete_roadmap(self, roadmap_id: uuid.UUID) -> bool:
-        ...
+    async def delete_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> bool:
+        success = await self.repo.delete_roadmap(user_id, roadmap_id)
+        if success:
+            logger.info(f"Roadmap deleted successfully: {roadmap_id}")
+        else:
+            logger.warning(f"Roadmap not found for deletion: {roadmap_id}")
+        return success
 
     async def update_roadmap(self, roadmap_update_data: RoadMapUpdate) -> RoadMapResponse:
         ...
