@@ -31,7 +31,7 @@ class RoadMapInDB(BaseModel):
 
 
 class RoadMapResponse(RoadMapInDB):
-    pass
+    ...
 
 
 class RoadMapStatus(str, Enum):

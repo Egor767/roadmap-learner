@@ -5,8 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.roadmap.repository import RoadMapRepository
 from app.repositories.user.repository import UserRepository
+from app.repositories.block.repository import BlockRepository
 from app.services.roadmap.service import RoadMapService
 from app.services.user.service import UserService
+from app.services.block.service import BlockService
 from app.core.db import db
 
 
@@ -34,3 +36,12 @@ async def get_roadmap_service(session: AsyncSession = Depends(get_db_session)) -
     repo = RoadMapRepository(session)
     return RoadMapService(repo)
 
+
+# block
+async def get_block_repository(session: AsyncSession = Depends(get_db_session)) -> BlockRepository:
+    return BlockRepository(session)
+
+
+async def get_block_service(session: AsyncSession = Depends(get_db_session)) -> BlockService:
+    repo = BlockRepository(session)
+    return BlockService(repo)
