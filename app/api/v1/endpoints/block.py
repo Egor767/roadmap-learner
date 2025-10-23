@@ -8,12 +8,13 @@ from app.core.handlers import router_handler
 from app.schemas.block import BlockResponse, BlockCreate, BlockUpdate, BlockFilters
 from app.services.block.service import BlockService
 
-router = APIRouter(prefix="/roadmaps/{roadmap_id}/blocks", tags=["blocks"])
+router = APIRouter(
+    prefix="/roadmaps/{roadmap_id}/blocks",
+    tags=["blocks"]
+)
 
 
-@router.get("/all",
-            response_model=List[BlockResponse],
-            status_code=status.HTTP_200_OK)
+@router.get("/all", response_model=List[BlockResponse], status_code=status.HTTP_200_OK)
 @router_handler
 async def get_all_blocks(
     block_service: BlockService = Depends(get_block_service)

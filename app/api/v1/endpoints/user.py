@@ -11,9 +11,7 @@ from app.services.user.service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/all",
-            response_model=List[UserResponse],
-            status_code=status.HTTP_200_OK)
+@router.get("/all", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
 @router_handler
 async def get_all_users(
     user_service: UserService = Depends(get_user_service)
@@ -22,9 +20,7 @@ async def get_all_users(
 
 
 # -------------------------------------- GET --------------------------------------
-@router.get("/{user_id}",
-            response_model=UserResponse,
-            status_code=status.HTTP_200_OK)
+@router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 @router_handler
 async def get_user_by_id(
     user_id: uuid.UUID,
@@ -33,8 +29,7 @@ async def get_user_by_id(
     return await user_service.get_user_by_id(user_id)
 
 
-@router.get("/",
-            response_model=List[UserResponse])
+@router.get("/", response_model=List[UserResponse])
 @router_handler
 async def get_users(
     filters: UserFilters = Depends(),
@@ -44,9 +39,7 @@ async def get_users(
 
 
 # -------------------------------------- CREATE --------------------------------------
-@router.post("/",
-             response_model=UserResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 @router_handler
 async def create_user(
     user_data: UserCreate,
@@ -56,8 +49,7 @@ async def create_user(
 
 
 # -------------------------------------- DELETE --------------------------------------
-@router.delete("/{user_id}",
-               status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 @router_handler
 async def delete_user(
     current_user_id: uuid.UUID,  # Depends(get_current_user)
@@ -69,9 +61,7 @@ async def delete_user(
 
 
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch("/{user_id}",
-              response_model=UserResponse,
-              status_code=status.HTTP_200_OK)
+@router.patch("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def update_user(
     current_user_id: uuid.UUID,  # Depends(get_current_user)
     user_id: uuid.UUID,  # query param

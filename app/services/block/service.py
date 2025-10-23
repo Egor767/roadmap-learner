@@ -27,7 +27,7 @@ class BlockService:
 
         blocks = await self.repo.get_roadmap_blocks(road_id, filters)
         validated_blocks = [BlockResponse.model_validate(block) for block in blocks]
-        logger.info(f"Successful get user blocks, count: {len(validated_blocks)}")
+        logger.info(f"Successful get roadmap blocks, count: {len(validated_blocks)}")
         return validated_blocks
 
     @service_handler
@@ -55,7 +55,7 @@ class BlockService:
         block_data["road_id"] = road_id
         block_data["block_id"] = uuid.uuid4()
 
-        logger.info(f"Creating new block: {block_create_data.title} for roadmap: {block_data.get('block_data')}")
+        logger.info(f"Creating new block: {block_create_data.title} for roadmap (roadmap_id={block_data.get('road_id')}): {block_data}")
         created_block = await self.repo.create_block(block_data)
 
         logger.info(f"Block created successfully: {created_block.block_id}")
@@ -83,7 +83,7 @@ class BlockService:
         # check roots
 
         block_data = block_update_data.model_dump(exclude_unset=True)
-        logger.info(f"Updating block {road_id}: {block_data}")
+        logger.info(f"Updating block {block_id}: {block_data}")
         updated_block = await self.repo.update_block(road_id, block_id, block_data)
 
         if not updated_block:

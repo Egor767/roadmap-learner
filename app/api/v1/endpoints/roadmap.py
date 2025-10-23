@@ -11,9 +11,7 @@ from app.services.roadmap.service import RoadMapService
 router = APIRouter(prefix="/roadmaps", tags=["roadmaps"])
 
 
-@router.get("/all",
-            response_model=List[RoadMapResponse],
-            status_code=status.HTTP_200_OK)
+@router.get("/all", response_model=List[RoadMapResponse], status_code=status.HTTP_200_OK)
 @router_handler
 async def get_all_roadmaps(
     roadmap_service: RoadMapService = Depends(get_roadmap_service)
@@ -32,8 +30,7 @@ async def get_roadmap(
     return await roadmap_service.get_user_roadmap(user_id, roadmap_id)
 
 
-@router.get("/",
-            response_model=List[RoadMapResponse])
+@router.get("/", response_model=List[RoadMapResponse])
 async def get_roadmaps(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     filters: RoadMapFilters = Depends(),

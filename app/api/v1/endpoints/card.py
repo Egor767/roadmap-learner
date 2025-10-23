@@ -1,0 +1,85 @@
+import uuid
+from typing import List
+
+from fastapi import APIRouter, Depends, status
+
+from app.core.dependencies import get_card_service
+from app.core.handlers import router_handler
+from app.schemas.card import CardResponse, CardCreate, CardUpdate, CardFilters
+from app.services.card.service import CardService
+
+router = APIRouter(
+    prefix="/roadmaps/{roadmap_id}/blocks/{block_id}/cards",
+    tags=["cards"]
+)
+
+
+@router.get("/all",
+            response_model=List[CardResponse],
+            status_code=status.HTTP_200_OK)
+@router_handler
+async def get_all_blocks(
+    card_service: CardService = Depends(get_card_service)
+):
+    return await card_service.get_all_cards()
+
+
+# -------------------------------------- GET ----------------------------------------------
+@router.get("/{card_id}", response_model=CardResponse)
+@router_handler
+async def get_block_card(
+    user_id: uuid.UUID,  # = Depends(get_current_user)
+    block_id: uuid.UUID,  # query param
+    card_id: uuid.UUID,
+    card_service: CardService = Depends(get_card_service)
+):
+    return await card_service.get_block_card(user_id, block_id, card_id)
+
+
+@router.get("/", response_model=List[CardResponse])
+@router_handler
+async def get_block_cards(
+    user_id: uuid.UUID,  # = Depends(get_current_user)
+    block_id: uuid.UUID,  # query param
+    filters: CardFilters = Depends(),
+    card_service: CardService = Depends(get_card_service)
+):
+    return await card_service.get_block_cards(user_id, block_id, filters)
+
+
+# -------------------------------------- CREATE --------------------------------------
+@router.post("/", response_model=CardResponse, status_code=201)
+@router_handler
+async def create_card(
+    user_id: uuid.UUID,  # = Depends(get_current_user)
+    block_id: uuid.UUID,  # query param
+    card_data: CardCreate,
+    card_service: CardService = Depends(get_card_service)
+):
+    return await card_service.create_card(user_id, block_id, card_data)
+
+
+# -------------------------------------- DELETE --------------------------------------
+@router.delete("/{card_id}", status_code=204)
+@router_handler
+async def delete_card(
+    user_id: uuid.UUID,  # = Depends(get_current_user)
+    block_id: uuid.UUID,  # query param
+    card_id: uuid.UUID,
+    card_service: CardService = Depends(get_card_service)
+):
+    await card_service.delete_card(user_id, block_id, card_id)
+
+
+# -------------------------------------- UPDATE --------------------------------------
+@router.patch("/{card_id}", response_model=CardResponse)
+@router_handler
+async def update_card(
+    user_id: uuid.UUID,  # = Depends(get_current_user)
+    block_id: uuid.UUID,  # query param
+    card_id: uuid.UUID,
+    card_data: CardUpdate,
+    card_service: CardService = Depends(get_card_service)
+):
+    return await card_service.update_card(user_id, block_id, card_id, card_data)
+
