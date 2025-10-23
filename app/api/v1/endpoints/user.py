@@ -11,8 +11,7 @@ from app.services.user.service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-# -------------------------------------- GET --------------------------------------
-@router.get("/",
+@router.get("/all",
             response_model=List[UserResponse],
             status_code=status.HTTP_200_OK)
 @router_handler
@@ -22,6 +21,7 @@ async def get_all_users(
     return await user_service.get_all_users()
 
 
+# -------------------------------------- GET --------------------------------------
 @router.get("/{user_id}",
             response_model=UserResponse,
             status_code=status.HTTP_200_OK)
@@ -33,15 +33,14 @@ async def get_user_by_id(
     return await user_service.get_user_by_id(user_id)
 
 
-@router.get("/search/filters",
-            response_model=List[UserResponse],
-            status_code=status.HTTP_200_OK)
+@router.get("/",
+            response_model=List[UserResponse])
 @router_handler
-async def get_users_by_filters(
+async def get_users(
     filters: UserFilters = Depends(),
     user_service: UserService = Depends(get_user_service)
 ):
-    return await user_service.get_users_by_filters(filters)
+    return await user_service.get_users(filters)
 
 
 # -------------------------------------- CREATE --------------------------------------
@@ -73,7 +72,8 @@ async def delete_user(
               response_model=UserResponse,
               status_code=status.HTTP_200_OK)
 async def update_user(
-    user_id: uuid.UUID,  # = Depends(get_current_user) / access_token.user_id,
+    current_user_id: uuid.UUID,  # Depends(get_current_user)
+    user_id: uuid.UUID,  # query param
     user_data: UserUpdate,
     user_service: UserService = Depends(get_user_service)
 ):

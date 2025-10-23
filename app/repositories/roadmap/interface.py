@@ -15,15 +15,11 @@ class IRoadMapRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_user_roadmaps(self, user_id: uuid.UUID) -> List[RoadMapInDB]:
-        pass
-
-    @abstractmethod
     async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> Optional[RoadMapInDB]:
         pass
 
     @abstractmethod
-    async def get_user_roadmaps_by_filters(self, user_id: uuid.UUID, filters: RoadMapFilters) -> List[RoadMapInDB]:
+    async def get_user_roadmaps(self, user_id: uuid.UUID, filters: RoadMapFilters) -> List[RoadMapInDB]:
         pass
 
     @abstractmethod

@@ -44,7 +44,7 @@ class UserRepository(IUserRepository):
         return map_to_schema(db_user) if db_user else None
 
     @repository_handler
-    async def get_users_by_filters(self, filters: UserFilters) -> List[UserInDB]:
+    async def get_users(self, filters: UserFilters) -> List[UserInDB]:
         stmt = select(User)
 
         if filters.email:

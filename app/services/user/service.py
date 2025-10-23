@@ -29,15 +29,15 @@ class UserService:
         return UserResponse.model_validate(user)
 
     @service_handler
-    async def get_users_by_filters(self, filters: UserFilters) -> List[UserResponse]:
-        users = await self.repo.get_users_by_filters(filters)
+    async def get_users(self, filters: UserFilters) -> List[UserResponse]:
+        users = await self.repo.get_users(filters)
         validated_users = [UserResponse.model_validate(user) for user in users]
         logger.info(f"Retrieved {len(validated_users)} users with filters: {filters}")
         return validated_users
 
     @service_handler
     async def create_user(self, user_create_model: UserCreate) -> UserResponse:
-        existing_user = await self.repo.get_users_by_filters(
+        existing_user = await self.repo.get_users(
             UserFilters(email=user_create_model.email))
         if existing_user:
             logger.warning(f"Attempt to create user with existing email: {user_create_model.email}")
@@ -80,4 +80,3 @@ class UserService:
 
         logger.info(f"Successful updating user: {user_id}")
         return UserResponse.model_validate(updated_user)
-

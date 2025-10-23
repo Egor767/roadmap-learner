@@ -19,13 +19,6 @@ class RoadMapService:
         return validated_roadmaps
 
     @service_handler
-    async def get_user_roadmaps(self, user_id: uuid.UUID) -> List[RoadMapResponse]:
-        roadmaps = await self.repo.get_user_roadmaps(user_id)
-        validated_roadmaps = [RoadMapResponse.model_validate(roadmap) for roadmap in roadmaps]
-        logger.info(f"Successful get user roadmaps, count: {len(validated_roadmaps)}")
-        return validated_roadmaps
-
-    @service_handler
     async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> RoadMapResponse:
         roadmap = await self.repo.get_user_roadmap(user_id, roadmap_id)
         if not roadmap:
@@ -35,14 +28,16 @@ class RoadMapService:
         return RoadMapResponse.model_validate(roadmap)
 
     @service_handler
-    async def get_user_roadmaps_by_filters(self, user_id: uuid.UUID, filters: RoadMapFilters) -> List[RoadMapResponse]:
-        roadmaps = await self.repo.get_user_roadmaps_by_filters(user_id, filters)
+    async def get_user_roadmaps(self, user_id: uuid.UUID, filters: RoadMapFilters) -> List[RoadMapResponse]:
+        roadmaps = await self.repo.get_user_roadmaps(user_id, filters)
         validated_roadmaps = [RoadMapResponse.model_validate(roadmap) for roadmap in roadmaps]
         logger.info(f"Retrieved {len(validated_roadmaps)} roadmaps with filters: {filters}")
         return validated_roadmaps
 
     @service_handler
     async def create_roadmap(self, user_id: uuid.UUID, roadmap_create_data: RoadMapCreate) -> RoadMapResponse:
+        # need to check here if existing
+
         roadmap_data = roadmap_create_data.model_dump()
         roadmap_data["user_id"] = user_id
         roadmap_data["road_id"] = uuid.uuid4()

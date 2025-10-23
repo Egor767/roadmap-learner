@@ -15,7 +15,7 @@ class IUserRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_users_by_filters(self, filters: UserFilters) -> List[UserInDB]:
+    async def get_users(self, filters: UserFilters) -> List[UserInDB]:
         ...
 
     @abstractmethod

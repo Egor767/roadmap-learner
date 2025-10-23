@@ -7,7 +7,6 @@ from typing import Optional
 
 
 class BlockCreate(BaseModel):
-    road_id: uuid.UUID
     title: str
     description: Optional[str] = None
     order_index: int
@@ -45,7 +44,6 @@ class BlockStatus(str, Enum):
 
 
 class BlockFilters(BaseModel):
-    road_id: Optional[uuid.UUID]
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[BlockStatus] = None

@@ -15,22 +15,18 @@ class IBlockRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_user_blocks(self, user_id: uuid.UUID) -> List[BlockInDB]:
+    async def get_roadmap_block(self, road_id: uuid.UUID, block_id: uuid.UUID) -> Optional[BlockInDB]:
         pass
 
     @abstractmethod
-    async def get_user_block(self, user_id: uuid.UUID, block_id: uuid.UUID) -> Optional[BlockInDB]:
+    async def get_roadmap_blocks(self, road_id: uuid.UUID, filters: BlockFilters) -> List[BlockInDB]:
         pass
 
     @abstractmethod
-    async def get_user_blocks_by_filters(self, user_id: uuid.UUID, filters: BlockFilters) -> List[BlockInDB]:
+    async def delete_block(self, roadmap_id: uuid.UUID, block_id: uuid.UUID) -> bool:
         pass
 
     @abstractmethod
-    async def delete_block(self, user_id: uuid.UUID, block_id: uuid.UUID) -> bool:
-        pass
-
-    @abstractmethod
-    async def update_roadmap(self, user_id: uuid.UUID, block_id: uuid.UUID, block_data: dict) -> Optional[BlockInDB]:
+    async def update_block(self, road_id: uuid.UUID, block_id: uuid.UUID, block_data: dict) -> Optional[BlockInDB]:
         pass
 
