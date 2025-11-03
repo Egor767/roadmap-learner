@@ -16,7 +16,7 @@ class Card(Base):
     definition = Column(Text, nullable=False)
     example = Column(Text)
     comment = Column(Text)
-    status = Column(SQLEnum("not learned", "learning", "known", "review", name="card_status"), default="not_learned")
+    status = Column(SQLEnum("unknown", "known", "review", name="card_status"), default="unknown")
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), default=func.now())
 

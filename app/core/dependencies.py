@@ -7,11 +7,13 @@ from app.repositories.roadmap.repository import RoadMapRepository
 from app.repositories.user.repository import UserRepository
 from app.repositories.block.repository import BlockRepository
 from app.repositories.card.repository import CardRepository
+from app.repositories.session_manager.repository import SessionManagerRepository
 
 from app.services.roadmap.service import RoadMapService
 from app.services.user.service import UserService
 from app.services.block.service import BlockService
 from app.services.card.service import CardService
+from app.services.session_manager.service import SessionManagerService
 
 from app.core.db import db
 
@@ -59,4 +61,14 @@ async def get_card_repository(session: AsyncSession = Depends(get_db_session)) -
 async def get_card_service(session: AsyncSession = Depends(get_db_session)) -> CardService:
     repo = CardRepository(session)
     return CardService(repo)
+
+
+# session manager
+async def get_session_manager_repository(session: AsyncSession = Depends(get_db_session)) -> SessionManagerRepository:
+    return SessionManagerRepository(session)
+
+
+async def get_session_manager_service(session: AsyncSession = Depends(get_db_session)) -> SessionManagerService:
+    repo = SessionManagerRepository(session)
+    return SessionManagerService(repo)
 

@@ -41,8 +41,7 @@ class CardResponse(CardInDB):
 
 
 class CardStatus(str, Enum):
-    NOT_LEARNED = "not learned"
-    LEARNING = "learning"
+    UNKNOWN = "unknown"
     KNOWN = "known"
     REVIEW = "review"
 

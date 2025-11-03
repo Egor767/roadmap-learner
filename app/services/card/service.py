@@ -4,7 +4,7 @@ from typing import List
 from app.core.handlers import service_handler
 from app.repositories.card.interface import ICardRepository
 from app.schemas.card import CardCreate, CardResponse, CardUpdate, CardFilters
-from app.core.logging import roadmap_service_logger as logger
+from app.core.logging import card_service_logger as logger
 
 
 class CardService:

@@ -4,7 +4,7 @@ from typing import List
 from app.core.handlers import service_handler
 from app.repositories.block.interface import IBlockRepository
 from app.schemas.block import BlockCreate, BlockResponse, BlockUpdate, BlockFilters
-from app.core.logging import roadmap_service_logger as logger
+from app.core.logging import block_service_logger as logger
 
 
 class BlockService:
