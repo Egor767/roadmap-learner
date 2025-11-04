@@ -19,6 +19,17 @@ class CardService:
         return validated_cards
 
     @service_handler
+    async def get_card(self, user_id: uuid.UUID, card_id) -> CardResponse:
+        # check roots
+
+        card = await self.repo.get_card(card_id)
+        if not card:
+            logger.warning(f"Card not found or access denied")
+            raise ValueError("Card not found or access denied")
+        logger.info(f"Successful get card")
+        return CardResponse.model_validate(card)
+
+    @service_handler
     async def get_block_cards(self, user_id: uuid.UUID,
                               block_id: uuid.UUID,
                               filters: CardFilters
@@ -41,7 +52,7 @@ class CardService:
         if not card:
             logger.warning(f"Card not found or access denied")
             raise ValueError("Card not found or access denied")
-        logger.info(f"Successful get block cards")
+        logger.info(f"Successful get block card")
         return CardResponse.model_validate(card)
 
     @service_handler

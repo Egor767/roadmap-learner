@@ -83,3 +83,20 @@ async def update_card(
 ):
     return await card_service.update_card(user_id, block_id, card_id, card_data)
 
+
+# -------------------------------------- RESOURCE ROUTER --------------------------------------
+resource_router = APIRouter(
+    prefix="/cards",
+    tags=["cards-resources"]
+)
+
+
+@resource_router.get("/{card_id}", response_model=CardResponse)
+@router_handler
+async def get_card(
+    user_id: uuid.UUID,
+    card_id: uuid.UUID,
+    card_service: CardService = Depends(get_card_service)
+):
+    return await card_service.get_card(user_id, card_id)
+

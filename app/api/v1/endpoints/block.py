@@ -80,3 +80,21 @@ async def update_block(
     block_service: BlockService = Depends(get_block_service)
 ):
     return await block_service.update_block(user_id, roadmap_id, block_id, block_data)
+
+
+# -------------------------------------- RESOURCE ROUTER --------------------------------------
+resource_router = APIRouter(
+    prefix="/blocks",
+    tags=["blocks-resources"]
+)
+
+
+@resource_router.get("/{block_id}", response_model=BlockResponse)
+@router_handler
+async def get_block(
+    user_id: uuid.UUID,
+    block_id: uuid.UUID,
+    block_service: BlockService = Depends(get_block_service)
+):
+    return await block_service.get_block(user_id, block_id)
+

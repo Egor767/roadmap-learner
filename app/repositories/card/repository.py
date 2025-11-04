@@ -36,6 +36,15 @@ class CardRepository(ICardRepository):
         return [map_to_schema(card) for card in db_cards]
 
     @repository_handler
+    async def get_card(self, card_id: uuid.UUID) -> CardInDB:
+        stmt = select(Card).where(
+            Card.card_id == card_id
+        )
+        result = await self.session.execute(stmt)
+        card = result.scalar_one_or_none()
+        return map_to_schema(card) if card else None
+
+    @repository_handler
     async def get_block_card(self, block_id: uuid.UUID, card_id: uuid.UUID) -> CardInDB:
         stmt = select(Card).where(
             Card.block_id == block_id,

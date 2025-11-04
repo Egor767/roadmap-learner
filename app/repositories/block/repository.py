@@ -61,6 +61,13 @@ class BlockRepository(IBlockRepository):
         return [map_to_schema(block) for block in db_blocks]
 
     @repository_handler
+    async def get_block(self, block_id: uuid.UUID) -> BlockInDB:
+        stmt = select(Block).where(Block.block_id == block_id)
+        result = await self.session.execute(stmt)
+        db_block = result.scalar_one_or_none()
+        return map_to_schema(db_block) if db_block else None
+
+    @repository_handler
     async def create_block(self, block_data: dict) -> BlockInDB:
         async with self._transaction():
             stmt = insert(Block).values(**block_data).returning(Block)

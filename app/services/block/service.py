@@ -45,6 +45,17 @@ class BlockService:
         return BlockResponse.model_validate(block)
 
     @service_handler
+    async def get_block(self, user_id: uuid.UUID, block_id: uuid.UUID) -> BlockResponse:
+        # check roots
+
+        block = await self.repo.get_block(block_id)
+        if not block:
+            logger.warning(f"Block not found or access denied")
+            raise ValueError("Block not found or access denied")
+        logger.info(f"Successful get block")
+        return BlockResponse.model_validate(block)
+
+    @service_handler
     async def create_block(self, user_id: uuid.UUID,
                            road_id: uuid.UUID,
                            block_create_data: BlockCreate
