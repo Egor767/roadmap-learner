@@ -99,7 +99,7 @@ class SessionManagerRepository(ISessionManagerRepository):
         ...
 
     @repository_handler
-    async def get_next_card(self, user_id: uuid.UUID, session_id: uuid.UUID) -> Optional[CardInDB]:
+    async def get_next_card_id(self, user_id: uuid.UUID, session_id: uuid.UUID) -> uuid.UUID:
         stmt = select(Session).where(
             Session.session_id == session_id,
             Session.user_id == user_id
@@ -107,11 +107,8 @@ class SessionManagerRepository(ISessionManagerRepository):
         result = await self.session.execute(stmt)
         db_session = result.scalar_one_or_none()
 
-        if (not db_session.card_queue or
-                db_session.current_card_index >= len(db_session.card_queue)):
-            return
-
         next_card_id = db_session.card_queue[db_session.current_card_index]
+        return next_card_id if next_card_id else None
 
     @repository_handler
     async def submit_answer(self, user_id: uuid.UUID, session_id: uuid.UUID, answer_data: SubmitAnswerRequest) -> SessionInDB:

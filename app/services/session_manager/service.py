@@ -1,8 +1,11 @@
 import uuid
 from typing import List
 
+from fastapi import HTTPException
+
 from app.core.handlers import service_handler
 from app.core.logging import session_manager_service_logger as logger
+from app.external.card_service import get_card_from_service
 from app.repositories.session_manager.interface import ISessionManagerRepository
 from app.schemas.card import CardResponse, CardStatus
 from app.schemas.session_manager import SessionResponse, SessionUpdate, SessionCreate, SessionFilters, SessionResult, \
@@ -84,14 +87,19 @@ class SessionManagerService:
 
     @service_handler
     async def get_next_card(self, user_id: uuid.UUID, session_id: uuid.UUID) -> CardResponse:
-        next_card = await self.repo.get_next_card(user_id, session_id)
+        next_card_id = await self.repo.get_next_card_id(user_id, session_id)
 
-        if not next_card:
+        if not next_card_id:
             logger.warning(f"Next card not found for session: {session_id}")
             raise ValueError("Next card not found")
 
-        logger.info(f"Successfully retrieved next card for session: {session_id}")
-        return next_card
+        logger.info(f"Successfully retrieved next card_id for session: {session_id}")
+
+        card_data = await get_card_from_service(str(user_id), str(next_card_id))
+        if not card_data:
+            raise HTTPException(status_code=404, detail="Card not found")
+
+        return CardResponse.model_validate(card_data)
 
     @service_handler
     async def submit_answer(self, user_id: uuid.UUID, session_id: uuid.UUID, answer_data: SubmitAnswerRequest) -> SessionResponse:

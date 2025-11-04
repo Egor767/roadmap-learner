@@ -15,3 +15,5 @@ card_repo_logger = logging.getLogger('CardRepo-Logger')
 session_manager_service_logger = logging.getLogger('SessionManagerService-Logger')
 session_manager_repository_logger = logging.getLogger('SessionManagerRepo-Logger')
 
+http_client_logger = logging.getLogger('HttpClient-Logger')
+
