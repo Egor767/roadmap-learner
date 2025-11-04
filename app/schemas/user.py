@@ -46,4 +46,3 @@ class UserFilters(BaseModel):
 
     class Config:
         extra = "forbid"
-

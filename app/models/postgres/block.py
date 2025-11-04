@@ -15,14 +15,19 @@ class Block(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text)
     order_index = Column(Integer, nullable=False)
-    status = Column(SQLEnum("draft", "active", "archived", name="block_status"), default="draft")
+    status = Column(
+        SQLEnum("draft", "active", "archived", name="block_status"), default="draft"
+    )
     created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=func.now(), default=func.now()
+    )
 
     def __repr__(self):
-        return (f"<Block(id={self.user_id}, "
-                f"road_id ={self.road_id}, "
-                f"title={self.title}, "
-                f"order_index={self.order_index}, "
-                f"status]({self.status})>")
-
+        return (
+            f"<Block(id={self.user_id}, "
+            f"road_id ={self.road_id}, "
+            f"title={self.title}, "
+            f"order_index={self.order_index}, "
+            f"status]({self.status})>"
+        )

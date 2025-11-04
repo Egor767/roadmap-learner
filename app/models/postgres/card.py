@@ -16,13 +16,18 @@ class Card(Base):
     definition = Column(Text, nullable=False)
     example = Column(Text)
     comment = Column(Text)
-    status = Column(SQLEnum("unknown", "known", "review", name="card_status"), default="unknown")
+    status = Column(
+        SQLEnum("unknown", "known", "review", name="card_status"), default="unknown"
+    )
     created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=func.now(), default=func.now()
+    )
 
     def __repr__(self):
-        return (f"<Card(id={self.card_id}, "
-                f"block_id ={self.block_id}, "
-                f"term={self.term}, "
-                f"status={self.status})>")
-
+        return (
+            f"<Card(id={self.card_id}, "
+            f"block_id ={self.block_id}, "
+            f"term={self.term}, "
+            f"status={self.status})>"
+        )

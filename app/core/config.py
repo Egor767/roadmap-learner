@@ -19,4 +19,3 @@ class DbConfig(BaseSettings):
 
 
 db_config = DbConfig()
-

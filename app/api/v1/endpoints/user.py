@@ -13,9 +13,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/all", response_model=List[UserResponse], status_code=status.HTTP_200_OK)
 @router_handler
-async def get_all_users(
-    user_service: UserService = Depends(get_user_service)
-):
+async def get_all_users(user_service: UserService = Depends(get_user_service)):
     return await user_service.get_all_users()
 
 
@@ -23,8 +21,7 @@ async def get_all_users(
 @router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 @router_handler
 async def get_user_by_id(
-    user_id: uuid.UUID,
-    user_service: UserService = Depends(get_user_service)
+    user_id: uuid.UUID, user_service: UserService = Depends(get_user_service)
 ):
     return await user_service.get_user_by_id(user_id)
 
@@ -33,7 +30,7 @@ async def get_user_by_id(
 @router_handler
 async def get_users(
     filters: UserFilters = Depends(),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     return await user_service.get_users(filters)
 
@@ -42,8 +39,7 @@ async def get_users(
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 @router_handler
 async def create_user(
-    user_data: UserCreate,
-    user_service: UserService = Depends(get_user_service)
+    user_data: UserCreate, user_service: UserService = Depends(get_user_service)
 ):
     return await user_service.create_user(user_data)
 
@@ -54,7 +50,7 @@ async def create_user(
 async def delete_user(
     current_user_id: uuid.UUID,  # Depends(get_current_user)
     user_id: uuid.UUID,
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     await user_service.delete_user(current_user_id, user_id)
     return {"id": str(user_id), "status": "deleted"}
@@ -66,7 +62,6 @@ async def update_user(
     current_user_id: uuid.UUID,  # Depends(get_current_user)
     user_id: uuid.UUID,  # query param
     user_data: UserUpdate,
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     return await user_service.update_user(current_user_id, user_id, user_data)
-

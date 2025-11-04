@@ -14,8 +14,9 @@ class User(Base):
     username = Column(String(100), nullable=False, unique=True)
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=func.now(), default=func.now()
+    )
 
     def __repr__(self):
         return f"<User(id={self.user_id}, email={self.email})>"
-

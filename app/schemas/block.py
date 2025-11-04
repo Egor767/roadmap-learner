@@ -33,8 +33,7 @@ class BlockInDB(BaseModel):
         from_attributes = True
 
 
-class BlockResponse(BlockInDB):
-    ...
+class BlockResponse(BlockInDB): ...
 
 
 class BlockStatus(str, Enum):
@@ -47,4 +46,3 @@ class BlockFilters(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[BlockStatus] = None
-

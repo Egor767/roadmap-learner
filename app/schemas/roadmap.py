@@ -30,8 +30,7 @@ class RoadMapInDB(BaseModel):
         from_attributes = True
 
 
-class RoadMapResponse(RoadMapInDB):
-    ...
+class RoadMapResponse(RoadMapInDB): ...
 
 
 class RoadMapStatus(str, Enum):
@@ -44,4 +43,3 @@ class RoadMapFilters(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[RoadMapStatus] = None
-

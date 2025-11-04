@@ -7,8 +7,7 @@ from typing import Optional, Dict, Any, List
 from app.schemas.card import CardStatus
 
 
-class SessionSettings(BaseModel):
-    ...
+class SessionSettings(BaseModel): ...
 
 
 class SessionMode(str, Enum):
@@ -53,8 +52,7 @@ class SessionInDB(BaseModel):
         from_attributes = True
 
 
-class SessionResponse(SessionInDB):
-    ...
+class SessionResponse(SessionInDB): ...
 
 
 class SessionUpdate(BaseModel):
@@ -88,4 +86,3 @@ class SessionResult(BaseModel):
 class SubmitAnswerRequest(BaseModel):
     card_id: uuid.UUID
     answer: CardStatus
-

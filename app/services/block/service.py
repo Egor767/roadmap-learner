@@ -19,10 +19,9 @@ class BlockService:
         return validated_blocks
 
     @service_handler
-    async def get_roadmap_blocks(self, user_id: uuid.UUID,
-                                 road_id: uuid.UUID,
-                                 filters: BlockFilters
-                                 ) -> List[BlockResponse]:
+    async def get_roadmap_blocks(
+        self, user_id: uuid.UUID, road_id: uuid.UUID, filters: BlockFilters
+    ) -> List[BlockResponse]:
         # check roots
 
         blocks = await self.repo.get_roadmap_blocks(road_id, filters)
@@ -31,10 +30,9 @@ class BlockService:
         return validated_blocks
 
     @service_handler
-    async def get_roadmap_block(self, user_id: uuid.UUID,
-                                road_id: uuid.UUID,
-                                block_id: uuid.UUID
-                                ) -> BlockResponse:
+    async def get_roadmap_block(
+        self, user_id: uuid.UUID, road_id: uuid.UUID, block_id: uuid.UUID
+    ) -> BlockResponse:
         # check roots
 
         block = await self.repo.get_roadmap_block(road_id, block_id)
@@ -56,26 +54,27 @@ class BlockService:
         return BlockResponse.model_validate(block)
 
     @service_handler
-    async def create_block(self, user_id: uuid.UUID,
-                           road_id: uuid.UUID,
-                           block_create_data: BlockCreate
-                           ) -> BlockResponse:
+    async def create_block(
+        self, user_id: uuid.UUID, road_id: uuid.UUID, block_create_data: BlockCreate
+    ) -> BlockResponse:
         # check roots
 
         block_data = block_create_data.model_dump()
         block_data["road_id"] = road_id
         block_data["block_id"] = uuid.uuid4()
 
-        logger.info(f"Creating new block: {block_create_data.title} for roadmap (roadmap_id={block_data.get('road_id')}): {block_data}")
+        logger.info(
+            f"Creating new block: {block_create_data.title} for roadmap (roadmap_id={block_data.get('road_id')}): {block_data}"
+        )
         created_block = await self.repo.create_block(block_data)
 
         logger.info(f"Block created successfully: {created_block.block_id}")
         return BlockResponse.model_validate(created_block)
 
     @service_handler
-    async def delete_block(self, user_id: uuid.UUID,
-                           road_id: uuid.UUID,
-                           block_id: uuid.UUID):
+    async def delete_block(
+        self, user_id: uuid.UUID, road_id: uuid.UUID, block_id: uuid.UUID
+    ):
         # check roots
 
         success = await self.repo.delete_block(road_id, block_id)
@@ -86,11 +85,13 @@ class BlockService:
         return success
 
     @service_handler
-    async def update_block(self, user_id: uuid.UUID,
-                           road_id: uuid.UUID,
-                           block_id: uuid.UUID,
-                           block_update_data: BlockUpdate
-                           ) -> BlockResponse:
+    async def update_block(
+        self,
+        user_id: uuid.UUID,
+        road_id: uuid.UUID,
+        block_id: uuid.UUID,
+        block_update_data: BlockUpdate,
+    ) -> BlockResponse:
         # check roots
 
         block_data = block_update_data.model_dump(exclude_unset=True)

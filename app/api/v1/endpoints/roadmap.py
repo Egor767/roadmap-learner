@@ -5,16 +5,23 @@ from fastapi import APIRouter, Depends, status
 
 from app.core.dependencies import get_roadmap_service
 from app.core.handlers import router_handler
-from app.schemas.roadmap import RoadMapResponse, RoadMapCreate, RoadMapUpdate, RoadMapFilters
+from app.schemas.roadmap import (
+    RoadMapResponse,
+    RoadMapCreate,
+    RoadMapUpdate,
+    RoadMapFilters,
+)
 from app.services.roadmap.service import RoadMapService
 
 router = APIRouter(prefix="/roadmaps", tags=["roadmaps"])
 
 
-@router.get("/all", response_model=List[RoadMapResponse], status_code=status.HTTP_200_OK)
+@router.get(
+    "/all", response_model=List[RoadMapResponse], status_code=status.HTTP_200_OK
+)
 @router_handler
 async def get_all_roadmaps(
-    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+    roadmap_service: RoadMapService = Depends(get_roadmap_service),
 ):
     return await roadmap_service.get_all_roadmaps()
 
@@ -25,7 +32,7 @@ async def get_all_roadmaps(
 async def get_roadmap(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     roadmap_id: uuid.UUID,
-    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+    roadmap_service: RoadMapService = Depends(get_roadmap_service),
 ):
     return await roadmap_service.get_user_roadmap(user_id, roadmap_id)
 
@@ -34,7 +41,7 @@ async def get_roadmap(
 async def get_roadmaps(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     filters: RoadMapFilters = Depends(),
-    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+    roadmap_service: RoadMapService = Depends(get_roadmap_service),
 ):
     return await roadmap_service.get_user_roadmaps(user_id, filters)
 
@@ -45,7 +52,7 @@ async def get_roadmaps(
 async def create_roadmap(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     roadmap_data: RoadMapCreate,
-    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+    roadmap_service: RoadMapService = Depends(get_roadmap_service),
 ):
     return await roadmap_service.create_roadmap(user_id, roadmap_data)
 
@@ -56,7 +63,7 @@ async def create_roadmap(
 async def delete_roadmap(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     roadmap_id: uuid.UUID,
-    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+    roadmap_service: RoadMapService = Depends(get_roadmap_service),
 ):
     await roadmap_service.delete_roadmap(user_id, roadmap_id)
 
@@ -68,7 +75,6 @@ async def update_roadmap(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     roadmap_id: uuid.UUID,
     roadmap_data: RoadMapUpdate,
-    roadmap_service: RoadMapService = Depends(get_roadmap_service)
+    roadmap_service: RoadMapService = Depends(get_roadmap_service),
 ):
     return await roadmap_service.update_roadmap(user_id, roadmap_id, roadmap_data)
-

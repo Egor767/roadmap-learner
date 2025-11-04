@@ -37,25 +37,22 @@ class CardRepository(ICardRepository):
 
     @repository_handler
     async def get_card(self, card_id: uuid.UUID) -> CardInDB:
-        stmt = select(Card).where(
-            Card.card_id == card_id
-        )
+        stmt = select(Card).where(Card.card_id == card_id)
         result = await self.session.execute(stmt)
         card = result.scalar_one_or_none()
         return map_to_schema(card) if card else None
 
     @repository_handler
     async def get_block_card(self, block_id: uuid.UUID, card_id: uuid.UUID) -> CardInDB:
-        stmt = select(Card).where(
-            Card.block_id == block_id,
-            Card.card_id == card_id
-        )
+        stmt = select(Card).where(Card.block_id == block_id, Card.card_id == card_id)
         result = await self.session.execute(stmt)
         card = result.scalar_one_or_none()
         return map_to_schema(card) if card else None
 
     @repository_handler
-    async def get_block_cards(self, block_id: uuid.UUID, filters: CardFilters) -> List[CardInDB]:
+    async def get_block_cards(
+        self, block_id: uuid.UUID, filters: CardFilters
+    ) -> List[CardInDB]:
         stmt = select(Card).where(Card.block_id == block_id)
 
         if filters.term:
@@ -82,28 +79,25 @@ class CardRepository(ICardRepository):
             return map_to_schema(db_card)
 
     @repository_handler
-    async def delete_card(self, block_id: uuid.UUID,  card_id: uuid.UUID) -> bool:
+    async def delete_card(self, block_id: uuid.UUID, card_id: uuid.UUID) -> bool:
         async with self._transaction():
             stmt = delete(Card).where(
-                Card.block_id == block_id,
-                Card.card_id == card_id
+                Card.block_id == block_id, Card.card_id == card_id
             )
             result = await self.session.execute(stmt)
             return result.rowcount > 0
 
     @repository_handler
-    async def update_card(self, block_id: uuid.UUID, card_id: uuid.UUID, card_data: dict) -> CardInDB:
+    async def update_card(
+        self, block_id: uuid.UUID, card_id: uuid.UUID, card_data: dict
+    ) -> CardInDB:
         async with self._transaction():
             stmt = (
                 update(Card)
-                .where(
-                    Card.block_id == block_id,
-                    Card.card_id == card_id
-                )
+                .where(Card.block_id == block_id, Card.card_id == card_id)
                 .values(**card_data)
                 .returning(Card)
             )
             result = await self.session.execute(stmt)
             db_card = result.scalar_one_or_none()
             return map_to_schema(db_card) if db_card else None
-

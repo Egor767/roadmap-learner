@@ -9,18 +9,13 @@ from app.schemas.card import CardResponse, CardCreate, CardUpdate, CardFilters
 from app.services.card.service import CardService
 
 router = APIRouter(
-    prefix="/roadmaps/{roadmap_id}/blocks/{block_id}/cards",
-    tags=["cards"]
+    prefix="/roadmaps/{roadmap_id}/blocks/{block_id}/cards", tags=["cards"]
 )
 
 
-@router.get("/all",
-            response_model=List[CardResponse],
-            status_code=status.HTTP_200_OK)
+@router.get("/all", response_model=List[CardResponse], status_code=status.HTTP_200_OK)
 @router_handler
-async def get_all_blocks(
-    card_service: CardService = Depends(get_card_service)
-):
+async def get_all_blocks(card_service: CardService = Depends(get_card_service)):
     return await card_service.get_all_cards()
 
 
@@ -31,7 +26,7 @@ async def get_block_card(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     block_id: uuid.UUID,  # query param
     card_id: uuid.UUID,
-    card_service: CardService = Depends(get_card_service)
+    card_service: CardService = Depends(get_card_service),
 ):
     return await card_service.get_block_card(user_id, block_id, card_id)
 
@@ -42,7 +37,7 @@ async def get_block_cards(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     block_id: uuid.UUID,  # query param
     filters: CardFilters = Depends(),
-    card_service: CardService = Depends(get_card_service)
+    card_service: CardService = Depends(get_card_service),
 ):
     return await card_service.get_block_cards(user_id, block_id, filters)
 
@@ -54,7 +49,7 @@ async def create_card(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     block_id: uuid.UUID,  # query param
     card_data: CardCreate,
-    card_service: CardService = Depends(get_card_service)
+    card_service: CardService = Depends(get_card_service),
 ):
     return await card_service.create_card(user_id, block_id, card_data)
 
@@ -66,7 +61,7 @@ async def delete_card(
     user_id: uuid.UUID,  # = Depends(get_current_user)
     block_id: uuid.UUID,  # query param
     card_id: uuid.UUID,
-    card_service: CardService = Depends(get_card_service)
+    card_service: CardService = Depends(get_card_service),
 ):
     await card_service.delete_card(user_id, block_id, card_id)
 
@@ -79,16 +74,13 @@ async def update_card(
     block_id: uuid.UUID,  # query param
     card_id: uuid.UUID,
     card_data: CardUpdate,
-    card_service: CardService = Depends(get_card_service)
+    card_service: CardService = Depends(get_card_service),
 ):
     return await card_service.update_card(user_id, block_id, card_id, card_data)
 
 
 # -------------------------------------- RESOURCE ROUTER --------------------------------------
-resource_router = APIRouter(
-    prefix="/cards",
-    tags=["cards-resources"]
-)
+resource_router = APIRouter(prefix="/cards", tags=["cards-resources"])
 
 
 @resource_router.get("/{card_id}", response_model=CardResponse)
@@ -96,7 +88,6 @@ resource_router = APIRouter(
 async def get_card(
     user_id: uuid.UUID,
     card_id: uuid.UUID,
-    card_service: CardService = Depends(get_card_service)
+    card_service: CardService = Depends(get_card_service),
 ):
     return await card_service.get_card(user_id, card_id)
-

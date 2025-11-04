@@ -38,9 +38,12 @@ class UserService:
     @service_handler
     async def create_user(self, user_create_model: UserCreate) -> UserResponse:
         existing_user = await self.repo.get_users(
-            UserFilters(email=user_create_model.email))
+            UserFilters(email=user_create_model.email)
+        )
         if existing_user:
-            logger.warning(f"Attempt to create user with existing email: {user_create_model.email}")
+            logger.warning(
+                f"Attempt to create user with existing email: {user_create_model.email}"
+            )
             raise ValueError("User with this email already exists")
 
         hashed_password = get_password_hash(user_create_model.password)
@@ -67,16 +70,18 @@ class UserService:
         return success
 
     @service_handler
-    async def update_user(self, current_user_id: uuid.UUID,
-                          user_id: uuid.UUID,
-                          user_update_model: UserUpdate
-                          ) -> UserResponse:
+    async def update_user(
+        self,
+        current_user_id: uuid.UUID,
+        user_id: uuid.UUID,
+        user_update_model: UserUpdate,
+    ) -> UserResponse:
         # check roots
 
         user_data = user_update_model.model_dump(exclude_unset=True)
 
-        if 'password' in user_data:
-            user_data['hashed_password'] = get_password_hash(user_data.pop('password'))
+        if "password" in user_data:
+            user_data["hashed_password"] = get_password_hash(user_data.pop("password"))
 
         logger.info(f"Updating user {user_id}: {user_data}")
         updated_user = await self.repo.update_user(user_id, user_data)

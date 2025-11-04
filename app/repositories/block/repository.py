@@ -36,17 +36,18 @@ class BlockRepository(IBlockRepository):
         return [map_to_schema(block) for block in db_blocks]
 
     @repository_handler
-    async def get_roadmap_block(self, road_id: uuid.UUID, block_id: uuid.UUID) -> BlockInDB:
-        stmt = select(Block).where(
-            Block.block_id == block_id,
-            Block.road_id == road_id
-        )
+    async def get_roadmap_block(
+        self, road_id: uuid.UUID, block_id: uuid.UUID
+    ) -> BlockInDB:
+        stmt = select(Block).where(Block.block_id == block_id, Block.road_id == road_id)
         result = await self.session.execute(stmt)
         block = result.scalar_one_or_none()
         return map_to_schema(block) if block else None
 
     @repository_handler
-    async def get_roadmap_blocks(self, road_id: uuid.UUID, filters: BlockFilters) -> List[BlockInDB]:
+    async def get_roadmap_blocks(
+        self, road_id: uuid.UUID, filters: BlockFilters
+    ) -> List[BlockInDB]:
         stmt = select(Block).where(Block.road_id == road_id)
 
         if filters.title:
@@ -76,28 +77,25 @@ class BlockRepository(IBlockRepository):
             return map_to_schema(db_block)
 
     @repository_handler
-    async def delete_block(self, road_id: uuid.UUID,  block_id: uuid.UUID) -> bool:
+    async def delete_block(self, road_id: uuid.UUID, block_id: uuid.UUID) -> bool:
         async with self._transaction():
             stmt = delete(Block).where(
-                Block.road_id == road_id,
-                Block.block_id == block_id
+                Block.road_id == road_id, Block.block_id == block_id
             )
             result = await self.session.execute(stmt)
             return result.rowcount > 0
 
     @repository_handler
-    async def update_block(self, road_id: uuid.UUID, block_id: uuid.UUID, block_data: dict) -> BlockInDB:
+    async def update_block(
+        self, road_id: uuid.UUID, block_id: uuid.UUID, block_data: dict
+    ) -> BlockInDB:
         async with self._transaction():
             stmt = (
                 update(Block)
-                .where(
-                    Block.road_id == road_id,
-                    Block.block_id == block_id
-                )
+                .where(Block.road_id == road_id, Block.block_id == block_id)
                 .values(**block_data)
                 .returning(Block)
             )
             result = await self.session.execute(stmt)
             db_roadmap = result.scalar_one_or_none()
             return map_to_schema(db_roadmap) if db_roadmap else None
-

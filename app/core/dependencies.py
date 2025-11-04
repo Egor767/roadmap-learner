@@ -24,51 +24,70 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 # user
-async def get_user_repository(session: AsyncSession = Depends(get_db_session)) -> UserRepository:
+async def get_user_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> UserRepository:
     return UserRepository(session)
 
 
-async def get_user_service(session: AsyncSession = Depends(get_db_session)) -> UserService:
+async def get_user_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> UserService:
     repo = UserRepository(session)
     return UserService(repo)
 
 
 # roadmap
-async def get_roadmap_repository(session: AsyncSession = Depends(get_db_session)) -> RoadMapRepository:
+async def get_roadmap_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> RoadMapRepository:
     return RoadMapRepository(session)
 
 
-async def get_roadmap_service(session: AsyncSession = Depends(get_db_session)) -> RoadMapService:
+async def get_roadmap_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> RoadMapService:
     repo = RoadMapRepository(session)
     return RoadMapService(repo)
 
 
 # block
-async def get_block_repository(session: AsyncSession = Depends(get_db_session)) -> BlockRepository:
+async def get_block_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> BlockRepository:
     return BlockRepository(session)
 
 
-async def get_block_service(session: AsyncSession = Depends(get_db_session)) -> BlockService:
+async def get_block_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> BlockService:
     repo = BlockRepository(session)
     return BlockService(repo)
 
 
 # card
-async def get_card_repository(session: AsyncSession = Depends(get_db_session)) -> CardRepository:
+async def get_card_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> CardRepository:
     return CardRepository(session)
 
 
-async def get_card_service(session: AsyncSession = Depends(get_db_session)) -> CardService:
+async def get_card_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> CardService:
     repo = CardRepository(session)
     return CardService(repo)
 
 
 # session manager
-async def get_session_manager_repository(session: AsyncSession = Depends(get_db_session)) -> SessionManagerRepository:
+async def get_session_manager_repository(
+    session: AsyncSession = Depends(get_db_session),
+) -> SessionManagerRepository:
     return SessionManagerRepository(session)
 
 
-async def get_session_manager_service(session: AsyncSession = Depends(get_db_session)) -> SessionManagerService:
+async def get_session_manager_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> SessionManagerService:
     repo = SessionManagerRepository(session)
     return SessionManagerService(repo)
-

@@ -16,16 +16,16 @@ def router_handler(func):
         except HTTPException:
             raise
         except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e)
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         except Exception as e:
-            logger.error(f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error"
+                detail="Internal server error",
             )
+
     return wrapper
 
 
@@ -35,10 +35,8 @@ def service_handler(func):
         try:
             return await func(*args, **kwargs)
         except ValueError:
-            # Бизнес-логика ошибки - пробрасываем как есть
             raise
         except Exception as e:
-            # Все остальные исключения логируем и пробрасываем как ValueError
             logger.error(f"Service error in {func.__name__}: {str(e)}", exc_info=True)
             raise ValueError(f"Service operation failed: {str(e)}")
 
@@ -64,7 +62,9 @@ def repository_handler(func):
             logger.error(f"Database error in {func.__name__}: {str(e)}", exc_info=True)
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
+            )
             raise
-    return wrapper
 
+    return wrapper

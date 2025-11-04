@@ -17,7 +17,10 @@ class Session(Base):
 
     mode = Column(SQLEnum("review", "exam", name="session_mode"), nullable=False)
 
-    status = Column(SQLEnum("active", "completed", "abandoned", name="session_status"), default="active")
+    status = Column(
+        SQLEnum("active", "completed", "abandoned", name="session_status"),
+        default="active",
+    )
     card_queue = Column(JSONB, nullable=True, default=list)
     current_card_index = Column(Integer, default=0)
 
@@ -26,12 +29,15 @@ class Session(Base):
     review_answers = Column(Integer, default=0)
 
     created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=func.now(), default=func.now()
+    )
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self):
-        return (f"<Session(id={self.session_id}, "
-                f"user_id={self.user_id}, "
-                f"mode={self.mode}, "
-                f"status={self.status})>")
-
+        return (
+            f"<Session(id={self.session_id}, "
+            f"user_id={self.user_id}, "
+            f"mode={self.mode}, "
+            f"status={self.status})>"
+        )

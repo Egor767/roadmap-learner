@@ -14,16 +14,10 @@ class PostgresDB(IDatabase):
 
     async def connect(self) -> None:
         self.engine = create_async_engine(
-            db_config.url,
-            echo=db_config.echo,
-            future=True,
-            poolclass=NullPool
+            db_config.url, echo=db_config.echo, future=True, poolclass=NullPool
         )
         self.session_factory = async_sessionmaker(
-            self.engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autoflush=False
+            self.engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
         )
 
     async def disconnect(self) -> None:
@@ -58,4 +52,3 @@ class PostgresDB(IDatabase):
     async def drop_tables(self) -> None:
         async with self.engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
-

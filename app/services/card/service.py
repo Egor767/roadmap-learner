@@ -30,10 +30,9 @@ class CardService:
         return CardResponse.model_validate(card)
 
     @service_handler
-    async def get_block_cards(self, user_id: uuid.UUID,
-                              block_id: uuid.UUID,
-                              filters: CardFilters
-                              ) -> List[CardResponse]:
+    async def get_block_cards(
+        self, user_id: uuid.UUID, block_id: uuid.UUID, filters: CardFilters
+    ) -> List[CardResponse]:
         # check roots
 
         cards = await self.repo.get_block_cards(block_id, filters)
@@ -42,10 +41,9 @@ class CardService:
         return validated_cards
 
     @service_handler
-    async def get_block_card(self, user_id: uuid.UUID,
-                             block_id: uuid.UUID,
-                             card_id: uuid.UUID
-                             ) -> CardResponse:
+    async def get_block_card(
+        self, user_id: uuid.UUID, block_id: uuid.UUID, card_id: uuid.UUID
+    ) -> CardResponse:
         # check roots
 
         card = await self.repo.get_block_card(block_id, card_id)
@@ -56,10 +54,9 @@ class CardService:
         return CardResponse.model_validate(card)
 
     @service_handler
-    async def create_card(self, user_id: uuid.UUID,
-                          block_id: uuid.UUID,
-                          card_create_data: CardCreate
-                          ) -> CardResponse:
+    async def create_card(
+        self, user_id: uuid.UUID, block_id: uuid.UUID, card_create_data: CardCreate
+    ) -> CardResponse:
         # check roots
 
         card_data = card_create_data.model_dump()
@@ -67,16 +64,17 @@ class CardService:
         card_data["card_id"] = uuid.uuid4()
 
         logger.info(
-            f"Creating new card: {card_create_data.term} for block (block_id={card_data.get('block_id')}: {card_data.get('block_data')}")
+            f"Creating new card: {card_create_data.term} for block (block_id={card_data.get('block_id')}: {card_data.get('block_data')}"
+        )
         created_card = await self.repo.create_card(card_data)
 
         logger.info(f"Card created successfully: {created_card.card_id}")
         return CardResponse.model_validate(created_card)
 
     @service_handler
-    async def delete_card(self, user_id: uuid.UUID,
-                          block_id: uuid.UUID,
-                          card_id: uuid.UUID):
+    async def delete_card(
+        self, user_id: uuid.UUID, block_id: uuid.UUID, card_id: uuid.UUID
+    ):
         # check roots
 
         success = await self.repo.delete_card(block_id, card_id)
@@ -87,11 +85,13 @@ class CardService:
         return success
 
     @service_handler
-    async def update_card(self, user_id: uuid.UUID,
-                          block_id: uuid.UUID,
-                          card_id: uuid.UUID,
-                          card_update_data: CardUpdate
-                          ) -> CardResponse:
+    async def update_card(
+        self,
+        user_id: uuid.UUID,
+        block_id: uuid.UUID,
+        card_id: uuid.UUID,
+        card_update_data: CardUpdate,
+    ) -> CardResponse:
         # check roots
 
         card_data = card_update_data.model_dump(exclude_unset=True)

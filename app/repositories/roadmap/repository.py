@@ -36,17 +36,20 @@ class RoadMapRepository(IRoadMapRepository):
         return [map_to_schema(roadmap) for roadmap in db_roadmaps]
 
     @repository_handler
-    async def get_user_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> RoadMapInDB:
+    async def get_user_roadmap(
+        self, user_id: uuid.UUID, roadmap_id: uuid.UUID
+    ) -> RoadMapInDB:
         stmt = select(RoadMap).where(
-            RoadMap.road_id == roadmap_id,
-            RoadMap.user_id == user_id
+            RoadMap.road_id == roadmap_id, RoadMap.user_id == user_id
         )
         result = await self.session.execute(stmt)
         roadmap = result.scalar_one_or_none()
         return map_to_schema(roadmap) if roadmap else None
 
     @repository_handler
-    async def get_user_roadmaps(self, user_id: uuid.UUID, filters: RoadMapFilters) -> List[RoadMapInDB]:
+    async def get_user_roadmaps(
+        self, user_id: uuid.UUID, filters: RoadMapFilters
+    ) -> List[RoadMapInDB]:
         stmt = select(RoadMap).where(RoadMap.user_id == user_id)
 
         if filters.title:
@@ -72,25 +75,22 @@ class RoadMapRepository(IRoadMapRepository):
     async def delete_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> bool:
         async with self._transaction():
             stmt = delete(RoadMap).where(
-                RoadMap.road_id == roadmap_id,
-                RoadMap.user_id == user_id
+                RoadMap.road_id == roadmap_id, RoadMap.user_id == user_id
             )
             result = await self.session.execute(stmt)
             return result.rowcount > 0
 
     @repository_handler
-    async def update_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID, roadmap_data: dict) -> RoadMapInDB:
+    async def update_roadmap(
+        self, user_id: uuid.UUID, roadmap_id: uuid.UUID, roadmap_data: dict
+    ) -> RoadMapInDB:
         async with self._transaction():
             stmt = (
                 update(RoadMap)
-                .where(
-                    RoadMap.road_id == roadmap_id,
-                    RoadMap.user_id == user_id
-                )
+                .where(RoadMap.road_id == roadmap_id, RoadMap.user_id == user_id)
                 .values(**roadmap_data)
                 .returning(RoadMap)
             )
             result = await self.session.execute(stmt)
             db_roadmap = result.scalar_one_or_none()
             return map_to_schema(db_roadmap) if db_roadmap else None
-

@@ -36,8 +36,7 @@ class CardInDB(BaseModel):
         from_attributes = True
 
 
-class CardResponse(CardInDB):
-    ...
+class CardResponse(CardInDB): ...
 
 
 class CardStatus(str, Enum):
@@ -52,4 +51,3 @@ class CardFilters(BaseModel):
     example: Optional[str] = None
     comment: Optional[str] = None
     status: Optional[CardStatus] = None
-

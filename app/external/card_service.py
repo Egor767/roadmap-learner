@@ -9,9 +9,9 @@ async def get_card_from_service(user_id: str, card_id: str) -> Optional[dict]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                    f"{BASE_URL}/cards/{card_id}",
-                    params={"user_id": user_id},
-                    timeout=aiohttp.ClientTimeout(total=5)
+                f"{BASE_URL}/cards/{card_id}",
+                params={"user_id": user_id},
+                timeout=aiohttp.ClientTimeout(total=5),
             ) as response:
                 if response.status == 200:
                     return await response.json()
@@ -19,4 +19,3 @@ async def get_card_from_service(user_id: str, card_id: str) -> Optional[dict]:
 
     except Exception:
         return
-
