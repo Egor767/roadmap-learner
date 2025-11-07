@@ -43,7 +43,7 @@ class BlockStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class BlockFilters(BaseModel):
+class BlockFilters:
     title: Optional[str] = None
     description: Optional[str] = None
     status: Optional[BlockStatus] = None

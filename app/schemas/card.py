@@ -16,9 +16,9 @@ class CardCreate(BaseModel):
 class CardUpdate(BaseModel):
     term: Optional[str] = None
     definition: Optional[str] = None
-    example: Optional[str]
-    comment: Optional[str]
-    status: Optional[str]
+    example: Optional[str] = None
+    comment: Optional[str] = None
+    status: Optional[str] = None
 
 
 class CardInDB(BaseModel):

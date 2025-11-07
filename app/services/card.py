@@ -62,14 +62,14 @@ class CardService:
 
         card_data = card_create_data.model_dump()
         card_data["block_id"] = block_id
-        card_data["card_id"] = generate_base_id()
+        card_data["id"] = await generate_base_id()
 
         logger.info(
             f"Creating new card: {card_create_data.term} for block (block_id={card_data.get('block_id')}: {card_data.get('block_data')}"
         )
         created_card = await self.repo.create_card(card_data)
 
-        logger.info(f"Card created successfully: {created_card.card_id}")
+        logger.info(f"Card created successfully: {created_card.id}")
         return CardResponse.model_validate(created_card)
 
     @service_handler

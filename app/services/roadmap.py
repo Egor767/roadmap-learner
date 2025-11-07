@@ -58,14 +58,14 @@ class RoadMapService:
 
         roadmap_data = roadmap_create_data.model_dump()
         roadmap_data["user_id"] = user_id
-        roadmap_data["road_id"] = generate_base_id()
+        roadmap_data["id"] = await generate_base_id()
 
         logger.info(
             f"Creating new roadmap: {roadmap_create_data.title} for user: {user_id}"
         )
         created_roadmap = await self.repo.create_roadmap(roadmap_data)
 
-        logger.info(f"Roadmap created successfully: {created_roadmap.road_id}")
+        logger.info(f"Roadmap created successfully: {created_roadmap.id}")
         return RoadMapResponse.model_validate(created_roadmap)
 
     @service_handler

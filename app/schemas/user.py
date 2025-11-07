@@ -21,7 +21,7 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    user_id: BaseIDType
+    id: BaseIDType
     created_at: datetime
     updated_at: datetime
 
@@ -30,7 +30,7 @@ class UserResponse(UserBase):
 
 
 class UserInDB(UserBase):
-    user_id: BaseIDType
+    id: BaseIDType
     username: str
     email: str
     hashed_password: str

@@ -28,11 +28,13 @@ class UserRepository:
         return [map_to_schema(user) for user in users]
 
     @repository_handler
-    async def get_user_by_id(self, uid: BaseIDType) -> UserInDB:
+    async def get_user_by_id(self, uid: BaseIDType) -> Optional[UserInDB]:
         stmt = select(User).where(User.id == uid)
         result = await self.session.execute(stmt)
         db_user = result.scalar_one_or_none()
-        return map_to_schema(db_user)
+        if db_user:
+            return UserInDB.from_orm(db_user)
+        return
 
     @repository_handler
     async def get_users(self, filters: UserFilters) -> List[UserInDB]:

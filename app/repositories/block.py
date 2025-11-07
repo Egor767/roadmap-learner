@@ -85,13 +85,13 @@ class BlockRepository:
 
     @repository_handler
     async def update_block(
-        self, road_id: BaseIDType, block_id: BaseIDType, block_data: dict
+        self, roadmap_id: BaseIDType, block_id: BaseIDType, block_data: dict
     ) -> BlockInDB:
         async with transaction_manager(self.session):
             stmt = (
                 update(Block)
                 .where(Block.id == block_id)
-                .where(Block.roadmap_id == road_id)
+                .where(Block.roadmap_id == roadmap_id)
                 .values(**block_data)
                 .returning(Block)
             )
