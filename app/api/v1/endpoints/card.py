@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from app.core.dependencies import get_card_service
 from app.core.handlers import router_handler
 from app.schemas.card import CardResponse, CardCreate, CardUpdate, CardFilters
-from app.services.card.service import CardService
+from app.services.card import CardService
 
 router = APIRouter(
     prefix="/roadmaps/{roadmap_id}/blocks/{block_id}/cards", tags=["cards"]

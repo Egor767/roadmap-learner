@@ -1,33 +1,22 @@
-import uuid
 from typing import List, Optional
-from contextlib import asynccontextmanager
 
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.logging import user_repo_logger as logger
-from app.models.postgres.user import User
-from app.repositories.user.interface import IUserRepository
-from app.schemas.user import UserInDB, UserFilters
+from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
+from app.core.types import BaseIDType
+from app.models.postgres.user import User
+from app.schemas.user import UserInDB, UserFilters
 
 
 def map_to_schema(db_user: User) -> UserInDB:
     return UserInDB.model_validate(db_user)
 
 
-class UserRepository(IUserRepository):
+class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
-
-    @asynccontextmanager
-    async def _transaction(self):
-        try:
-            yield
-            await self.session.commit()
-        except Exception:
-            await self.session.rollback()
-            raise
 
     @repository_handler
     async def get_all_users(self) -> List[UserInDB]:
@@ -37,8 +26,8 @@ class UserRepository(IUserRepository):
         return [map_to_schema(user) for user in users]
 
     @repository_handler
-    async def get_user_by_id(self, uid: uuid.UUID) -> Optional[UserInDB]:
-        stmt = select(User).where(User.user_id == uid)
+    async def get_user_by_id(self, uid: BaseIDType) -> Optional[UserInDB]:
+        stmt = select(User).where(User.id == uid)
         result = await self.session.execute(stmt)
         db_user = result.scalar_one_or_none()
         return map_to_schema(db_user) if db_user else None
@@ -58,27 +47,24 @@ class UserRepository(IUserRepository):
 
     @repository_handler
     async def create_user(self, user_data: dict) -> UserInDB:
-        async with self._transaction():
+        async with transaction_manager(self.session):
             stmt = insert(User).values(**user_data).returning(User)
             result = await self.session.execute(stmt)
             db_user = result.scalar_one()
             return map_to_schema(db_user)
 
     @repository_handler
-    async def delete_user(self, uid: uuid.UUID) -> bool:
-        async with self._transaction():
-            stmt = delete(User).where(User.user_id == uid)
+    async def delete_user(self, uid: BaseIDType) -> bool:
+        async with transaction_manager(self.session):
+            stmt = delete(User).where(User.id == uid)
             result = await self.session.execute(stmt)
             return result.rowcount > 0
 
     @repository_handler
-    async def update_user(self, uid: uuid.UUID, user_data: dict) -> Optional[UserInDB]:
-        async with self._transaction():
+    async def update_user(self, uid: BaseIDType, user_data: dict) -> Optional[UserInDB]:
+        async with transaction_manager(self.session):
             stmt = (
-                update(User)
-                .where(User.user_id == uid)
-                .values(**user_data)
-                .returning(User)
+                update(User).where(User.id == uid).values(**user_data).returning(User)
             )
             result = await self.session.execute(stmt)
             db_user = result.scalar_one_or_none()

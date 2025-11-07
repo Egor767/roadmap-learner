@@ -3,19 +3,28 @@ from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.roadmap.repository import RoadMapRepository
-from app.repositories.user.repository import UserRepository
-from app.repositories.block.repository import BlockRepository
-from app.repositories.card.repository import CardRepository
-from app.repositories.session_manager.repository import SessionManagerRepository
+from app.repositories.roadmap import RoadmapRepository
+from app.repositories.user import UserRepository
+from app.repositories.block import BlockRepository
+from app.repositories.card import CardRepository
+from app.repositories.session_manager import SessionManagerRepository
 
-from app.services.roadmap.service import RoadMapService
-from app.services.user.service import UserService
-from app.services.block.service import BlockService
-from app.services.card.service import CardService
-from app.services.session_manager.service import SessionManagerService
+from app.services.roadmap import RoadMapService
+from app.services.user import UserService
+from app.services.block import BlockService
+from app.services.card import CardService
+from app.services.session_manager import SessionManagerService
 
 from app.models.postgres.db_helper import db_helper
+
+
+async def transaction_manager(session: AsyncSession):
+    try:
+        yield
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
@@ -40,14 +49,14 @@ async def get_user_service(
 # roadmap
 async def get_roadmap_repository(
     session: AsyncSession = Depends(get_db_session),
-) -> RoadMapRepository:
-    return RoadMapRepository(session)
+) -> RoadmapRepository:
+    return RoadmapRepository(session)
 
 
 async def get_roadmap_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> RoadMapService:
-    repo = RoadMapRepository(session)
+    repo = RoadmapRepository(session)
     return RoadMapService(repo)
 
 

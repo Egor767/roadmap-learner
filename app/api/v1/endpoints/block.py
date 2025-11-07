@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, status
 from app.core.dependencies import get_block_service
 from app.core.handlers import router_handler
 from app.schemas.block import BlockResponse, BlockCreate, BlockUpdate, BlockFilters
-from app.services.block.service import BlockService
+from app.services.block import BlockService
 
 router = APIRouter(prefix="/roadmaps/{roadmap_id}/blocks", tags=["blocks"])
 

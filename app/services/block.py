@@ -1,14 +1,15 @@
-import uuid
 from typing import List
 
 from app.core.handlers import service_handler
-from app.repositories.block.interface import IBlockRepository
+from app.core.types import BaseIDType
+from app.repositories.block import BlockRepository
 from app.schemas.block import BlockCreate, BlockResponse, BlockUpdate, BlockFilters
 from app.core.logging import block_service_logger as logger
+from shared.generate_id import generate_base_id
 
 
 class BlockService:
-    def __init__(self, repo: IBlockRepository):
+    def __init__(self, repo: BlockRepository):
         self.repo = repo
 
     @service_handler
@@ -20,7 +21,7 @@ class BlockService:
 
     @service_handler
     async def get_roadmap_blocks(
-        self, user_id: uuid.UUID, road_id: uuid.UUID, filters: BlockFilters
+        self, user_id: BaseIDType, road_id: BaseIDType, filters: BlockFilters
     ) -> List[BlockResponse]:
         # check roots
 
@@ -31,7 +32,7 @@ class BlockService:
 
     @service_handler
     async def get_roadmap_block(
-        self, user_id: uuid.UUID, road_id: uuid.UUID, block_id: uuid.UUID
+        self, user_id: BaseIDType, road_id: BaseIDType, block_id: BaseIDType
     ) -> BlockResponse:
         # check roots
 
@@ -43,7 +44,9 @@ class BlockService:
         return BlockResponse.model_validate(block)
 
     @service_handler
-    async def get_block(self, user_id: uuid.UUID, block_id: uuid.UUID) -> BlockResponse:
+    async def get_block(
+        self, user_id: BaseIDType, block_id: BaseIDType
+    ) -> BlockResponse:
         # check roots
 
         block = await self.repo.get_block(block_id)
@@ -55,13 +58,13 @@ class BlockService:
 
     @service_handler
     async def create_block(
-        self, user_id: uuid.UUID, road_id: uuid.UUID, block_create_data: BlockCreate
+        self, user_id: BaseIDType, road_id: BaseIDType, block_create_data: BlockCreate
     ) -> BlockResponse:
         # check roots
 
         block_data = block_create_data.model_dump()
         block_data["road_id"] = road_id
-        block_data["block_id"] = uuid.uuid4()
+        block_data["block_id"] = generate_base_id()
 
         logger.info(
             f"Creating new block: {block_create_data.title} for roadmap (roadmap_id={block_data.get('road_id')}): {block_data}"
@@ -73,7 +76,7 @@ class BlockService:
 
     @service_handler
     async def delete_block(
-        self, user_id: uuid.UUID, road_id: uuid.UUID, block_id: uuid.UUID
+        self, user_id: BaseIDType, road_id: BaseIDType, block_id: BaseIDType
     ):
         # check roots
 
@@ -87,9 +90,9 @@ class BlockService:
     @service_handler
     async def update_block(
         self,
-        user_id: uuid.UUID,
-        road_id: uuid.UUID,
-        block_id: uuid.UUID,
+        user_id: BaseIDType,
+        road_id: BaseIDType,
+        block_id: BaseIDType,
         block_update_data: BlockUpdate,
     ) -> BlockResponse:
         # check roots

@@ -1,9 +1,9 @@
 from enum import Enum
-
 from pydantic import BaseModel
-import uuid
 from datetime import datetime
 from typing import Optional
+
+from app.core.types import BaseIDType
 
 
 class RoadMapCreate(BaseModel):
@@ -18,8 +18,8 @@ class RoadMapUpdate(BaseModel):
 
 
 class RoadMapInDB(BaseModel):
-    road_id: uuid.UUID
-    user_id: uuid.UUID
+    id: BaseIDType
+    user_id: BaseIDType
     title: str
     description: Optional[str]
     status: str

@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.orm import (
     DeclarativeBase,
     declared_attr,
@@ -15,4 +16,8 @@ class Base(DeclarativeBase):
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"
 
-    id: Mapped[BaseIDType] = mapped_column(primary_key=True)
+    id: Mapped[BaseIDType] = mapped_column(
+        primary_key=True,
+        default=BaseIDType,
+        server_default=text("gen_random_uuid()"),
+    )

@@ -2,8 +2,9 @@ from enum import Enum
 from pydantic import BaseModel
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, List
 
+from app.core.types import BaseIDType
 from app.schemas.card import CardStatus
 
 
@@ -22,22 +23,22 @@ class SessionStatus(str, Enum):
 
 
 class SessionCreate(BaseModel):
-    roadmap_id: uuid.UUID
-    block_id: Optional[uuid.UUID] = None
+    roadmap_id: BaseIDType
+    block_id: Optional[BaseIDType] = None
     mode: SessionMode
     settings: SessionSettings = SessionSettings()
 
 
 class SessionInDB(BaseModel):
-    session_id: uuid.UUID
-    user_id: uuid.UUID
-    roadmap_id: uuid.UUID
-    block_id: Optional[uuid.UUID] = None
+    id: BaseIDType
+    user_id: BaseIDType
+    roadmap_id: BaseIDType
+    block_id: Optional[BaseIDType] = None
 
     mode: SessionMode
 
     status: SessionStatus
-    card_queue: List[uuid.UUID] = []
+    card_queue: List[BaseIDType] = []
     current_card_index: int
 
     correct_answers: int
@@ -64,16 +65,16 @@ class SessionUpdate(BaseModel):
 
 
 class SessionFilters(BaseModel):
-    roadmap_id: Optional[uuid.UUID] = None
+    roadmap_id: Optional[BaseIDType] = None
     block_id: Optional[uuid.UUID] = None
     mode: Optional[SessionMode] = None
     status: Optional[SessionStatus] = None
 
 
 class SessionResult(BaseModel):
-    session_id: uuid.UUID
-    user_id: uuid.UUID
-    roadmap_id: uuid.UUID
+    id: BaseIDType
+    user_id: BaseIDType
+    roadmap_id: BaseIDType
     mode: SessionMode
     total_cards: int
     correct_answers: int
@@ -84,5 +85,5 @@ class SessionResult(BaseModel):
 
 
 class SubmitAnswerRequest(BaseModel):
-    card_id: uuid.UUID
+    card_id: BaseIDType
     answer: CardStatus

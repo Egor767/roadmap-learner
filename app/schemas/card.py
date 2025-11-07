@@ -1,9 +1,9 @@
 from enum import Enum
-
 from pydantic import BaseModel
-import uuid
 from datetime import datetime
 from typing import Optional
+
+from app.core.types import BaseIDType
 
 
 class CardCreate(BaseModel):
@@ -22,8 +22,8 @@ class CardUpdate(BaseModel):
 
 
 class CardInDB(BaseModel):
-    card_id: uuid.UUID
-    block_id: uuid.UUID
+    id: BaseIDType
+    block_id: BaseIDType
     term: str
     definition: str = None
     example: Optional[str]

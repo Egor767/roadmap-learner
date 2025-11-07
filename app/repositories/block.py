@@ -1,13 +1,12 @@
-import uuid
-from contextlib import asynccontextmanager
 from typing import List
 
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
+from app.core.types import BaseIDType
 from app.models.postgres.block import Block
-from app.repositories.block.interface import IBlockRepository
 from app.schemas.block import BlockInDB, BlockFilters
 
 
@@ -15,18 +14,9 @@ def map_to_schema(db_block: Block) -> BlockInDB:
     return BlockInDB.model_validate(db_block)
 
 
-class BlockRepository(IBlockRepository):
+class BlockRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
-
-    @asynccontextmanager
-    async def _transaction(self):
-        try:
-            yield
-            await self.session.commit()
-        except Exception:
-            await self.session.rollback()
-            raise
 
     @repository_handler
     async def get_all_blocks(self) -> List[BlockInDB]:
@@ -37,18 +27,18 @@ class BlockRepository(IBlockRepository):
 
     @repository_handler
     async def get_roadmap_block(
-        self, road_id: uuid.UUID, block_id: uuid.UUID
+        self, roadmap_id: BaseIDType, block_id: BaseIDType
     ) -> BlockInDB:
-        stmt = select(Block).where(Block.block_id == block_id, Block.road_id == road_id)
+        stmt = select(Block).where(Block.id == block_id, Block.roadmap_id == roadmap_id)
         result = await self.session.execute(stmt)
         block = result.scalar_one_or_none()
         return map_to_schema(block) if block else None
 
     @repository_handler
     async def get_roadmap_blocks(
-        self, road_id: uuid.UUID, filters: BlockFilters
+        self, roadmap_id: BaseIDType, filters: BlockFilters
     ) -> List[BlockInDB]:
-        stmt = select(Block).where(Block.road_id == road_id)
+        stmt = select(Block).where(Block.roadmap_id == roadmap_id)
 
         if filters.title:
             stmt = stmt.where(Block.title == filters.title)
@@ -62,37 +52,37 @@ class BlockRepository(IBlockRepository):
         return [map_to_schema(block) for block in db_blocks]
 
     @repository_handler
-    async def get_block(self, block_id: uuid.UUID) -> BlockInDB:
-        stmt = select(Block).where(Block.block_id == block_id)
+    async def get_block(self, block_id: BaseIDType) -> BlockInDB:
+        stmt = select(Block).where(Block.id == block_id)
         result = await self.session.execute(stmt)
         db_block = result.scalar_one_or_none()
         return map_to_schema(db_block) if db_block else None
 
     @repository_handler
     async def create_block(self, block_data: dict) -> BlockInDB:
-        async with self._transaction():
+        async with transaction_manager(self.session):
             stmt = insert(Block).values(**block_data).returning(Block)
             result = await self.session.execute(stmt)
             db_block = result.scalar_one()
             return map_to_schema(db_block)
 
     @repository_handler
-    async def delete_block(self, road_id: uuid.UUID, block_id: uuid.UUID) -> bool:
-        async with self._transaction():
+    async def delete_block(self, roadmap_id: BaseIDType, block_id: BaseIDType) -> bool:
+        async with transaction_manager(self.session):
             stmt = delete(Block).where(
-                Block.road_id == road_id, Block.block_id == block_id
+                Block.roadmap_id == roadmap_id, Block.id == block_id
             )
             result = await self.session.execute(stmt)
             return result.rowcount > 0
 
     @repository_handler
     async def update_block(
-        self, road_id: uuid.UUID, block_id: uuid.UUID, block_data: dict
+        self, road_id: BaseIDType, block_id: BaseIDType, block_data: dict
     ) -> BlockInDB:
-        async with self._transaction():
+        async with transaction_manager(self.session):
             stmt = (
                 update(Block)
-                .where(Block.road_id == road_id, Block.block_id == block_id)
+                .where(Block.roadmap_id == road_id, Block.id == block_id)
                 .values(**block_data)
                 .returning(Block)
             )

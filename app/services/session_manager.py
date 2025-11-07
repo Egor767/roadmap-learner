@@ -1,40 +1,26 @@
-import uuid
 from typing import List
 
 from fastapi import HTTPException
 
 from app.core.handlers import service_handler
 from app.core.logging import session_manager_service_logger as logger
+from app.core.types import BaseIDType
 from app.external.card_service import get_card_from_service
-from app.repositories.session_manager.interface import ISessionManagerRepository
-from app.schemas.card import CardResponse, CardStatus
+from app.external.session_manager_service import calculate_session_stats
+from app.repositories.session_manager import SessionManagerRepository
+from app.schemas.card import CardResponse
 from app.schemas.session_manager import (
     SessionResponse,
-    SessionUpdate,
     SessionCreate,
     SessionFilters,
     SessionResult,
-    SessionInDB,
     SubmitAnswerRequest,
 )
-
-
-def calculate_session_stats(session: SessionInDB) -> dict:
-    total_answers = (
-        session.correct_answers + session.incorrect_answers + session.review_answers
-    )
-    accuracy_percentage = (
-        (session.correct_answers / total_answers * 100) if total_answers > 0 else 0.0
-    )
-
-    return {
-        "total_cards": len(session.card_queue) if session.card_queue else 0,
-        "accuracy_percentage": round(accuracy_percentage, 2),
-    }
+from shared.generate_id import generate_base_id
 
 
 class SessionManagerService:
-    def __init__(self, repo: ISessionManagerRepository):
+    def __init__(self, repo: SessionManagerRepository):
         self.repo = repo
 
     @service_handler
@@ -48,7 +34,7 @@ class SessionManagerService:
 
     @service_handler
     async def get_user_session(
-        self, user_id: uuid.UUID, session_id: uuid.UUID
+        self, user_id: BaseIDType, session_id: BaseIDType
     ) -> SessionResponse:
         session = await self.repo.get_user_session(user_id, session_id)
         if not session:
@@ -59,7 +45,7 @@ class SessionManagerService:
 
     @service_handler
     async def get_user_sessions(
-        self, user_id: uuid.UUID, filters: SessionFilters
+        self, user_id: BaseIDType, filters: SessionFilters
     ) -> List[SessionResponse]:
         sessions = await self.repo.get_user_sessions(user_id, filters)
         validated_sessions = [
@@ -72,27 +58,26 @@ class SessionManagerService:
 
     @service_handler
     async def create_session(
-        self, user_id: uuid.UUID, session_create_data: SessionCreate
+        self, user_id: BaseIDType, session_create_data: SessionCreate
     ) -> SessionResponse:
         # need to check here if existing
 
         session_data = session_create_data.model_dump()
-        # пока так
         del session_data["settings"]
         session_data["user_id"] = user_id
-        session_data["session_id"] = uuid.uuid4()
+        session_data["id"] = generate_base_id()
 
         logger.info(
             f"Creating new session: {session_create_data.mode} for user: {user_id}"
         )
-        created_session = await self.repo.create_session(session_data)
+        created_session = await self.repo.create_session(user_id, session_data)
 
         logger.info(f"Session created successfully: {created_session.session_id}")
         return SessionResponse.model_validate(created_session)
 
     @service_handler
     async def finish_session(
-        self, user_id: uuid.UUID, session_id: uuid.UUID
+        self, user_id: BaseIDType, session_id: BaseIDType
     ) -> SessionResult:
         finished_session = await self.repo.finish_session(user_id, session_id)
 
@@ -109,7 +94,9 @@ class SessionManagerService:
         return SessionResult.model_validate(result_data)
 
     @service_handler
-    async def abandon_session(self, user_id: uuid.UUID, session_id: uuid.UUID) -> bool:
+    async def abandon_session(
+        self, user_id: BaseIDType, session_id: BaseIDType
+    ) -> bool:
         success = await self.repo.abandon_session(user_id, session_id)
 
         if success:
@@ -123,7 +110,7 @@ class SessionManagerService:
 
     @service_handler
     async def get_next_card(
-        self, user_id: uuid.UUID, session_id: uuid.UUID
+        self, user_id: BaseIDType, session_id: BaseIDType
     ) -> CardResponse:
         next_card_id = await self.repo.get_next_card_id(user_id, session_id)
 
@@ -142,8 +129,8 @@ class SessionManagerService:
     @service_handler
     async def submit_answer(
         self,
-        user_id: uuid.UUID,
-        session_id: uuid.UUID,
+        user_id: BaseIDType,
+        session_id: BaseIDType,
         answer_data: SubmitAnswerRequest,
     ) -> SessionResponse:
         # need ro check if session exist, status==active, if mode==exam then answer_data.answer!=review
@@ -161,7 +148,7 @@ class SessionManagerService:
         return SessionResponse.model_validate(updated_session)
 
     @service_handler
-    async def delete_session(self, user_id: uuid.UUID, session_id: uuid.UUID) -> bool:
+    async def delete_session(self, user_id: BaseIDType, session_id: BaseIDType) -> bool:
         # check roots
 
         success = await self.repo.delete_session(user_id, session_id)

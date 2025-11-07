@@ -11,7 +11,7 @@ from app.schemas.roadmap import (
     RoadMapUpdate,
     RoadMapFilters,
 )
-from app.services.roadmap.service import RoadMapService
+from app.services.roadmap import RoadMapService
 
 router = APIRouter(prefix="/roadmaps", tags=["roadmaps"])
 

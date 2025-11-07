@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -14,7 +14,7 @@ from app.schemas.session_manager import (
     SessionResult,
     SubmitAnswerRequest,
 )
-from app.services.session_manager.service import SessionManagerService
+from app.services.session_manager import SessionManagerService
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 

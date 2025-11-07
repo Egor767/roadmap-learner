@@ -1,9 +1,10 @@
+from datetime import datetime
 from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel
-import uuid
-from datetime import datetime
-from typing import Optional
+
+from app.core.types import BaseIDType
 
 
 class BlockCreate(BaseModel):
@@ -20,8 +21,8 @@ class BlockUpdate(BaseModel):
 
 
 class BlockInDB(BaseModel):
-    block_id: uuid.UUID
-    road_id: uuid.UUID
+    id: BaseIDType
+    roadmap_id: BaseIDType
     title: str
     description: Optional[str] = None
     order_index: int

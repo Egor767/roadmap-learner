@@ -1,8 +1,8 @@
-import uuid
 from typing import List
 
 from app.core.handlers import service_handler
-from app.repositories.roadmap.interface import IRoadMapRepository
+from app.core.types import BaseIDType
+from app.repositories.roadmap import RoadmapRepository
 from app.schemas.roadmap import (
     RoadMapCreate,
     RoadMapResponse,
@@ -10,10 +10,11 @@ from app.schemas.roadmap import (
     RoadMapFilters,
 )
 from app.core.logging import roadmap_service_logger as logger
+from shared.generate_id import generate_base_id
 
 
 class RoadMapService:
-    def __init__(self, repo: IRoadMapRepository):
+    def __init__(self, repo: RoadmapRepository):
         self.repo = repo
 
     @service_handler
@@ -27,7 +28,7 @@ class RoadMapService:
 
     @service_handler
     async def get_user_roadmap(
-        self, user_id: uuid.UUID, roadmap_id: uuid.UUID
+        self, user_id: BaseIDType, roadmap_id: BaseIDType
     ) -> RoadMapResponse:
         roadmap = await self.repo.get_user_roadmap(user_id, roadmap_id)
         if not roadmap:
@@ -38,7 +39,7 @@ class RoadMapService:
 
     @service_handler
     async def get_user_roadmaps(
-        self, user_id: uuid.UUID, filters: RoadMapFilters
+        self, user_id: BaseIDType, filters: RoadMapFilters
     ) -> List[RoadMapResponse]:
         roadmaps = await self.repo.get_user_roadmaps(user_id, filters)
         validated_roadmaps = [
@@ -51,13 +52,13 @@ class RoadMapService:
 
     @service_handler
     async def create_roadmap(
-        self, user_id: uuid.UUID, roadmap_create_data: RoadMapCreate
+        self, user_id: BaseIDType, roadmap_create_data: RoadMapCreate
     ) -> RoadMapResponse:
         # need to check here if existing
 
         roadmap_data = roadmap_create_data.model_dump()
         roadmap_data["user_id"] = user_id
-        roadmap_data["road_id"] = uuid.uuid4()
+        roadmap_data["road_id"] = generate_base_id()
 
         logger.info(
             f"Creating new roadmap: {roadmap_create_data.title} for user: {user_id}"
@@ -68,7 +69,7 @@ class RoadMapService:
         return RoadMapResponse.model_validate(created_roadmap)
 
     @service_handler
-    async def delete_roadmap(self, user_id: uuid.UUID, roadmap_id: uuid.UUID) -> bool:
+    async def delete_roadmap(self, user_id: BaseIDType, roadmap_id: BaseIDType) -> bool:
         success = await self.repo.delete_roadmap(user_id, roadmap_id)
         if success:
             logger.info(f"Roadmap deleted successfully: {roadmap_id}")
@@ -79,8 +80,8 @@ class RoadMapService:
     @service_handler
     async def update_roadmap(
         self,
-        user_id: uuid.UUID,
-        roadmap_id: uuid.UUID,
+        user_id: BaseIDType,
+        roadmap_id: BaseIDType,
         roadmap_update_data: RoadMapUpdate,
     ) -> RoadMapResponse:
         roadmap_data = roadmap_update_data.model_dump(exclude_unset=True)

@@ -1,15 +1,16 @@
-import uuid
 from typing import List
 
 from app.core.handlers import service_handler
 from app.core.logging import user_service_logger as logger
 from app.core.security import get_password_hash
-from app.repositories.user.interface import IUserRepository
+from app.core.types import BaseIDType
+from app.repositories.user import UserRepository
 from app.schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
+from shared.generate_id import generate_base_id
 
 
 class UserService:
-    def __init__(self, repo: IUserRepository):
+    def __init__(self, repo: UserRepository):
         self.repo = repo
 
     @service_handler
@@ -20,7 +21,7 @@ class UserService:
         return validated_users
 
     @service_handler
-    async def get_user_by_id(self, user_id: uuid.UUID) -> UserResponse:
+    async def get_user_by_id(self, user_id: BaseIDType) -> UserResponse:
         user = await self.repo.get_user_by_id(user_id)
         if not user:
             logger.warning(f"User not found with id: {user_id}")
@@ -50,7 +51,7 @@ class UserService:
         user_data = user_create_model.model_dump()
         user_data["hashed_password"] = hashed_password
         del user_data["password"]
-        user_data["user_id"] = uuid.uuid4()
+        user_data["user_id"] = generate_base_id()
 
         logger.info(f"Creating new user: {user_create_model.username}")
         created_user = await self.repo.create_user(user_data)
@@ -59,7 +60,9 @@ class UserService:
         return UserResponse.model_validate(created_user)
 
     @service_handler
-    async def delete_user(self, current_user_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    async def delete_user(
+        self, current_user_id: BaseIDType, user_id: BaseIDType
+    ) -> bool:
         # check roots
 
         success = await self.repo.delete_user(user_id)
@@ -72,8 +75,8 @@ class UserService:
     @service_handler
     async def update_user(
         self,
-        current_user_id: uuid.UUID,
-        user_id: uuid.UUID,
+        current_user_id: BaseIDType,
+        user_id: BaseIDType,
         user_update_model: UserUpdate,
     ) -> UserResponse:
         # check roots
