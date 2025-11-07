@@ -1,31 +1,23 @@
-import uuid
-
-from sqlalchemy import Column, String, DateTime, Text, Integer, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func
+from sqlalchemy import String, Enum as SQLEnum
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
+from .mixins import BlockRelationMixin, TimestampMixin
 
 
-class Card(Base):
-    card_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    block_id = Column(UUID(as_uuid=True), nullable=False)
-    term = Column(String(255), nullable=False)
-    definition = Column(Text, nullable=False)
-    example = Column(Text)
-    comment = Column(Text)
-    status = Column(
+class Card(TimestampMixin, BlockRelationMixin, Base):
+    _block_back_populates = "cards"
+
+    term: Mapped[str] = mapped_column(String(40), nullable=False)
+    definition: Mapped[str] = mapped_column(String(40), nullable=False)
+    example: Mapped[str] = mapped_column(String(40))
+    comment: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(
         SQLEnum("unknown", "known", "review", name="card_status"), default="unknown"
     )
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), onupdate=func.now(), default=func.now()
-    )
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(id={self.id}, term={self.term!r}), status={self.status}"
 
     def __repr__(self):
-        return (
-            f"<Card(id={self.card_id}, "
-            f"block_id ={self.block_id}, "
-            f"term={self.term}, "
-            f"status={self.status})>"
-        )
+        return str(self)

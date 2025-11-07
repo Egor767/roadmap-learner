@@ -1,14 +1,16 @@
-from datetime import datetime
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy import String, DateTime, Enum as SQLEnum
-from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy.sql import func
+from sqlalchemy import String, Enum as SQLEnum
+from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from .base import Base
-from .mixins import UserRelationMixin
+from .mixins import UserRelationMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from .block import Block
 
 
-class Roadmap(UserRelationMixin, Base):
+class Roadmap(TimestampMixin, UserRelationMixin, Base):
     _user_back_populates = "roadmaps"
 
     title: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -16,15 +18,8 @@ class Roadmap(UserRelationMixin, Base):
     status: Mapped[str] = mapped_column(
         SQLEnum("draft", "active", "archived", name="roadmap_status"), default="draft"
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=func.now(), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        onupdate=func.now(),
-        default=func.now(),
-        server_default=func.now(),
-    )
+
+    blocks: Mapped[List["Block"]] = relationship(back_populates="roadmap")
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}), status={self.status}"

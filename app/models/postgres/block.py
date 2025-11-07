@@ -1,31 +1,29 @@
-import uuid
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy import Column, String, DateTime, Text, Integer, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func
+from sqlalchemy import String, Integer, Enum as SQLEnum
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from .base import Base
+from .mixins import RoadmapRelationMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from .card import Card
 
 
-class Block(Base):
-    block_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    road_id = Column(UUID(as_uuid=True), nullable=False)
-    title = Column(String(255), nullable=False)
-    description = Column(Text)
-    order_index = Column(Integer, nullable=False)
-    status = Column(
+class Block(TimestampMixin, RoadmapRelationMixin, Base):
+    _roadmap_back_populates = "blocks"
+
+    title: Mapped[str] = mapped_column(String(30), nullable=False)
+    description: Mapped[str] = mapped_column(String(30))
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(
         SQLEnum("draft", "active", "archived", name="block_status"), default="draft"
     )
-    created_at = Column(DateTime(timezone=True), default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), onupdate=func.now(), default=func.now()
-    )
+
+    cards: Mapped[List["Card"]] = relationship(back_populates="block")
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}), status={self.status}"
 
     def __repr__(self):
-        return (
-            f"<Block(id={self.user_id}, "
-            f"road_id ={self.road_id}, "
-            f"title={self.title}, "
-            f"order_index={self.order_index}, "
-            f"status]({self.status})>"
-        )
+        return str(self)
