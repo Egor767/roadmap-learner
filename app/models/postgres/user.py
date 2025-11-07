@@ -8,6 +8,7 @@ from .mixins import TimestampMixin
 
 if TYPE_CHECKING:
     from .roadmap import Roadmap
+    from .session_manager import Session
 
 
 class User(TimestampMixin, Base):
@@ -16,7 +17,7 @@ class User(TimestampMixin, Base):
     hashed_password: Mapped[str] = mapped_column(String(50), nullable=False)
 
     roadmaps: Mapped[List["Roadmap"]] = relationship(back_populates="user")
-    sessuinos
+    sessions: Mapped[List["Session"]] = relationship(back_populates="user")
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={self.id}, username={self.username!r})"

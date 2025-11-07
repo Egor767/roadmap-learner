@@ -2,13 +2,21 @@ from sqlalchemy import Column, DateTime, Integer, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from .base import Base
-from .mixins import TimestampMixin
+from .mixins import (
+    TimestampMixin,
+    UserRelationMixin,
+    RoadmapRelationMixin,
+    BlockRelationMixin,
+)
 
 
-class Session(TimestampMixin, Base):
-    user_id = Column(UUID(as_uuid=True), nullable=False)
-    roadmap_id = Column(UUID(as_uuid=True), nullable=False)
-    block_id = Column(UUID(as_uuid=True), nullable=True)
+class Session(
+    TimestampMixin, UserRelationMixin, RoadmapRelationMixin, BlockRelationMixin, Base
+):
+    _user_back_populates = "sessions"
+    _roadmap_back_populates = None
+    _block_back_populates = None
+    _block_id_nullable = True
 
     mode = Column(SQLEnum("review", "exam", name="session_mode"), nullable=False)
 
