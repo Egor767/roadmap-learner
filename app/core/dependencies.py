@@ -15,11 +15,11 @@ from app.services.block.service import BlockService
 from app.services.card.service import CardService
 from app.services.session_manager.service import SessionManagerService
 
-from app.core.db import db
+from app.models.postgres.db_helper import db_helper
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
-    async for session in db.get_session():
+    async for session in db_helper.session_dependency():
         yield session
 
 
