@@ -1,15 +1,23 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, DateTime, func
+from sqlalchemy import ForeignKey, DateTime, func, text
 from sqlalchemy.orm import declared_attr, Mapped, mapped_column, relationship
 
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 
 if TYPE_CHECKING:
     from .user import User
     from .roadmap import Roadmap
     from .block import Block
+
+
+class IdMixin:
+    id: Mapped[BaseIdType] = mapped_column(
+        primary_key=True,
+        default=BaseIdType,
+        server_default=text("gen_random_uuid()"),
+    )
 
 
 class UserRelationMixin:
@@ -18,7 +26,7 @@ class UserRelationMixin:
     _user_back_populates: str | None = None
 
     @declared_attr
-    def user_id(cls) -> Mapped[BaseIDType]:
+    def user_id(cls) -> Mapped[BaseIdType]:
         return mapped_column(
             ForeignKey("users.id"),
             unique=cls._user_id_unique,
@@ -51,7 +59,7 @@ class RoadmapRelationMixin:
     _roadmap_back_populates: str | None = None
 
     @declared_attr
-    def roadmap_id(cls) -> Mapped[BaseIDType]:
+    def roadmap_id(cls) -> Mapped[BaseIdType]:
         return mapped_column(
             ForeignKey("roadmaps.id"),
             unique=cls._roadmap_id_unique,
@@ -72,7 +80,7 @@ class BlockRelationMixin:
     _block_back_populates: str | None = None
 
     @declared_attr
-    def block_id(cls) -> Mapped[BaseIDType]:
+    def block_id(cls) -> Mapped[BaseIdType]:
         return mapped_column(
             ForeignKey("blocks.id"),
             unique=cls._block_id_unique,

@@ -1,3 +1,3 @@
 import uuid
 
-BaseIDType = uuid.UUID
+BaseIdType = uuid.UUID

@@ -1,7 +1,7 @@
 from typing import List
 
 from app.core.handlers import service_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.repositories.roadmap import RoadmapRepository
 from app.schemas.roadmap import (
     RoadMapCreate,
@@ -28,7 +28,7 @@ class RoadMapService:
 
     @service_handler
     async def get_user_roadmap(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType
+        self, user_id: BaseIdType, roadmap_id: BaseIdType
     ) -> RoadMapResponse:
         roadmap = await self.repo.get_user_roadmap(user_id, roadmap_id)
         if not roadmap:
@@ -39,7 +39,7 @@ class RoadMapService:
 
     @service_handler
     async def get_user_roadmaps(
-        self, user_id: BaseIDType, filters: RoadMapFilters
+        self, user_id: BaseIdType, filters: RoadMapFilters
     ) -> List[RoadMapResponse]:
         roadmaps = await self.repo.get_user_roadmaps(user_id, filters)
         validated_roadmaps = [
@@ -52,7 +52,7 @@ class RoadMapService:
 
     @service_handler
     async def create_roadmap(
-        self, user_id: BaseIDType, roadmap_create_data: RoadMapCreate
+        self, user_id: BaseIdType, roadmap_create_data: RoadMapCreate
     ) -> RoadMapResponse:
         # need to check here if existing
 
@@ -69,7 +69,7 @@ class RoadMapService:
         return RoadMapResponse.model_validate(created_roadmap)
 
     @service_handler
-    async def delete_roadmap(self, user_id: BaseIDType, roadmap_id: BaseIDType) -> bool:
+    async def delete_roadmap(self, user_id: BaseIdType, roadmap_id: BaseIdType) -> bool:
         success = await self.repo.delete_roadmap(user_id, roadmap_id)
         if success:
             logger.info(f"Roadmap deleted successfully: {roadmap_id}")
@@ -80,8 +80,8 @@ class RoadMapService:
     @service_handler
     async def update_roadmap(
         self,
-        user_id: BaseIDType,
-        roadmap_id: BaseIDType,
+        user_id: BaseIdType,
+        roadmap_id: BaseIdType,
         roadmap_update_data: RoadMapUpdate,
     ) -> RoadMapResponse:
         roadmap_data = roadmap_update_data.model_dump(exclude_unset=True)

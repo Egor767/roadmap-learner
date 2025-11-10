@@ -4,13 +4,13 @@ from sqlalchemy import String, Integer, Enum as SQLEnum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from .base import Base
-from .mixins import RoadmapRelationMixin, TimestampMixin
+from .mixins import RoadmapRelationMixin, TimestampMixin, IdMixin
 
 if TYPE_CHECKING:
     from .card import Card
 
 
-class Block(TimestampMixin, RoadmapRelationMixin, Base):
+class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
     _roadmap_back_populates = "blocks"
 
     title: Mapped[str] = mapped_column(String(30), nullable=False)

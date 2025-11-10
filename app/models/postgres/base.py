@@ -1,23 +1,20 @@
-from sqlalchemy import text
+from sqlalchemy import MetaData
 from sqlalchemy.orm import (
     DeclarativeBase,
     declared_attr,
-    Mapped,
-    mapped_column,
 )
 
-from app.core.types import BaseIDType
+from app.core.config import settings
+from app.utils import camel_case_to_snake_case
 
 
 class Base(DeclarativeBase):
     __abstract__ = True
 
+    metadata = MetaData(
+        naming_convention=settings.db.naming_convention,
+    )
+
     @declared_attr.directive
     def __tablename__(cls) -> str:
-        return f"{cls.__name__.lower()}s"
-
-    id: Mapped[BaseIDType] = mapped_column(
-        primary_key=True,
-        default=BaseIDType,
-        server_default=text("gen_random_uuid()"),
-    )
+        return f"{camel_case_to_snake_case(cls.__name__)}s"

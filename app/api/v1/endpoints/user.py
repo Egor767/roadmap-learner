@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.core.dependencies import get_user_service
 from app.core.handlers import router_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
 from app.services.user import UserService
 
@@ -21,7 +21,7 @@ async def get_all_users(user_service: UserService = Depends(get_user_service)):
 @router.get("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 @router_handler
 async def get_user_by_id(
-    user_id: BaseIDType, user_service: Annotated[UserService, Depends(get_user_service)]
+    user_id: BaseIdType, user_service: Annotated[UserService, Depends(get_user_service)]
 ):
     return await user_service.get_user_by_id(user_id)
 
@@ -49,8 +49,8 @@ async def create_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 @router_handler
 async def delete_user(
-    current_user_id: BaseIDType,  # Depends(get_current_user)
-    user_id: BaseIDType,
+    current_user_id: BaseIdType,  # Depends(get_current_user)
+    user_id: BaseIdType,
     user_service: Annotated[UserService, Depends(get_user_service)],
 ):
     await user_service.delete_user(current_user_id, user_id)
@@ -60,8 +60,8 @@ async def delete_user(
 # -------------------------------------- UPDATE --------------------------------------
 @router.patch("/{user_id}", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def update_user(
-    current_user_id: BaseIDType,  # Depends(get_current_user)
-    user_id: BaseIDType,  # query param
+    current_user_id: BaseIdType,  # Depends(get_current_user)
+    user_id: BaseIdType,  # query param
     user_data: UserUpdate,
     user_service: Annotated[UserService, Depends(get_user_service)],
 ):

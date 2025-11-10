@@ -3,7 +3,7 @@ from typing import List
 from app.core.handlers import service_handler
 from app.core.logging import user_service_logger as logger
 from app.core.security import get_password_hash
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.repositories.user import UserRepository
 from app.schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
 from app.shared.generate_id import generate_base_id
@@ -21,7 +21,7 @@ class UserService:
         return validated_users
 
     @service_handler
-    async def get_user_by_id(self, user_id: BaseIDType) -> UserResponse:
+    async def get_user_by_id(self, user_id: BaseIdType) -> UserResponse:
         user = await self.repo.get_user_by_id(user_id)
         if not user:
             logger.warning(f"User not found with id: {user_id}")
@@ -61,7 +61,7 @@ class UserService:
 
     @service_handler
     async def delete_user(
-        self, current_user_id: BaseIDType, user_id: BaseIDType
+        self, current_user_id: BaseIdType, user_id: BaseIdType
     ) -> bool:
         # check roots
 
@@ -75,8 +75,8 @@ class UserService:
     @service_handler
     async def update_user(
         self,
-        current_user_id: BaseIDType,
-        user_id: BaseIDType,
+        current_user_id: BaseIdType,
+        user_id: BaseIdType,
         user_update_model: UserUpdate,
     ) -> UserResponse:
         # check roots

@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, List
 
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.schemas.card import CardStatus
 
 
@@ -23,22 +23,22 @@ class SessionStatus(str, Enum):
 
 
 class SessionCreate(BaseModel):
-    roadmap_id: BaseIDType
-    block_id: Optional[BaseIDType] = None
+    roadmap_id: BaseIdType
+    block_id: Optional[BaseIdType] = None
     mode: SessionMode
     settings: SessionSettings = SessionSettings()
 
 
 class SessionInDB(BaseModel):
-    id: BaseIDType
-    user_id: BaseIDType
-    roadmap_id: BaseIDType
-    block_id: Optional[BaseIDType] = None
+    id: BaseIdType
+    user_id: BaseIdType
+    roadmap_id: BaseIdType
+    block_id: Optional[BaseIdType] = None
 
     mode: SessionMode
 
     status: SessionStatus
-    card_queue: List[BaseIDType] = []
+    card_queue: List[BaseIdType] = []
     current_card_index: int
 
     correct_answers: int
@@ -65,16 +65,16 @@ class SessionUpdate(BaseModel):
 
 
 class SessionFilters(BaseModel):
-    roadmap_id: Optional[BaseIDType] = None
+    roadmap_id: Optional[BaseIdType] = None
     block_id: Optional[uuid.UUID] = None
     mode: Optional[SessionMode] = None
     status: Optional[SessionStatus] = None
 
 
 class SessionResult(BaseModel):
-    id: BaseIDType
-    user_id: BaseIDType
-    roadmap_id: BaseIDType
+    id: BaseIdType
+    user_id: BaseIdType
+    roadmap_id: BaseIdType
     mode: SessionMode
     total_cards: int
     correct_answers: int
@@ -85,5 +85,5 @@ class SessionResult(BaseModel):
 
 
 class SubmitAnswerRequest(BaseModel):
-    card_id: BaseIDType
+    card_id: BaseIdType
     answer: CardStatus

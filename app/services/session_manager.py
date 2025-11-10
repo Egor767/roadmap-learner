@@ -4,7 +4,7 @@ from fastapi import HTTPException
 
 from app.core.handlers import service_handler
 from app.core.logging import session_manager_service_logger as logger
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.external.card_service import get_card_from_service
 from app.external.session_manager_service import calculate_session_stats
 from app.repositories.session_manager import SessionManagerRepository
@@ -34,7 +34,7 @@ class SessionManagerService:
 
     @service_handler
     async def get_user_session(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> SessionResponse:
         session = await self.repo.get_user_session(user_id, session_id)
         if not session:
@@ -45,7 +45,7 @@ class SessionManagerService:
 
     @service_handler
     async def get_user_sessions(
-        self, user_id: BaseIDType, filters: SessionFilters
+        self, user_id: BaseIdType, filters: SessionFilters
     ) -> List[SessionResponse]:
         sessions = await self.repo.get_user_sessions(user_id, filters)
         validated_sessions = [
@@ -58,7 +58,7 @@ class SessionManagerService:
 
     @service_handler
     async def create_session(
-        self, user_id: BaseIDType, session_create_data: SessionCreate
+        self, user_id: BaseIdType, session_create_data: SessionCreate
     ) -> SessionResponse:
         # need to check here if existing
 
@@ -77,7 +77,7 @@ class SessionManagerService:
 
     @service_handler
     async def finish_session(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> SessionResult:
         finished_session = await self.repo.finish_session(user_id, session_id)
 
@@ -95,7 +95,7 @@ class SessionManagerService:
 
     @service_handler
     async def abandon_session(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> bool:
         success = await self.repo.abandon_session(user_id, session_id)
 
@@ -110,7 +110,7 @@ class SessionManagerService:
 
     @service_handler
     async def get_next_card(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> CardResponse:
         next_card_id = await self.repo.get_next_card_id(user_id, session_id)
 
@@ -129,8 +129,8 @@ class SessionManagerService:
     @service_handler
     async def submit_answer(
         self,
-        user_id: BaseIDType,
-        session_id: BaseIDType,
+        user_id: BaseIdType,
+        session_id: BaseIdType,
         answer_data: SubmitAnswerRequest,
     ) -> SessionResponse:
         # need ro check if session exist, status==active, if mode==exam then answer_data.answer!=review
@@ -148,7 +148,7 @@ class SessionManagerService:
         return SessionResponse.model_validate(updated_session)
 
     @service_handler
-    async def delete_session(self, user_id: BaseIDType, session_id: BaseIDType) -> bool:
+    async def delete_session(self, user_id: BaseIdType, session_id: BaseIdType) -> bool:
         # check roots
 
         success = await self.repo.delete_session(user_id, session_id)

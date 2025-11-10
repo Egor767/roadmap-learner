@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.core.dependencies import get_card_service
 from app.core.handlers import router_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.schemas.card import CardResponse, CardCreate, CardUpdate, CardFilters
 from app.services.card import CardService
 
@@ -25,9 +25,9 @@ async def get_all_blocks(
 @router.get("/{card_id}", response_model=CardResponse)
 @router_handler
 async def get_block_card(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    block_id: BaseIDType,  # query param
-    card_id: BaseIDType,
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    block_id: BaseIdType,  # query param
+    card_id: BaseIdType,
     card_service: Annotated[CardService, Depends(get_card_service)],
 ):
     return await card_service.get_block_card(user_id, block_id, card_id)
@@ -36,8 +36,8 @@ async def get_block_card(
 @router.get("/", response_model=List[CardResponse])
 @router_handler
 async def get_block_cards(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    block_id: BaseIDType,  # query param
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    block_id: BaseIdType,  # query param
     filters: Annotated[CardFilters, Depends()],
     card_service: Annotated[CardService, Depends(get_card_service)],
 ):
@@ -48,8 +48,8 @@ async def get_block_cards(
 @router.post("/", response_model=CardResponse, status_code=201)
 @router_handler
 async def create_card(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    block_id: BaseIDType,  # query param
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    block_id: BaseIdType,  # query param
     card_data: CardCreate,
     card_service: Annotated[CardService, Depends(get_card_service)],
 ):
@@ -60,9 +60,9 @@ async def create_card(
 @router.delete("/{card_id}", status_code=204)
 @router_handler
 async def delete_card(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    block_id: BaseIDType,  # query param
-    card_id: BaseIDType,
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    block_id: BaseIdType,  # query param
+    card_id: BaseIdType,
     card_service: Annotated[CardService, Depends(get_card_service)],
 ):
     await card_service.delete_card(user_id, block_id, card_id)
@@ -72,9 +72,9 @@ async def delete_card(
 @router.patch("/{card_id}", response_model=CardResponse)
 @router_handler
 async def update_card(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    block_id: BaseIDType,  # query param
-    card_id: BaseIDType,
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    block_id: BaseIdType,  # query param
+    card_id: BaseIdType,
     card_data: CardUpdate,
     card_service: Annotated[CardService, Depends(get_card_service)],
 ):
@@ -88,8 +88,8 @@ resource_router = APIRouter(prefix="/cards", tags=["cards-resources"])
 @resource_router.get("/{card_id}", response_model=CardResponse)
 @router_handler
 async def get_card(
-    user_id: BaseIDType,
-    card_id: BaseIDType,
+    user_id: BaseIdType,
+    card_id: BaseIdType,
     card_service: Annotated[CardService, Depends(get_card_service)],
 ):
     return await card_service.get_card(user_id, card_id)

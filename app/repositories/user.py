@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import transaction_manager
 from app.core.handlers import repository_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.models.postgres.user import User
 from app.schemas.user import UserInDB, UserFilters
 
@@ -28,7 +28,7 @@ class UserRepository:
         return [map_to_schema(user) for user in users]
 
     @repository_handler
-    async def get_user_by_id(self, uid: BaseIDType) -> Optional[UserInDB]:
+    async def get_user_by_id(self, uid: BaseIdType) -> Optional[UserInDB]:
         stmt = select(User).where(User.id == uid)
         result = await self.session.execute(stmt)
         db_user = result.scalar_one_or_none()
@@ -58,14 +58,14 @@ class UserRepository:
             return map_to_schema(db_user)
 
     @repository_handler
-    async def delete_user(self, uid: BaseIDType) -> bool:
+    async def delete_user(self, uid: BaseIdType) -> bool:
         async with transaction_manager(self.session):
             stmt = delete(User).where(User.id == uid)
             result = await self.session.execute(stmt)
             return result.rowcount > 0
 
     @repository_handler
-    async def update_user(self, uid: BaseIDType, user_data: dict) -> UserInDB:
+    async def update_user(self, uid: BaseIdType, user_data: dict) -> UserInDB:
         async with transaction_manager(self.session):
             stmt = (
                 update(User).where(User.id == uid).values(**user_data).returning(User)

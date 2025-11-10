@@ -7,11 +7,17 @@ from .mixins import (
     UserRelationMixin,
     RoadmapRelationMixin,
     BlockRelationMixin,
+    IdMixin,
 )
 
 
 class Session(
-    TimestampMixin, UserRelationMixin, RoadmapRelationMixin, BlockRelationMixin, Base
+    IdMixin,
+    TimestampMixin,
+    UserRelationMixin,
+    RoadmapRelationMixin,
+    BlockRelationMixin,
+    Base,
 ):
     _user_back_populates = "sessions"
     _roadmap_back_populates = None

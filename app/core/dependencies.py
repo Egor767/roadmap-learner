@@ -1,9 +1,13 @@
 from typing import AsyncGenerator, Annotated, TYPE_CHECKING
 
 from fastapi import Depends
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db_session
+from app.models.postgres import User
+from app.models.postgres import AccessToken
 from app.repositories.roadmap import RoadmapRepository
 from app.repositories.user import UserRepository
 from app.repositories.block import BlockRepository
@@ -17,7 +21,18 @@ from app.services.card import CardService
 from app.services.session_manager import SessionManagerService
 
 
+# AUTH
+async def get_access_token_db(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+):
+    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+
+
 # USER
+async def get_user_db(session: Annotated[AsyncSession, Depends(get_db_session)]):
+    yield SQLAlchemyUserDatabase(session, User)
+
+
 async def get_user_repository(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> UserRepository:

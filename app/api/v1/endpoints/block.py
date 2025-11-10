@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.core.dependencies import get_block_service
 from app.core.handlers import router_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.schemas.block import BlockResponse, BlockCreate, BlockUpdate, BlockFilters
 from app.services.block import BlockService
 
@@ -23,9 +23,9 @@ async def get_all_blocks(
 @router.get("/{block_id}", response_model=BlockResponse)
 @router_handler
 async def get_roadmap_block(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    roadmap_id: BaseIDType,  # query param
-    block_id: BaseIDType,
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    roadmap_id: BaseIdType,  # query param
+    block_id: BaseIdType,
     block_service: Annotated[BlockService, Depends(get_block_service)],
 ):
     return await block_service.get_roadmap_block(user_id, roadmap_id, block_id)
@@ -34,8 +34,8 @@ async def get_roadmap_block(
 @router.get("/", response_model=List[BlockResponse])
 @router_handler
 async def get_roadmap_blocks(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    roadmap_id: BaseIDType,  # query param
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    roadmap_id: BaseIdType,  # query param
     filters: Annotated[BlockFilters, Depends()],
     block_service: Annotated[BlockService, Depends(get_block_service)],
 ):
@@ -46,8 +46,8 @@ async def get_roadmap_blocks(
 @router.post("/", response_model=BlockResponse, status_code=201)
 @router_handler
 async def create_block(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    roadmap_id: BaseIDType,  # query param
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    roadmap_id: BaseIdType,  # query param
     block_data: BlockCreate,
     block_service: Annotated[BlockService, Depends(get_block_service)],
 ):
@@ -58,9 +58,9 @@ async def create_block(
 @router.delete("/{block_id}", status_code=204)
 @router_handler
 async def delete_block(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    road_id: BaseIDType,  # query param
-    block_id: BaseIDType,
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    road_id: BaseIdType,  # query param
+    block_id: BaseIdType,
     block_service: Annotated[BlockService, Depends(get_block_service)],
 ):
     await block_service.delete_block(user_id, road_id, block_id)
@@ -70,9 +70,9 @@ async def delete_block(
 @router.patch("/{block_id}", response_model=BlockResponse)
 @router_handler
 async def update_block(
-    user_id: BaseIDType,  # = Depends(get_current_user)
-    roadmap_id: BaseIDType,  # query param
-    block_id: BaseIDType,
+    user_id: BaseIdType,  # = Depends(get_current_user)
+    roadmap_id: BaseIdType,  # query param
+    block_id: BaseIdType,
     block_data: BlockUpdate,
     block_service: Annotated[BlockService, Depends(get_block_service)],
 ):
@@ -86,8 +86,8 @@ resource_router = APIRouter(prefix="/blocks", tags=["blocks-resources"])
 @resource_router.get("/{block_id}", response_model=BlockResponse)
 @router_handler
 async def get_block(
-    user_id: BaseIDType,
-    block_id: BaseIDType,
+    user_id: BaseIdType,
+    block_id: BaseIdType,
     block_service: Annotated[BlockService, Depends(get_block_service)],
 ):
     return await block_service.get_block(user_id, block_id)

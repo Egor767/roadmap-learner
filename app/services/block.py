@@ -1,7 +1,7 @@
 from typing import List
 
 from app.core.handlers import service_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.repositories.block import BlockRepository
 from app.schemas.block import BlockCreate, BlockResponse, BlockUpdate, BlockFilters
 from app.core.logging import block_service_logger as logger
@@ -21,7 +21,7 @@ class BlockService:
 
     @service_handler
     async def get_roadmap_blocks(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType, filters: BlockFilters
+        self, user_id: BaseIdType, roadmap_id: BaseIdType, filters: BlockFilters
     ) -> List[BlockResponse]:
         # check roots
 
@@ -32,7 +32,7 @@ class BlockService:
 
     @service_handler
     async def get_roadmap_block(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType, block_id: BaseIDType
+        self, user_id: BaseIdType, roadmap_id: BaseIdType, block_id: BaseIdType
     ) -> BlockResponse:
         # check roots
 
@@ -45,7 +45,7 @@ class BlockService:
 
     @service_handler
     async def get_block(
-        self, user_id: BaseIDType, block_id: BaseIDType
+        self, user_id: BaseIdType, block_id: BaseIdType
     ) -> BlockResponse:
         # check roots
 
@@ -59,8 +59,8 @@ class BlockService:
     @service_handler
     async def create_block(
         self,
-        user_id: BaseIDType,
-        roadmap_id: BaseIDType,
+        user_id: BaseIdType,
+        roadmap_id: BaseIdType,
         block_create_data: BlockCreate,
     ) -> BlockResponse:
         # check roots
@@ -79,7 +79,7 @@ class BlockService:
 
     @service_handler
     async def delete_block(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType, block_id: BaseIDType
+        self, user_id: BaseIdType, roadmap_id: BaseIdType, block_id: BaseIdType
     ):
         # check roots
 
@@ -93,9 +93,9 @@ class BlockService:
     @service_handler
     async def update_block(
         self,
-        user_id: BaseIDType,
-        roadmap_id: BaseIDType,
-        block_id: BaseIDType,
+        user_id: BaseIdType,
+        roadmap_id: BaseIdType,
+        block_id: BaseIdType,
         block_update_data: BlockUpdate,
     ) -> BlockResponse:
         # check roots

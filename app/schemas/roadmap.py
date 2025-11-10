@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 
 
 class RoadMapCreate(BaseModel):
@@ -18,8 +18,8 @@ class RoadMapUpdate(BaseModel):
 
 
 class RoadMapInDB(BaseModel):
-    id: BaseIDType
-    user_id: BaseIDType
+    id: BaseIdType
+    user_id: BaseIdType
     title: str
     description: Optional[str]
     status: str

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import transaction_manager
 from app.core.handlers import repository_handler
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 from app.models.postgres.roadmap import Roadmap
 from app.schemas.roadmap import RoadMapInDB, RoadMapFilters
 
@@ -29,7 +29,7 @@ class RoadmapRepository:
 
     @repository_handler
     async def get_user_roadmap(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType
+        self, user_id: BaseIdType, roadmap_id: BaseIdType
     ) -> RoadMapInDB:
         stmt = (
             select(Roadmap)
@@ -42,7 +42,7 @@ class RoadmapRepository:
 
     @repository_handler
     async def get_user_roadmaps(
-        self, user_id: BaseIDType, filters: RoadMapFilters
+        self, user_id: BaseIdType, filters: RoadMapFilters
     ) -> List[RoadMapInDB]:
         stmt = select(Roadmap).where(Roadmap.user_id == user_id)
 
@@ -66,7 +66,7 @@ class RoadmapRepository:
             return map_to_schema(db_roadmap)
 
     @repository_handler
-    async def delete_roadmap(self, user_id: BaseIDType, roadmap_id: BaseIDType) -> bool:
+    async def delete_roadmap(self, user_id: BaseIdType, roadmap_id: BaseIdType) -> bool:
         async with transaction_manager(self.session):
             stmt = (
                 delete(Roadmap)
@@ -78,7 +78,7 @@ class RoadmapRepository:
 
     @repository_handler
     async def update_roadmap(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType, roadmap_data: dict
+        self, user_id: BaseIdType, roadmap_id: BaseIdType, roadmap_data: dict
     ) -> RoadMapInDB:
         async with transaction_manager(self.session):
             stmt = (

@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 
 
 class BlockCreate(BaseModel):
@@ -21,8 +21,8 @@ class BlockUpdate(BaseModel):
 
 
 class BlockInDB(BaseModel):
-    id: BaseIDType
-    roadmap_id: BaseIDType
+    id: BaseIdType
+    roadmap_id: BaseIdType
     title: str
     description: Optional[str] = None
     order_index: int

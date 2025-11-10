@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-from app.core.types import BaseIDType
+from app.core.types import BaseIdType
 
 
 class UserBase(BaseModel):
@@ -21,7 +21,7 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(UserBase):
-    id: BaseIDType
+    id: BaseIdType
     created_at: datetime
     updated_at: datetime
 
@@ -30,7 +30,7 @@ class UserResponse(UserBase):
 
 
 class UserInDB(UserBase):
-    id: BaseIDType
+    id: BaseIdType
     username: str
     email: str
     hashed_password: str
