@@ -10,7 +10,7 @@ from app.schemas.roadmap import (
     RoadMapFilters,
 )
 from app.core.logging import roadmap_service_logger as logger
-from shared.generate_id import generate_base_id
+from app.shared.generate_id import generate_base_id
 
 
 class RoadMapService:

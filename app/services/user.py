@@ -6,7 +6,7 @@ from app.core.security import get_password_hash
 from app.core.types import BaseIDType
 from app.repositories.user import UserRepository
 from app.schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
-from shared.generate_id import generate_base_id
+from app.shared.generate_id import generate_base_id
 
 
 class UserService:
