@@ -5,7 +5,7 @@ from app.core.types import BaseIDType
 from app.repositories.block import BlockRepository
 from app.schemas.block import BlockCreate, BlockResponse, BlockUpdate, BlockFilters
 from app.core.logging import block_service_logger as logger
-from shared.generate_id import generate_base_id
+from app.shared.generate_id import generate_base_id
 
 
 class BlockService:

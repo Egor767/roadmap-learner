@@ -16,7 +16,7 @@ from app.schemas.session_manager import (
     SessionResult,
     SubmitAnswerRequest,
 )
-from shared.generate_id import generate_base_id
+from app.shared.generate_id import generate_base_id
 
 
 class SessionManagerService:

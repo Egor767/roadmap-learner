@@ -5,7 +5,7 @@ from app.core.types import BaseIDType
 from app.repositories.card import CardRepository
 from app.schemas.card import CardCreate, CardResponse, CardUpdate, CardFilters
 from app.core.logging import card_service_logger as logger
-from shared.generate_id import generate_base_id
+from app.shared.generate_id import generate_base_id
 
 
 class CardService:
