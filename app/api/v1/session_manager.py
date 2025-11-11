@@ -15,7 +15,7 @@ from app.schemas.session_manager import (
     SessionResult,
     SubmitAnswerRequest,
 )
-from app.services.session_manager import SessionManagerService
+from app.services import SessionManagerService
 
 router = APIRouter(
     prefix=settings.api.v1.sessions,

@@ -7,7 +7,7 @@ from app.core.dependencies import get_block_service
 from app.core.handlers import router_handler
 from app.core.types import BaseIdType
 from app.schemas.block import BlockResponse, BlockCreate, BlockUpdate, BlockFilters
-from app.services.block import BlockService
+from app.services import BlockService
 
 router = APIRouter(
     prefix=settings.api.v1.blocks,

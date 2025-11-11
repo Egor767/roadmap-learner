@@ -7,7 +7,7 @@ from pydantic import BaseModel
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-class DBSettings(BaseModel):
+class DBConfig(BaseModel):
     host: str = "localhost"
     port: str = "5433"
     username: str = "postgres"
@@ -61,10 +61,17 @@ class ApiPrefix(BaseModel):
         return path.removeprefix("/")
 
 
+class AccessToken(BaseModel):
+    lifetime_seconds: int = 3600
+    reset_password_token_secret: str
+    verification_token_secret: str
+
+
 class Settings(BaseSettings):
-    db: DBSettings = DBSettings()
+    db: DBConfig
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
+    access_token: AccessToken
 
 
 settings = Settings()

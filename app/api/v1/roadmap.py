@@ -12,7 +12,7 @@ from app.schemas.roadmap import (
     RoadMapUpdate,
     RoadMapFilters,
 )
-from app.services.roadmap import RoadMapService
+from app.services import RoadMapService
 
 router = APIRouter(
     prefix=settings.api.v1.roadmaps,

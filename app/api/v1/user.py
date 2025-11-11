@@ -7,7 +7,7 @@ from app.core.dependencies import get_user_service
 from app.core.handlers import router_handler
 from app.core.types import BaseIdType
 from app.schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
-from app.services.user import UserService
+from app.services import UserService
 
 router = APIRouter(
     prefix=settings.api.v1.users,

@@ -7,7 +7,7 @@ from app.core.dependencies import get_card_service
 from app.core.handlers import router_handler
 from app.core.types import BaseIdType
 from app.schemas.card import CardResponse, CardCreate, CardUpdate, CardFilters
-from app.services.card import CardService
+from app.services import CardService
 
 router = APIRouter(
     prefix=settings.api.v1.cards,
