@@ -1,73 +1,37 @@
 from typing import List, Optional
 
-from sqlalchemy import select, insert, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from core.db import transaction_manager
 from core.handlers import repository_handler
-from core.types import BaseIdType
 from models import User
 from repositories import BaseRepository
-from schemas.user import UserInDB, UserFilters
+from schemas.user import UserFilters
+from schemas.user import UserRead
 
 
-def map_to_schema(db_user: Optional[User]) -> Optional[UserInDB]:
+def map_to_schema(db_user: Optional[User]) -> Optional[UserRead]:
     if db_user:
-        return UserInDB.model_validate(db_user)
+        return UserRead.model_validate(db_user)
     return
 
 
 class UserRepository(BaseRepository):
     @repository_handler
-    async def get_all_users(self) -> List[UserInDB]:
+    async def get_all_users(self) -> List[UserRead]:
         stmt = select(User)
         result = await self.session.execute(stmt)
         users = result.scalars().all()
         return [map_to_schema(user) for user in users]
 
     @repository_handler
-    async def get_user_by_id(self, uid: BaseIdType) -> Optional[UserInDB]:
-        stmt = select(User).where(User.id == uid)
-        result = await self.session.execute(stmt)
-        db_user = result.scalar_one_or_none()
-        if db_user:
-            return UserInDB.from_orm(db_user)
-        return
-
-    @repository_handler
-    async def get_users(self, filters: UserFilters) -> List[UserInDB]:
+    async def get_users(self, filters: UserFilters) -> List[UserRead]:
         stmt = select(User)
 
-        if filters.email:
+        if filters.email is not None:
             stmt = stmt.where(User.email == filters.email)
-        if filters.username:
+        if filters.username is not None:
             stmt = stmt.where(User.username == filters.username)
 
         result = await self.session.execute(stmt)
         users = result.scalars().all()
         return [map_to_schema(user) for user in users]
-
-    @repository_handler
-    async def create_user(self, user_data: dict) -> UserInDB:
-        async with transaction_manager(self.session):
-            stmt = insert(User).values(**user_data).returning(User)
-            result = await self.session.execute(stmt)
-            db_user = result.scalar_one_or_none()
-            return map_to_schema(db_user)
-
-    @repository_handler
-    async def delete_user(self, uid: BaseIdType) -> bool:
-        async with transaction_manager(self.session):
-            stmt = delete(User).where(User.id == uid)
-            result = await self.session.execute(stmt)
-            return result.rowcount > 0
-
-    @repository_handler
-    async def update_user(self, uid: BaseIdType, user_data: dict) -> UserInDB:
-        async with transaction_manager(self.session):
-            stmt = (
-                update(User).where(User.id == uid).values(**user_data).returning(User)
-            )
-            result = await self.session.execute(stmt)
-            db_user = result.scalar_one_or_none()
-            return map_to_schema(db_user)

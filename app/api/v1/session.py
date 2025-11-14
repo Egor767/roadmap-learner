@@ -8,7 +8,7 @@ from core.dependencies import get_session_manager_service
 from core.handlers import router_handler
 from core.types import BaseIdType
 from schemas.card import CardResponse
-from schemas.session_manager import (
+from schemas.session import (
     SessionResponse,
     SessionFilters,
     SessionCreate,

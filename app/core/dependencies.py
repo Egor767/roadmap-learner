@@ -1,6 +1,6 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import Annotated, TYPE_CHECKING, Optional
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from fastapi_users.authentication import AuthenticationBackend
 from fastapi_users.authentication.strategy import DatabaseStrategy
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
@@ -17,6 +17,7 @@ from repositories import (
     CardRepository,
     SessionManagerRepository,
 )
+from schemas.user import UserFilters
 from services import (
     UserService,
     RoadMapService,
@@ -90,6 +91,20 @@ async def get_user_service(
 ) -> UserService:
     repo = UserRepository(session)
     return UserService(repo)
+
+
+async def get_user_filters(
+    email: Optional[str] = Query(None),
+    username: Optional[str] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    is_verified: Optional[bool] = Query(None),
+) -> UserFilters:
+    return UserFilters(
+        email=email,
+        username=username,
+        is_active=is_active,
+        is_verified=is_verified,
+    )
 
 
 # USER MANAGER

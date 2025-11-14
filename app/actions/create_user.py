@@ -3,12 +3,12 @@ import contextlib
 import logging
 from os import getenv
 
+from fastapi_users.exceptions import UserAlreadyExists
+
 from core.dependencies import get_users_db, get_user_manager
 from models import User, db_helper
-from schemas.user_manager import UserCreate
+from schemas.user import UserCreate
 from services import UserManager
-
-from fastapi_users.exceptions import UserAlreadyExists
 
 logger = logging.getLogger("Actions-Logger")
 get_users_db_context = contextlib.asynccontextmanager(get_users_db)

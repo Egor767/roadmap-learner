@@ -9,7 +9,7 @@ from external.card_service import get_card_from_service
 from external.session_manager_service import calculate_session_stats
 from repositories import SessionManagerRepository
 from schemas.card import CardResponse
-from schemas.session_manager import (
+from schemas.session import (
     SessionResponse,
     SessionCreate,
     SessionFilters,

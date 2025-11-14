@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 from sqlalchemy import select, insert, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.db import transaction_manager
 from core.handlers import repository_handler
