@@ -1,16 +1,16 @@
 from typing import List
 
-from app.core.handlers import service_handler
-from app.core.logging import roadmap_service_logger as logger
-from app.core.types import BaseIdType
-from app.repositories import RoadmapRepository
-from app.schemas.roadmap import (
+from core.handlers import service_handler
+from core.logging import roadmap_service_logger as logger
+from core.types import BaseIdType
+from repositories import RoadmapRepository
+from schemas.roadmap import (
     RoadMapCreate,
     RoadMapResponse,
     RoadMapUpdate,
     RoadMapFilters,
 )
-from app.shared.generate_id import generate_base_id
+from shared.generate_id import generate_base_id
 
 
 class RoadMapService:

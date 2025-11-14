@@ -2,17 +2,17 @@ from typing import Annotated, TYPE_CHECKING
 
 from fastapi import APIRouter, Depends
 
-from app.core.authentication.fastapi_users import fastapi_users
-from app.core.config import settings
-from app.core.dependencies import get_users_db
-from app.schemas.user_manager import UserRead, UserUpdate
+from core.authentication.fastapi_users import fastapi_users
+from core.config import settings
+from core.dependencies import get_users_db
+from schemas.user_manager import UserRead, UserUpdate
 
 if TYPE_CHECKING:
-    from app.models.postgres.user import SQLAlchemyUserDatabase
+    from models.user import SQLAlchemyUserDatabase
 
 router = APIRouter(
     prefix=settings.api.v1.users,
-    tags=["Users Fastapi"],
+    tags=["Users"],
 )
 
 

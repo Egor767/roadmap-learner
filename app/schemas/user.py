@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
-from app.core.types import BaseIdType
+from core.types import BaseIdType
 
 
 class UserBase(BaseModel):

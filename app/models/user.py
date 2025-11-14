@@ -8,7 +8,7 @@ from fastapi_users_db_sqlalchemy import (
 from sqlalchemy import String, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.types import BaseIdType
+from core.types import BaseIdType
 from .base import Base
 from .mixins import TimestampMixin, IdMixin
 

@@ -2,17 +2,17 @@ from typing import List, Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.config import settings
-from app.core.dependencies import get_roadmap_service
-from app.core.handlers import router_handler
-from app.core.types import BaseIdType
-from app.schemas.roadmap import (
+from core.config import settings
+from core.dependencies import get_roadmap_service
+from core.handlers import router_handler
+from core.types import BaseIdType
+from schemas.roadmap import (
     RoadMapResponse,
     RoadMapCreate,
     RoadMapUpdate,
     RoadMapFilters,
 )
-from app.services import RoadMapService
+from services import RoadMapService
 
 router = APIRouter(
     prefix=settings.api.v1.roadmaps,

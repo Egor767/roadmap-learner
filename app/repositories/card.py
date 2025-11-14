@@ -3,11 +3,11 @@ from typing import List, Optional
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import transaction_manager
-from app.core.handlers import repository_handler
-from app.core.types import BaseIdType
-from app.models.postgres.card import Card
-from app.schemas.card import CardInDB, CardFilters
+from core.db import transaction_manager
+from core.handlers import repository_handler
+from core.types import BaseIdType
+from models import Card
+from schemas.card import CardInDB, CardFilters
 
 
 def map_to_schema(db_card: Optional[Card]) -> Optional[CardInDB]:

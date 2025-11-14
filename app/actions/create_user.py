@@ -3,10 +3,10 @@ import contextlib
 import logging
 from os import getenv
 
-from app.core.dependencies import get_users_db, get_user_manager
-from app.models.postgres import User, db_helper
-from app.schemas.user_manager import UserCreate
-from app.services import UserManager
+from core.dependencies import get_users_db, get_user_manager
+from models import User, db_helper
+from schemas.user_manager import UserCreate
+from services import UserManager
 
 from fastapi_users.exceptions import UserAlreadyExists
 

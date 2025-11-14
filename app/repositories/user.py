@@ -3,11 +3,11 @@ from typing import List, Optional
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import transaction_manager
-from app.core.handlers import repository_handler
-from app.core.types import BaseIdType
-from app.models.postgres.user import User
-from app.schemas.user import UserInDB, UserFilters
+from core.db import transaction_manager
+from core.handlers import repository_handler
+from core.types import BaseIdType
+from models import User
+from schemas.user import UserInDB, UserFilters
 
 
 def map_to_schema(db_user: Optional[User]) -> Optional[UserInDB]:

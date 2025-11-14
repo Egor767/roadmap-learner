@@ -28,7 +28,9 @@ def upgrade() -> None:
         sa.Column("description", sa.String(length=30), nullable=False),
         sa.Column("order_index", sa.Integer(), nullable=False),
         sa.Column(
-            "status", sa.Enum("draft", "active", "archived", name="block_status"), nullable=False
+            "status",
+            sa.Enum("draft", "active", "archived", name="block_status"),
+            nullable=False,
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -47,7 +49,9 @@ def upgrade() -> None:
         sa.Column("example", sa.String(length=40), nullable=False),
         sa.Column("comment", sa.String(length=40), nullable=False),
         sa.Column(
-            "status", sa.Enum("unknown", "known", "review", name="card_status"), nullable=False
+            "status",
+            sa.Enum("unknown", "known", "review", name="card_status"),
+            nullable=False,
         ),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),

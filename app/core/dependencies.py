@@ -6,18 +6,18 @@ from fastapi_users.authentication.strategy import DatabaseStrategy
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 
-from app.core.authentication.transport import bearer_transport
-from app.core.config import settings
-from app.core.db import get_db_session
-from app.models.postgres import User, AccessToken
-from app.repositories import (
+from core.authentication.transport import bearer_transport
+from core.config import settings
+from core.db import get_db_session
+from models import User, AccessToken
+from repositories import (
     UserRepository,
     RoadmapRepository,
     BlockRepository,
     CardRepository,
     SessionManagerRepository,
 )
-from app.services import (
+from services import (
     UserService,
     RoadMapService,
     BlockService,

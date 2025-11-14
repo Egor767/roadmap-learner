@@ -2,12 +2,12 @@ from typing import List, Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.core.config import settings
-from app.core.dependencies import get_block_service
-from app.core.handlers import router_handler
-from app.core.types import BaseIdType
-from app.schemas.block import BlockResponse, BlockCreate, BlockUpdate, BlockFilters
-from app.services import BlockService
+from core.config import settings
+from core.dependencies import get_block_service
+from core.handlers import router_handler
+from core.types import BaseIdType
+from schemas.block import BlockResponse, BlockCreate, BlockUpdate, BlockFilters
+from services import BlockService
 
 router = APIRouter(
     prefix=settings.api.v1.blocks,

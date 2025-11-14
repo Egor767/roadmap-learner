@@ -3,12 +3,12 @@ from typing import List, Optional
 from sqlalchemy import select, insert, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import transaction_manager
-from app.core.handlers import repository_handler
-from app.core.types import BaseIdType
-from app.models.postgres.session_manager import Session
-from app.schemas.card import CardStatus
-from app.schemas.session_manager import (
+from core.db import transaction_manager
+from core.handlers import repository_handler
+from core.types import BaseIdType
+from models.session_manager import Session
+from schemas.card import CardStatus
+from schemas.session_manager import (
     SessionInDB,
     SessionCreate,
     SessionFilters,

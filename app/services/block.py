@@ -1,11 +1,11 @@
 from typing import List
 
-from app.core.handlers import service_handler
-from app.core.logging import block_service_logger as logger
-from app.core.types import BaseIdType
-from app.repositories.block import BlockRepository
-from app.schemas.block import BlockCreate, BlockResponse, BlockUpdate, BlockFilters
-from app.shared.generate_id import generate_base_id
+from core.handlers import service_handler
+from core.logging import block_service_logger as logger
+from core.types import BaseIdType
+from repositories.block import BlockRepository
+from schemas.block import BlockCreate, BlockResponse, BlockUpdate, BlockFilters
+from shared.generate_id import generate_base_id
 
 
 class BlockService:

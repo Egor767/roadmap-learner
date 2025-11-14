@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from app.core.types import BaseIdType
+from core.types import BaseIdType
 
 
 def id_generator() -> Optional[BaseIdType]:

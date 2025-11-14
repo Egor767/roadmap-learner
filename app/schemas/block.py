@@ -4,7 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from app.core.types import BaseIdType
+from core.types import BaseIdType
 
 
 class BlockCreate(BaseModel):

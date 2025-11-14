@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_users import schemas
 
-from app.core.types import BaseIdType
+from core.types import BaseIdType
 
 
 class UserRead(schemas.BaseUser[BaseIdType]):

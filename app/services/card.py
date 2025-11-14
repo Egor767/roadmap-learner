@@ -1,11 +1,11 @@
 from typing import List
 
-from app.core.handlers import service_handler
-from app.core.logging import card_service_logger as logger
-from app.core.types import BaseIdType
-from app.repositories import CardRepository
-from app.schemas.card import CardCreate, CardResponse, CardUpdate, CardFilters
-from app.shared.generate_id import generate_base_id
+from core.handlers import service_handler
+from core.logging import card_service_logger as logger
+from core.types import BaseIdType
+from repositories import CardRepository
+from schemas.card import CardCreate, CardResponse, CardUpdate, CardFilters
+from shared.generate_id import generate_base_id
 
 
 class CardService:

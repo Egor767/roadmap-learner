@@ -49,7 +49,9 @@ def upgrade() -> None:
         sa.Column("title", sa.String(length=30), nullable=False),
         sa.Column("description", sa.String(length=100), nullable=False),
         sa.Column(
-            "status", sa.Enum("draft", "active", "archived", name="roadmap_status"), nullable=False
+            "status",
+            sa.Enum("draft", "active", "archived", name="roadmap_status"),
+            nullable=False,
         ),
         sa.Column(
             "created_at",

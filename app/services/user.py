@@ -1,12 +1,12 @@
 from typing import List
 
-from app.core.handlers import service_handler
-from app.core.logging import user_service_logger as logger
-from app.core.security import get_password_hash
-from app.core.types import BaseIdType
-from app.repositories import UserRepository
-from app.schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
-from app.shared.generate_id import generate_base_id
+from core.handlers import service_handler
+from core.logging import user_service_logger as logger
+from core.security import get_password_hash
+from core.types import BaseIdType
+from repositories import UserRepository
+from schemas.user import UserCreate, UserResponse, UserFilters, UserUpdate
+from shared.generate_id import generate_base_id
 
 
 class UserService:
