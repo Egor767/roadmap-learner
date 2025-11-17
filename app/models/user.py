@@ -26,7 +26,11 @@ class SQLAlchemyUserDatabase(SQLAlchemyUserDatabaseGeneric):
 
 
 class User(IdMixin, TimestampMixin, Base, SQLAlchemyBaseUserTable[BaseIdType]):
-    username: Mapped[str] = mapped_column(String(20), nullable=True, unique=True)
+    username: Mapped[str] = mapped_column(
+        String(20),
+        nullable=True,
+        unique=True,
+    )
 
     roadmaps: Mapped[List["Roadmap"]] = relationship(back_populates="user")
     sessions: Mapped[List["Session"]] = relationship(back_populates="user")

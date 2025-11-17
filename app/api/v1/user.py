@@ -7,10 +7,10 @@ from core.config import settings
 from core.dependencies import get_users_db, get_user_service, get_user_filters
 from core.handlers import router_handler
 from schemas.user import UserRead, UserUpdate, UserFilters
-from services import UserService
 
 if TYPE_CHECKING:
     from models.user import SQLAlchemyUserDatabase
+    from services import UserService
 
 router = APIRouter(
     prefix=settings.api.v1.users,
@@ -22,7 +22,7 @@ router = APIRouter(
     "",
     response_model=list[UserRead],
 )
-async def get_users_list(
+async def get_users(
     users_db: Annotated[
         "SQLAlchemyUserDatabase",
         Depends(get_users_db),
@@ -34,7 +34,7 @@ async def get_users_list(
 
 @router.get(
     "/filters",
-    response_model=List[UserRead],
+    response_model=list[UserRead],
 )
 @router_handler
 async def get_users_by_filters(
