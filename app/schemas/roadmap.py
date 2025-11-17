@@ -2,45 +2,43 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from core.types import BaseIdType
 
 
-class RoadMapCreate(BaseModel):
+class BaseRoadmap(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
+
+
+class RoadmapCreate(BaseRoadmap):
+    pass
 
 
 class RoadMapUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None
 
 
-class RoadMapInDB(BaseModel):
+class RoadmapRead(BaseRoadmap):
     id: BaseIdType
     user_id: BaseIdType
-    title: str
-    description: Optional[str]
     status: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
-class RoadMapResponse(RoadMapInDB): ...
-
-
-class RoadMapStatus(str, Enum):
+class RoadmapStatus(str, Enum):
     DRAFT = "draft"
     ACTIVE = "active"
     ARCHIVED = "archived"
 
 
-class RoadMapFilters(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[RoadMapStatus] = None
+class RoadmapFilters(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    status: str | None = None

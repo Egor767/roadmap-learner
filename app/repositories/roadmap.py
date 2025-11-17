@@ -7,18 +7,18 @@ from core.handlers import repository_handler
 from core.types import BaseIdType
 from models import Roadmap
 from repositories import BaseRepository
-from schemas.roadmap import RoadMapInDB, RoadMapFilters
+from schemas.roadmap import RoadmapRead, RoadmapFilters
 
 
-def map_to_schema(db_user: Optional[Roadmap]) -> Optional[RoadMapInDB]:
+def map_to_schema(db_user: Optional[Roadmap]) -> Optional[RoadmapRead]:
     if db_user:
-        return RoadMapInDB.model_validate(db_user)
+        return RoadmapRead.model_validate(db_user)
     return
 
 
 class RoadmapRepository(BaseRepository):
     @repository_handler
-    async def get_all_roadmaps(self) -> List[RoadMapInDB]:
+    async def get_all_roadmaps(self) -> List[RoadmapRead]:
         stmt = select(Roadmap)
         result = await self.session.execute(stmt)
         db_roadmaps = result.scalars().all()
@@ -27,7 +27,7 @@ class RoadmapRepository(BaseRepository):
     @repository_handler
     async def get_user_roadmap(
         self, user_id: BaseIdType, roadmap_id: BaseIdType
-    ) -> RoadMapInDB:
+    ) -> RoadmapRead:
         stmt = (
             select(Roadmap)
             .where(Roadmap.id == roadmap_id)
@@ -39,8 +39,8 @@ class RoadmapRepository(BaseRepository):
 
     @repository_handler
     async def get_user_roadmaps(
-        self, user_id: BaseIdType, filters: RoadMapFilters
-    ) -> List[RoadMapInDB]:
+        self, user_id: BaseIdType, filters: RoadmapFilters
+    ) -> List[RoadmapRead]:
         stmt = select(Roadmap).where(Roadmap.user_id == user_id)
 
         if filters.title:
@@ -55,7 +55,7 @@ class RoadmapRepository(BaseRepository):
         return [map_to_schema(roadmap) for roadmap in db_roadmaps]
 
     @repository_handler
-    async def create_roadmap(self, roadmap_data: dict) -> RoadMapInDB:
+    async def create_roadmap(self, roadmap_data: dict) -> RoadmapRead:
         async with transaction_manager(self.session):
             stmt = insert(Roadmap).values(**roadmap_data).returning(Roadmap)
             result = await self.session.execute(stmt)
@@ -76,7 +76,7 @@ class RoadmapRepository(BaseRepository):
     @repository_handler
     async def update_roadmap(
         self, user_id: BaseIdType, roadmap_id: BaseIdType, roadmap_data: dict
-    ) -> RoadMapInDB:
+    ) -> RoadmapRead:
         async with transaction_manager(self.session):
             stmt = (
                 update(Roadmap)

@@ -1,28 +1,27 @@
 from typing import Optional
 
 from fastapi_users import schemas
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from core.types import BaseIdType
 
 
 class UserRead(schemas.BaseUser[BaseIdType]):
-    username: Optional[str] = None
+    username: str | None = None
 
 
 class UserCreate(schemas.BaseUserCreate):
-    username: Optional[str] = None
+    username: str | None = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    username: Optional[str] = None
+    username: str | None = None
 
 
 class UserFilters(BaseModel):
-    email: Optional[EmailStr] = None
-    username: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_verified: Optional[bool] = None
+    email: EmailStr | None = None
+    username: str | None = None
+    is_active: str | None = None
+    is_verified: str | None = None
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")

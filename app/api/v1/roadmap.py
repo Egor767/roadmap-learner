@@ -7,10 +7,9 @@ from core.dependencies import get_roadmap_service
 from core.handlers import router_handler
 from core.types import BaseIdType
 from schemas.roadmap import (
-    RoadMapResponse,
-    RoadMapCreate,
+    RoadmapRead,
     RoadMapUpdate,
-    RoadMapFilters,
+    RoadmapFilters,
 )
 from services import RoadMapService
 
@@ -20,11 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "/all",
-    response_model=List[RoadMapResponse],
-    status_code=status.HTTP_200_OK,
-)
+@router.get("", response_model=List[RoadmapRead])
 @router_handler
 async def get_all_roadmaps(
     roadmap_service: Annotated[
@@ -38,7 +33,7 @@ async def get_all_roadmaps(
 # -------------------------------------- GET ----------------------------------------------
 @router.get(
     "/{roadmap_id}",
-    response_model=RoadMapResponse,
+    response_model=RoadmapRead,
 )
 @router_handler
 async def get_roadmap(
@@ -57,12 +52,12 @@ async def get_roadmap(
 
 @router.get(
     "/",
-    response_model=List[RoadMapResponse],
+    response_model=List[RoadmapRead],
 )
 async def get_roadmaps(
     user_id: BaseIdType,  # = Depends(get_current_user)
     filters: Annotated[
-        RoadMapFilters,
+        RoadmapFilters,
         Depends(),
     ],
     roadmap_service: Annotated[
@@ -77,11 +72,11 @@ async def get_roadmaps(
 
 
 # -------------------------------------- CREATE --------------------------------------
-@router.post("/", response_model=RoadMapResponse, status_code=201)
+@router.post("/", response_model=RoadmapRead, status_code=201)
 @router_handler
 async def create_roadmap(
     user_id: BaseIdType,  # = Depends(get_current_user)
-    roadmap_data: RoadMapCreate,
+    roadmap_data: RoadmapRead,
     roadmap_service: Annotated[
         RoadMapService,
         Depends(get_roadmap_service),
@@ -113,7 +108,7 @@ async def delete_roadmap(
 # -------------------------------------- UPDATE --------------------------------------
 @router.patch(
     "/{roadmap_id}",
-    response_model=RoadMapResponse,
+    response_model=RoadmapRead,
 )
 @router_handler
 async def update_roadmap(
