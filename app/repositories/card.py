@@ -1,13 +1,13 @@
 from typing import List, Optional
 
 from sqlalchemy import select, insert, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import transaction_manager
-from app.core.handlers import repository_handler
-from app.core.types import BaseIDType
-from app.models.postgres.card import Card
-from app.schemas.card import CardInDB, CardFilters
+from core.db import transaction_manager
+from core.handlers import repository_handler
+from core.types import BaseIdType
+from models import Card
+from repositories import BaseRepository
+from schemas.card import CardInDB, CardFilters
 
 
 def map_to_schema(db_card: Optional[Card]) -> Optional[CardInDB]:
@@ -16,10 +16,7 @@ def map_to_schema(db_card: Optional[Card]) -> Optional[CardInDB]:
     return
 
 
-class CardRepository:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
+class CardRepository(BaseRepository):
     @repository_handler
     async def get_all_cards(self) -> List[CardInDB]:
         stmt = select(Card)
@@ -28,7 +25,7 @@ class CardRepository:
         return [map_to_schema(card) for card in db_cards]
 
     @repository_handler
-    async def get_card(self, card_id: BaseIDType) -> CardInDB:
+    async def get_card(self, card_id: BaseIdType) -> CardInDB:
         stmt = select(Card).where(Card.id == card_id)
         result = await self.session.execute(stmt)
         card = result.scalar_one_or_none()
@@ -36,7 +33,7 @@ class CardRepository:
 
     @repository_handler
     async def get_block_card(
-        self, block_id: BaseIDType, card_id: BaseIDType
+        self, block_id: BaseIdType, card_id: BaseIdType
     ) -> CardInDB:
         stmt = select(Card).where(Card.id == card_id).where(Card.block_id == block_id)
         result = await self.session.execute(stmt)
@@ -45,7 +42,7 @@ class CardRepository:
 
     @repository_handler
     async def get_block_cards(
-        self, block_id: BaseIDType, filters: CardFilters
+        self, block_id: BaseIdType, filters: CardFilters
     ) -> List[CardInDB]:
         stmt = select(Card).where(Card.block_id == block_id)
 
@@ -73,7 +70,7 @@ class CardRepository:
             return map_to_schema(db_card)
 
     @repository_handler
-    async def delete_card(self, block_id: BaseIDType, card_id: BaseIDType) -> bool:
+    async def delete_card(self, block_id: BaseIdType, card_id: BaseIdType) -> bool:
         async with transaction_manager(self.session):
             stmt = delete(Card).where(Card.block_id == block_id, Card.id == card_id)
             result = await self.session.execute(stmt)
@@ -81,7 +78,7 @@ class CardRepository:
 
     @repository_handler
     async def update_card(
-        self, block_id: BaseIDType, card_id: BaseIDType, card_data: dict
+        self, block_id: BaseIdType, card_id: BaseIdType, card_data: dict
     ) -> CardInDB:
         async with transaction_manager(self.session):
             stmt = (

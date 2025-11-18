@@ -1,13 +1,13 @@
 from typing import List, Optional
 
 from sqlalchemy import select, insert, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import transaction_manager
-from app.core.handlers import repository_handler
-from app.core.types import BaseIDType
-from app.models.postgres.block import Block
-from app.schemas.block import BlockInDB, BlockFilters
+from core.db import transaction_manager
+from core.handlers import repository_handler
+from core.types import BaseIdType
+from models import Block
+from repositories import BaseRepository
+from schemas.block import BlockInDB, BlockFilters
 
 
 def map_to_schema(db_block: Optional[Block]) -> Optional[BlockInDB]:
@@ -16,10 +16,7 @@ def map_to_schema(db_block: Optional[Block]) -> Optional[BlockInDB]:
     return
 
 
-class BlockRepository:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
+class BlockRepository(BaseRepository):
     @repository_handler
     async def get_all_blocks(self) -> List[BlockInDB]:
         stmt = select(Block)
@@ -29,7 +26,7 @@ class BlockRepository:
 
     @repository_handler
     async def get_roadmap_block(
-        self, roadmap_id: BaseIDType, block_id: BaseIDType
+        self, roadmap_id: BaseIdType, block_id: BaseIdType
     ) -> BlockInDB:
         stmt = (
             select(Block)
@@ -42,7 +39,7 @@ class BlockRepository:
 
     @repository_handler
     async def get_roadmap_blocks(
-        self, roadmap_id: BaseIDType, filters: BlockFilters
+        self, roadmap_id: BaseIdType, filters: BlockFilters
     ) -> List[BlockInDB]:
         stmt = select(Block).where(Block.roadmap_id == roadmap_id)
 
@@ -58,7 +55,7 @@ class BlockRepository:
         return [map_to_schema(block) for block in db_blocks]
 
     @repository_handler
-    async def get_block(self, block_id: BaseIDType) -> BlockInDB:
+    async def get_block(self, block_id: BaseIdType) -> BlockInDB:
         stmt = select(Block).where(Block.id == block_id)
         result = await self.session.execute(stmt)
         db_block = result.scalar_one_or_none()
@@ -73,7 +70,7 @@ class BlockRepository:
             return map_to_schema(db_block)
 
     @repository_handler
-    async def delete_block(self, roadmap_id: BaseIDType, block_id: BaseIDType) -> bool:
+    async def delete_block(self, roadmap_id: BaseIdType, block_id: BaseIdType) -> bool:
         async with transaction_manager(self.session):
             stmt = (
                 delete(Block)
@@ -85,7 +82,7 @@ class BlockRepository:
 
     @repository_handler
     async def update_block(
-        self, roadmap_id: BaseIDType, block_id: BaseIDType, block_data: dict
+        self, roadmap_id: BaseIdType, block_id: BaseIdType, block_data: dict
     ) -> BlockInDB:
         async with transaction_manager(self.session):
             stmt = (

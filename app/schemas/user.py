@@ -1,49 +1,25 @@
-from pydantic import BaseModel
-from datetime import datetime
-from typing import Optional
+from fastapi_users import schemas
+from pydantic import BaseModel, EmailStr, ConfigDict
 
-from app.core.types import BaseIDType
-
-
-class UserBase(BaseModel):
-    username: str
-    email: str
+from core.types import BaseIdType
 
 
-class UserCreate(UserBase):
-    password: str
+class UserRead(schemas.BaseUser[BaseIdType]):
+    username: str | None = None
 
 
-class UserUpdate(BaseModel):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    password: Optional[str] = None
+class UserCreate(schemas.BaseUserCreate):
+    username: str | None = None
 
 
-class UserResponse(UserBase):
-    id: BaseIDType
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class UserInDB(UserBase):
-    id: BaseIDType
-    username: str
-    email: str
-    hashed_password: str
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
+class UserUpdate(schemas.BaseUserUpdate):
+    username: str | None = None
 
 
 class UserFilters(BaseModel):
-    email: Optional[str] = None
-    username: Optional[str] = None
+    email: EmailStr | None = None
+    username: str | None = None
+    is_active: str | None = None
+    is_verified: str | None = None
 
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")

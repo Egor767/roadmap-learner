@@ -8,6 +8,7 @@ dependencies = [
     "aiohttp>=3.13.2",
     "alembic>=1.17.1",
     "asyncpg>=0.30.0",
+    "black>=25.9.0",
     "fastapi>=0.117.1",
     "fastapi-users[oauth,sqlalchemy]>=15.0.1",
     "pydantic-settings>=2.11.0",

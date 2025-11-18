@@ -1,11 +1,15 @@
-import aiohttp
 import os
 from typing import Optional
+
+import aiohttp
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8080/api/v1.0")
 
 
-async def get_card_from_service(user_id: str, card_id: str) -> Optional[dict]:
+async def get_card_from_service(
+    user_id: str,
+    card_id: str,
+) -> Optional[dict]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(

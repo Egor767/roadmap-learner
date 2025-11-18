@@ -1,11 +1,11 @@
 from typing import List
 
-from app.core.handlers import service_handler
-from app.core.types import BaseIDType
-from app.repositories.card import CardRepository
-from app.schemas.card import CardCreate, CardResponse, CardUpdate, CardFilters
-from app.core.logging import card_service_logger as logger
-from app.shared.generate_id import generate_base_id
+from core.handlers import service_handler
+from core.logging import card_service_logger as logger
+from core.types import BaseIdType
+from repositories import CardRepository
+from schemas.card import CardCreate, CardResponse, CardUpdate, CardFilters
+from shared.generate_id import generate_base_id
 
 
 class CardService:
@@ -20,7 +20,7 @@ class CardService:
         return validated_cards
 
     @service_handler
-    async def get_card(self, user_id: BaseIDType, card_id: BaseIDType) -> CardResponse:
+    async def get_card(self, user_id: BaseIdType, card_id: BaseIdType) -> CardResponse:
         # check roots
 
         card = await self.repo.get_card(card_id)
@@ -32,7 +32,7 @@ class CardService:
 
     @service_handler
     async def get_block_cards(
-        self, user_id: BaseIDType, block_id: BaseIDType, filters: CardFilters
+        self, user_id: BaseIdType, block_id: BaseIdType, filters: CardFilters
     ) -> List[CardResponse]:
         # check roots
 
@@ -43,7 +43,7 @@ class CardService:
 
     @service_handler
     async def get_block_card(
-        self, user_id: BaseIDType, block_id: BaseIDType, card_id: BaseIDType
+        self, user_id: BaseIdType, block_id: BaseIdType, card_id: BaseIdType
     ) -> CardResponse:
         # check roots
 
@@ -56,7 +56,7 @@ class CardService:
 
     @service_handler
     async def create_card(
-        self, user_id: BaseIDType, block_id: BaseIDType, card_create_data: CardCreate
+        self, user_id: BaseIdType, block_id: BaseIdType, card_create_data: CardCreate
     ) -> CardResponse:
         # check roots
 
@@ -74,7 +74,7 @@ class CardService:
 
     @service_handler
     async def delete_card(
-        self, user_id: BaseIDType, block_id: BaseIDType, card_id: BaseIDType
+        self, user_id: BaseIdType, block_id: BaseIdType, card_id: BaseIdType
     ):
         # check roots
 
@@ -88,9 +88,9 @@ class CardService:
     @service_handler
     async def update_card(
         self,
-        user_id: BaseIDType,
-        block_id: BaseIDType,
-        card_id: BaseIDType,
+        user_id: BaseIdType,
+        block_id: BaseIdType,
+        card_id: BaseIdType,
         card_update_data: CardUpdate,
     ) -> CardResponse:
         # check roots
