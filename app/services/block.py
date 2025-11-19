@@ -21,7 +21,7 @@ class BlockService:
 
     @service_handler
     async def get_all_blocks(self) -> list[BlockRead]:
-        blocks = await self.repo.get_all_blocks()
+        blocks = await self.repo.get_all()
         logger.info(
             "Successful get all blocks, count: %r",
             len(blocks),
@@ -29,7 +29,7 @@ class BlockService:
         return blocks
 
     @service_handler
-    async def get_blocks(
+    async def get_blocks_by_filters(
         self,
         current_user: User,
         roadmap_id: BaseIdType,
@@ -37,7 +37,7 @@ class BlockService:
     ) -> list[BlockRead]:
         # check roots
 
-        blocks = await self.repo.get_blocks(roadmap_id, filters)
+        blocks = await self.repo.get_by_filters(roadmap_id, filters)
         validated_blocks = [BlockRead.model_validate(block) for block in blocks]
         logger.info(
             "Successful get roadmap blocks, count: %r",
@@ -46,12 +46,15 @@ class BlockService:
         return validated_blocks
 
     @service_handler
-    async def get_roadmap_block(
-        self, user_id: BaseIdType, roadmap_id: BaseIdType, block_id: BaseIdType
+    async def get_roadmap_block_by_id(
+        self,
+        user_id: BaseIdType,
+        roadmap_id: BaseIdType,
+        block_id: BaseIdType,
     ) -> BlockRead:
         # check roots
 
-        block = await self.repo.get_roadmap_block(roadmap_id, block_id)
+        block = await self.repo.get_by_parent(roadmap_id, block_id)
         if not block:
             logger.warning("Block(%r) not found or access denied", block_id)
             raise ValueError("Block not found or access denied")
@@ -59,10 +62,14 @@ class BlockService:
         return BlockRead.model_validate(block)
 
     @service_handler
-    async def get_block(self, user_id: BaseIdType, block_id: BaseIdType) -> BlockRead:
+    async def get_block_by_id(
+        self,
+        user_id: BaseIdType,
+        block_id: BaseIdType,
+    ) -> BlockRead:
         # check roots
 
-        block = await self.repo.get_block(block_id)
+        block = await self.repo.get_by_id(block_id)
         if not block:
             logger.warning("Block(%r) not found or access denied", block_id)
             raise ValueError("Block not found or access denied")
@@ -88,7 +95,7 @@ class BlockService:
             block_data.get("roadmap_id"),
             block_data,
         )
-        created_block = await self.repo.create_block(block_data)
+        created_block = await self.repo.create(block_data)
 
         logger.info(
             "Block created successfully: %r",
@@ -98,11 +105,14 @@ class BlockService:
 
     @service_handler
     async def delete_block(
-        self, user_id: BaseIdType, roadmap_id: BaseIdType, block_id: BaseIdType
+        self,
+        user_id: BaseIdType,
+        roadmap_id: BaseIdType,
+        block_id: BaseIdType,
     ):
         # check roots
 
-        success = await self.repo.delete_block(roadmap_id, block_id)
+        success = await self.repo.delete(roadmap_id, block_id)
         if success:
             logger.info("Block deleted successfully: %r", block_id)
         else:
@@ -125,7 +135,8 @@ class BlockService:
             block_id,
             block_data,
         )
-        updated_block = await self.repo.update_block(roadmap_id, block_id, block_data)
+        # TODO убрал roadmap_id из update() надо проверку принадлежности сделать
+        updated_block = await self.repo.update(block_id, block_data)
 
         if not updated_block:
             logger.warning("Block(%r) not found or access denied", block_id)

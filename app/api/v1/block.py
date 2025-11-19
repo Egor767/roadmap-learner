@@ -1,6 +1,7 @@
 from typing import List, Annotated, TYPE_CHECKING
 
 from fastapi import APIRouter, Depends
+from starlette import status
 
 from core.authentication.fastapi_users import current_active_user
 from core.config import settings
@@ -27,6 +28,7 @@ router = APIRouter(
 
 @router.get(
     "",
+    name="blocks:all_blocks",
     response_model=list[BlockRead],
 )
 @router_handler
@@ -42,6 +44,7 @@ async def get_blocks(
 # -------------------------------------- GET ----------------------------------------------
 @router.get(
     "/filters",
+    name="cards:filter_cards",
     response_model=list[BlockRead],
 )
 @router_handler
@@ -60,7 +63,7 @@ async def get_blocks(
         Depends(get_block_service),
     ],
 ):
-    return await block_service.get_blocks(
+    return await block_service.get_blocks_by_filters(
         current_user,
         roadmap_id,
         filters,
@@ -69,6 +72,7 @@ async def get_blocks(
 
 @router.get(
     "/{block_id}",
+    name="blocks:block",
     response_model=BlockRead,
 )
 @router_handler
@@ -81,7 +85,7 @@ async def get_roadmap_block(
         Depends(get_block_service),
     ],
 ):
-    return await block_service.get_roadmap_block(
+    return await block_service.get_roadmap_block_by_id(
         user_id,
         roadmap_id,
         block_id,
@@ -91,8 +95,8 @@ async def get_roadmap_block(
 # -------------------------------------- CREATE --------------------------------------
 @router.post(
     "/",
+    name="blocks:create_block",
     response_model=BlockRead,
-    status_code=201,
 )
 @router_handler
 async def create_block(
@@ -112,7 +116,11 @@ async def create_block(
 
 
 # -------------------------------------- DELETE --------------------------------------
-@router.delete("/{block_id}", status_code=204)
+@router.delete(
+    "/{block_id}",
+    name="cards:all_cards",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 @router_handler
 async def delete_block(
     user_id: BaseIdType,  # = Depends(get_current_user)
@@ -133,6 +141,7 @@ async def delete_block(
 # -------------------------------------- UPDATE --------------------------------------
 @router.patch(
     "/{block_id}",
+    name="blocks:patch_block",
     response_model=BlockRead,
 )
 @router_handler
@@ -163,6 +172,7 @@ resource_router = APIRouter(
 
 @resource_router.get(
     "/{block_id}",
+    name="blocks:block",
     response_model=BlockRead,
 )
 @router_handler
@@ -174,7 +184,7 @@ async def get_block(
         Depends(get_block_service),
     ],
 ):
-    return await block_service.get_block(
+    return await block_service.get_block_by_id(
         user_id,
         block_id,
     )

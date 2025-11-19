@@ -16,9 +16,9 @@ router = APIRouter(
 
 
 @router.get(
-    "/all",
+    "/",
+    name="cards:all_cards",
     response_model=List[CardResponse],
-    status_code=status.HTTP_200_OK,
 )
 @router_handler
 async def get_all_blocks(
@@ -31,7 +31,11 @@ async def get_all_blocks(
 
 
 # -------------------------------------- GET ----------------------------------------------
-@router.get("/{card_id}", response_model=CardResponse)
+@router.get(
+    "/{card_id}",
+    name="cards:filter_cards",
+    response_model=CardResponse,
+)
 @router_handler
 async def get_block_card(
     user_id: BaseIdType,  # = Depends(get_current_user)
@@ -49,7 +53,11 @@ async def get_block_card(
     )
 
 
-@router.get("/", response_model=List[CardResponse])
+@router.get(
+    "/",
+    name="cards:all_cards",
+    response_model=List[CardResponse],
+)
 @router_handler
 async def get_block_cards(
     user_id: BaseIdType,  # = Depends(get_current_user)
@@ -70,8 +78,8 @@ async def get_block_cards(
 # -------------------------------------- CREATE --------------------------------------
 @router.post(
     "/",
+    name="cards:create_card",
     response_model=CardResponse,
-    status_code=201,
 )
 @router_handler
 async def create_card(
@@ -88,7 +96,11 @@ async def create_card(
 
 
 # -------------------------------------- DELETE --------------------------------------
-@router.delete("/{card_id}", status_code=204)
+@router.delete(
+    "/{card_id}",
+    name="cards:delete_card",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 @router_handler
 async def delete_card(
     user_id: BaseIdType,  # = Depends(get_current_user)
@@ -107,7 +119,11 @@ async def delete_card(
 
 
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch("/{card_id}", response_model=CardResponse)
+@router.patch(
+    "/{card_id}",
+    name="cards:patch_card",
+    response_model=CardResponse,
+)
 @router_handler
 async def update_card(
     user_id: BaseIdType,  # = Depends(get_current_user)

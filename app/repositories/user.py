@@ -1,4 +1,4 @@
-from typing import List, Optional
+from abc import ABC
 
 from sqlalchemy import select
 
@@ -9,22 +9,22 @@ from schemas.user import UserFilters
 from schemas.user import UserRead
 
 
-def map_to_schema(db_user: Optional[User]) -> Optional[UserRead]:
+def map_to_schema(db_user: User | None) -> UserRead | None:
     if db_user:
         return UserRead.model_validate(db_user)
     return
 
 
-class UserRepository(BaseRepository):
+class UserRepository(BaseRepository, ABC):
     @repository_handler
-    async def get_all_users(self) -> List[UserRead]:
+    async def get_all(self) -> list[UserRead]:
         stmt = select(User)
         result = await self.session.execute(stmt)
         users = result.scalars().all()
         return [map_to_schema(user) for user in users]
 
     @repository_handler
-    async def get_users(self, filters: UserFilters) -> List[UserRead]:
+    async def get_by_filters(self, filters: UserFilters) -> list[UserRead]:
         stmt = select(User)
 
         if filters.email is not None:

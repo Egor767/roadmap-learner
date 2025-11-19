@@ -20,6 +20,7 @@ router = APIRouter(
 
 @router.get(
     "",
+    name="users:all_users",
     response_model=list[UserRead],
 )
 async def get_users(
@@ -34,6 +35,7 @@ async def get_users(
 
 @router.get(
     "/filters",
+    name="users:filter_users",
     response_model=list[UserRead],
 )
 @router_handler
@@ -47,7 +49,7 @@ async def get_users_by_filters(
         Depends(get_user_service),
     ],
 ):
-    return await user_service.get_users(filters)
+    return await user_service.get_users_by_filters(filters)
 
 
 # /me

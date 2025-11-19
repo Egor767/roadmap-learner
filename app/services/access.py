@@ -16,7 +16,7 @@ class AccessService:
     @service_handler
     async def ensure_roadmap_exists(self, roadmap_id: BaseIdType) -> RoadmapRead:
         logger.info("HELLO FROM AccessService.ensure_roadmap_exists")
-        roadmap = await self.roadmap_repo.get_roadmap_by_id(roadmap_id)
+        roadmap = await self.roadmap_repo.get_by_id(roadmap_id)
         if not roadmap:
             logger.warning("Roadmap(id=%r) not found", roadmap_id)
             raise ValueError("Roadmap not found")

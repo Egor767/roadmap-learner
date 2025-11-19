@@ -27,6 +27,7 @@ router = APIRouter(
 
 @router.get(
     "",
+    name="roadmaps:all_roadmaps",
     response_model=list[RoadmapRead],
 )
 @router_handler
@@ -42,6 +43,7 @@ async def get_roadmaps(
 # -------------------------------------- GET ----------------------------------------------
 @router.get(
     "/filters",
+    name="roadmaps:filter_roadmaps",
     response_model=list[RoadmapRead],
 )
 async def get_roadmaps(
@@ -58,7 +60,7 @@ async def get_roadmaps(
         Depends(get_roadmap_service),
     ],
 ):
-    return await roadmap_service.get_roadmaps(
+    return await roadmap_service.get_roadmaps_by_filters(
         current_user,
         filters,
     )
@@ -66,6 +68,7 @@ async def get_roadmaps(
 
 @router.get(
     "/{roadmap_id}",
+    name="roadmaps:roadmap",
     response_model=RoadmapRead,
 )
 @router_handler
@@ -85,7 +88,7 @@ async def get_roadmap(
         current_user,
         roadmap_id,
     )
-    return await roadmap_service.get_roadmap(
+    return await roadmap_service.get_roadmap_by_id(
         current_user,
         roadmap_id,
     )
@@ -94,6 +97,7 @@ async def get_roadmap(
 # -------------------------------------- CREATE --------------------------------------
 @router.post(
     "/",
+    name="roadmaps:create_roadmap",
     response_model=RoadmapRead,
 )
 @router_handler
@@ -117,6 +121,7 @@ async def create_roadmap(
 # -------------------------------------- DELETE --------------------------------------
 @router.delete(
     "/{roadmap_id}",
+    name="roadmaps:delete_roadmap",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 @router_handler
@@ -140,6 +145,7 @@ async def delete_roadmap(
 # -------------------------------------- UPDATE --------------------------------------
 @router.patch(
     "/{roadmap_id}",
+    name="roadmaps:path_roadmap",
     response_model=RoadmapRead,
 )
 @router_handler
