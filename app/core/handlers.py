@@ -1,8 +1,8 @@
+import logging
 from functools import wraps
+
 from fastapi import HTTPException
 from fastapi import status
-import logging
-
 from sqlalchemy.exc import SQLAlchemyError
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,10 @@ def router_handler(func):
         except HTTPException:
             raise
         except ValueError as e:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         except Exception as e:
             logger.error(
                 f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
@@ -37,7 +40,10 @@ def service_handler(func):
         except ValueError:
             raise
         except Exception as e:
-            logger.error(f"Service error in {func.__name__}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Service error in {func.__name__}: {str(e)}",
+                exc_info=True,
+            )
             raise ValueError(f"Service operation failed: {str(e)}")
 
     @wraps(func)
@@ -47,7 +53,10 @@ def service_handler(func):
         except ValueError:
             raise
         except Exception as e:
-            logger.error(f"Service error in {func.__name__}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Service error in {func.__name__}: {str(e)}",
+                exc_info=True,
+            )
             raise ValueError(f"Service operation failed: {str(e)}")
 
     return async_wrapper if func.__code__.co_flags & 0x80 else sync_wrapper
@@ -59,11 +68,15 @@ def repository_handler(func):
         try:
             return await func(*args, **kwargs)
         except SQLAlchemyError as e:
-            logger.error(f"Database error in {func.__name__}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Database error in {func.__name__}: {str(e)}",
+                exc_info=True,
+            )
             raise
         except Exception as e:
             logger.error(
-                f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
+                f"Unexpected error in {func.__name__}: {str(e)}",
+                exc_info=True,
             )
             raise
 

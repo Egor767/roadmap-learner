@@ -1,15 +1,14 @@
 from typing import List, Optional
 
 from sqlalchemy import select, insert, update, delete, func
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import transaction_manager
-from app.core.handlers import repository_handler
-from app.core.logging import session_manager_repository_logger as logger
-from app.core.types import BaseIDType
-from app.models.postgres.session_manager import Session
-from app.schemas.card import CardStatus
-from app.schemas.session_manager import (
+from core.db import transaction_manager
+from core.handlers import repository_handler
+from core.types import BaseIdType
+from models.session_manager import Session
+from repositories import BaseRepository
+from schemas.card import CardStatus
+from schemas.session import (
     SessionInDB,
     SessionCreate,
     SessionFilters,
@@ -24,10 +23,7 @@ def map_to_schema(db_session: Optional[Session]) -> Optional[SessionInDB]:
     return
 
 
-class SessionManagerRepository:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
+class SessionManagerRepository(BaseRepository):
     @repository_handler
     async def get_all_sessions(self) -> List[SessionInDB]:
         stmt = select(Session)
@@ -37,7 +33,7 @@ class SessionManagerRepository:
 
     @repository_handler
     async def get_user_session(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> SessionInDB:
         stmt = select(Session).where(
             Session.id == session_id, Session.user_id == user_id
@@ -48,7 +44,7 @@ class SessionManagerRepository:
 
     @repository_handler
     async def get_user_sessions(
-        self, user_id: BaseIDType, filters: SessionFilters
+        self, user_id: BaseIdType, filters: SessionFilters
     ) -> List[SessionInDB]:
         stmt = select(Session).where(Session.user_id == user_id)
 
@@ -75,7 +71,7 @@ class SessionManagerRepository:
 
     @repository_handler
     async def finish_session(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> SessionInDB:
         async with transaction_manager(self.session):
             stmt = (
@@ -94,7 +90,7 @@ class SessionManagerRepository:
 
     @repository_handler
     async def abandon_session(
-        self, user_id: BaseIDType, session_id: BaseIDType
+        self, user_id: BaseIdType, session_id: BaseIdType
     ) -> bool:
         async with transaction_manager(self.session):
             stmt = (
@@ -111,8 +107,8 @@ class SessionManagerRepository:
 
     @repository_handler
     async def get_next_card_id(
-        self, user_id: BaseIDType, session_id: BaseIDType
-    ) -> Optional[BaseIDType]:
+        self, user_id: BaseIdType, session_id: BaseIdType
+    ) -> Optional[BaseIdType]:
         stmt = select(Session).where(
             Session.id == session_id, Session.user_id == user_id
         )
@@ -126,8 +122,8 @@ class SessionManagerRepository:
     @repository_handler
     async def submit_answer(
         self,
-        user_id: BaseIDType,
-        session_id: BaseIDType,
+        user_id: BaseIdType,
+        session_id: BaseIdType,
         answer_data: SubmitAnswerRequest,
     ) -> SessionInDB:
         async with transaction_manager(self.session):
@@ -160,7 +156,7 @@ class SessionManagerRepository:
             return map_to_schema(updated_db_session)
 
     @repository_handler
-    async def delete_session(self, user_id: BaseIDType, session_id: BaseIDType) -> bool:
+    async def delete_session(self, user_id: BaseIdType, session_id: BaseIdType) -> bool:
         async with transaction_manager(self.session):
             stmt = delete(Session).where(
                 Session.id == session_id, Session.user_id == user_id

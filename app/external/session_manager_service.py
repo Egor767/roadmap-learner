@@ -1,4 +1,4 @@
-from app.schemas.session_manager import SessionInDB
+from schemas.session import SessionInDB
 
 
 def calculate_session_stats(session: SessionInDB) -> dict:

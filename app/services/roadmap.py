@@ -1,16 +1,17 @@
 from typing import List
 
-from app.core.handlers import service_handler
-from app.core.types import BaseIDType
-from app.repositories.roadmap import RoadmapRepository
-from app.schemas.roadmap import (
-    RoadMapCreate,
-    RoadMapResponse,
-    RoadMapUpdate,
-    RoadMapFilters,
+from core.handlers import service_handler
+from core.logging import roadmap_service_logger as logger
+from core.types import BaseIdType
+from models import User
+from repositories import RoadmapRepository
+from schemas.roadmap import (
+    RoadmapRead,
+    RoadmapCreate,
+    RoadmapUpdate,
+    RoadmapFilters,
 )
-from app.core.logging import roadmap_service_logger as logger
-from app.shared.generate_id import generate_base_id
+from shared.generate_id import generate_base_id
 
 
 class RoadMapService:
@@ -18,81 +19,117 @@ class RoadMapService:
         self.repo = repo
 
     @service_handler
-    async def get_all_roadmaps(self) -> List[RoadMapResponse]:
+    async def get_all_roadmaps(self) -> list[RoadmapRead]:
         roadmaps = await self.repo.get_all_roadmaps()
-        validated_roadmaps = [
-            RoadMapResponse.model_validate(roadmap) for roadmap in roadmaps
-        ]
-        logger.info(f"Successful get all roadmaps, count: {len(validated_roadmaps)}")
-        return validated_roadmaps
-
-    @service_handler
-    async def get_user_roadmap(
-        self, user_id: BaseIDType, roadmap_id: BaseIDType
-    ) -> RoadMapResponse:
-        roadmap = await self.repo.get_user_roadmap(user_id, roadmap_id)
-        if not roadmap:
-            logger.warning(f"Roadmap not found or access denied")
-            raise ValueError("Roadmap not found or access denied")
-        logger.info(f"Successful get user roadmap")
-        return RoadMapResponse.model_validate(roadmap)
-
-    @service_handler
-    async def get_user_roadmaps(
-        self, user_id: BaseIDType, filters: RoadMapFilters
-    ) -> List[RoadMapResponse]:
-        roadmaps = await self.repo.get_user_roadmaps(user_id, filters)
-        validated_roadmaps = [
-            RoadMapResponse.model_validate(roadmap) for roadmap in roadmaps
-        ]
         logger.info(
-            f"Retrieved {len(validated_roadmaps)} roadmaps with filters: {filters}"
+            "Successful get all roadmaps, count: %r",
+            len(roadmaps),
         )
-        return validated_roadmaps
+        return roadmaps
+
+    @service_handler
+    async def get_roadmap(
+        self,
+        current_user: User,
+        roadmap_id: BaseIdType,
+    ) -> RoadmapRead:
+        roadmap = await self.repo.get_roadmap_by_id(roadmap_id)
+        if not roadmap:
+            logger.error("Roadmap(id=%r) not found", roadmap_id)
+            raise ValueError("Roadmap not found")
+        if not current_user.is_superuser and roadmap.user_id != current_user.id:
+            logger.error(
+                "Access to Roadmap(id=%r), for User(id=%r) denied",
+                roadmap_id,
+                current_user,
+            )
+            raise PermissionError("Access denied")
+        return roadmap
+
+    @service_handler
+    async def get_roadmaps(
+        self,
+        current_user: User,
+        filters: RoadmapFilters,
+    ) -> List[RoadmapRead]:
+        roadmaps = await self.repo.get_roadmaps(filters)
+        if not roadmaps:
+            logger.error("Roadmaps with filters(%r) not found", filters)
+            raise ValueError("Roadmaps not found")
+        if not current_user.is_superuser:
+            roadmaps = [r for r in roadmaps if r.user_id == current_user.id]
+        return roadmaps
 
     @service_handler
     async def create_roadmap(
-        self, user_id: BaseIDType, roadmap_create_data: RoadMapCreate
-    ) -> RoadMapResponse:
-        # need to check here if existing
+        self,
+        current_user: User,
+        roadmap_create_data: RoadmapCreate,
+    ) -> RoadmapRead:
 
         roadmap_data = roadmap_create_data.model_dump()
-        roadmap_data["user_id"] = user_id
+        roadmap_data["user_id"] = current_user.id
         roadmap_data["id"] = await generate_base_id()
 
-        logger.info(
-            f"Creating new roadmap: {roadmap_create_data.title} for user: {user_id}"
-        )
         created_roadmap = await self.repo.create_roadmap(roadmap_data)
+        if not created_roadmap:
+            logger.error("Roadmap with params(%r) not created", roadmap_create_data)
+            raise ValueError("Creation failed")
 
-        logger.info(f"Roadmap created successfully: {created_roadmap.id}")
-        return RoadMapResponse.model_validate(created_roadmap)
+        return created_roadmap
 
     @service_handler
-    async def delete_roadmap(self, user_id: BaseIDType, roadmap_id: BaseIDType) -> bool:
-        success = await self.repo.delete_roadmap(user_id, roadmap_id)
+    async def delete_roadmap(
+        self,
+        current_user: User,
+        roadmap_id: BaseIdType,
+    ) -> None:
+        roadmap = await self.repo.get_roadmap_by_id(roadmap_id)
+        if not roadmap:
+            logger.error("Roadmap(id=%r) not found", roadmap_id)
+            raise ValueError("Roadmap not found")
+
+        if not current_user.is_superuser and roadmap.user_id != current_user.id:
+            logger.warning(
+                "Access denied to delete Roadmap(id=%r) by User(id=%r)",
+                roadmap_id,
+                current_user.id,
+            )
+            raise PermissionError("Access denied")
+
+        success = await self.repo.delete_roadmap(roadmap_id)
         if success:
-            logger.info(f"Roadmap deleted successfully: {roadmap_id}")
+            logger.info("Roadmap(id=%r)deleted successfully", roadmap_id)
         else:
-            logger.warning(f"Roadmap not found for deletion: {roadmap_id}")
-        return success
+            logger.error("Failed to delete Roadmap(id=%r)", roadmap_id)
+            raise ValueError("Deletion failed")
 
     @service_handler
     async def update_roadmap(
         self,
-        user_id: BaseIDType,
-        roadmap_id: BaseIDType,
-        roadmap_update_data: RoadMapUpdate,
-    ) -> RoadMapResponse:
-        roadmap_data = roadmap_update_data.model_dump(exclude_unset=True)
-        logger.info(f"Updating roadmap {roadmap_id}: {roadmap_data}")
-        updated_roadmap = await self.repo.update_roadmap(
-            user_id, roadmap_id, roadmap_data
-        )
-
-        if not updated_roadmap:
-            logger.warning(f"Roadmap not found for update: {roadmap_id}")
+        current_user: User,
+        roadmap_id: BaseIdType,
+        roadmap_update_data: RoadmapUpdate,
+    ) -> RoadmapRead:
+        roadmap = await self.repo.get_roadmap_by_id(roadmap_id)
+        if not roadmap:
+            logger.error("Roadmap(id=%r) not found", roadmap_id)
             raise ValueError("Roadmap not found")
 
-        logger.info(f"Successful updating roadmap: {roadmap_id}")
-        return RoadMapResponse.model_validate(updated_roadmap)
+        if not current_user.is_superuser and roadmap.user_id != current_user.id:
+            logger.warning(
+                "Access denied to update Roadmap(id=%r) by User(id=%r)",
+                roadmap_id,
+                current_user.id,
+            )
+            raise PermissionError("Access denied")
+
+        roadmap_data = roadmap_update_data.model_dump(exclude_unset=True)
+
+        updated_roadmap = await self.repo.update_roadmap(roadmap_id, roadmap_data)
+
+        if not updated_roadmap:
+            logger.warning("Failed to update Roadmap(id=%r)", roadmap_id)
+            raise ValueError("Updating failed")
+
+        return updated_roadmap
