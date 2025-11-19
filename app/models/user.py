@@ -32,9 +32,9 @@ class User(IdMixin, TimestampMixin, Base, SQLAlchemyBaseUserTable[BaseIdType]):
         unique=True,
     )
 
-    roadmaps: Mapped[List["Roadmap"]] = relationship(back_populates="user")
-    sessions: Mapped[List["Session"]] = relationship(back_populates="user")
-    tokens: Mapped[List["AccessToken"]] = relationship(back_populates="user")
+    # roadmaps: Mapped[List["Roadmap"]] = relationship(back_populates="user")
+    # sessions: Mapped[List["Session"]] = relationship(back_populates="user")
+    # tokens: Mapped[List["AccessToken"]] = relationship(back_populates="user")
 
     @classmethod
     def get_db(cls, session: "AsyncSession"):

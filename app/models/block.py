@@ -20,7 +20,7 @@ class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
         SQLEnum("draft", "active", "archived", name="block_status"), default="draft"
     )
 
-    cards: Mapped[List["Card"]] = relationship(back_populates="block")
+    # cards: Mapped[List["Card"]] = relationship(back_populates="block")
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}), status={self.status}"

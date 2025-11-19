@@ -15,7 +15,13 @@ class Card(IdMixin, TimestampMixin, BlockRelationMixin, Base):
     example: Mapped[str] = mapped_column(String(40))
     comment: Mapped[str] = mapped_column(String(40))
     status: Mapped[str] = mapped_column(
-        SQLEnum("unknown", "known", "review", name="card_status"), default="unknown"
+        SQLEnum(
+            "unknown",
+            "known",
+            "review",
+            name="card_status",
+        ),
+        default="unknown",
     )
 
     def __str__(self):

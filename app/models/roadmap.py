@@ -28,7 +28,7 @@ class Roadmap(IdMixin, TimestampMixin, UserRelationMixin, Base):
         default="draft",
     )
 
-    blocks: Mapped[List["Block"]] = relationship(back_populates="roadmap")
+    # blocks: Mapped[List["Block"]] = relationship(back_populates="roadmap")
 
     def __str__(self):
         return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}), status={self.status}"
