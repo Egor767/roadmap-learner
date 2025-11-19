@@ -65,6 +65,11 @@ authentication_backend = AuthenticationBackend(
 )
 
 
+# ACCESS
+async def get_access_service() -> AccessService:
+    yield AccessService()
+
+
 # USER
 async def get_users_db(
     session: Annotated[
@@ -132,8 +137,9 @@ async def get_roadmap_service(
         "RoadmapRepository",
         Depends(get_roadmap_repository),
     ],
+    access_service: Annotated["AccessService", Depends(get_access_service)],
 ) -> RoadMapService:
-    yield RoadMapService(roadmap_repo)
+    yield RoadMapService(roadmap_repo, access_service)
 
 
 # BLOCK

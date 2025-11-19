@@ -7,7 +7,7 @@ from .mixins import UserRelationMixin
 
 
 class AccessToken(UserRelationMixin, Base, SQLAlchemyBaseAccessTokenTable[BaseIdType]):
-    _user_back_populates = "tokens"
+    # _user_back_populates = "tokens"
 
     def __str__(self):
         return f"{self.__class__.__name__}(token={self.token}, user={self.user_id!r})"

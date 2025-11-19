@@ -8,7 +8,7 @@ from .mixins import BlockRelationMixin, TimestampMixin, IdMixin
 
 
 class Card(IdMixin, TimestampMixin, BlockRelationMixin, Base):
-    _block_back_populates = "cards"
+    # _block_back_populates = "cards"
 
     term: Mapped[str] = mapped_column(String(40), nullable=False)
     definition: Mapped[str] = mapped_column(String(40), nullable=False)

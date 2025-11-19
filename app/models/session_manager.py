@@ -19,15 +19,27 @@ class Session(
     BlockRelationMixin,
     Base,
 ):
-    _user_back_populates = "sessions"
-    _roadmap_back_populates = None
-    _block_back_populates = None
-    _block_id_nullable = True
+    # _user_back_populates = "sessions"
+    # _roadmap_back_populates = None
+    # _block_back_populates = None
+    # _block_id_nullable = True
 
-    mode = Column(SQLEnum("review", "exam", name="session_mode"), nullable=False)
+    mode = Column(
+        SQLEnum(
+            "review",
+            "exam",
+            name="session_mode",
+        ),
+        nullable=False,
+    )
 
     status = Column(
-        SQLEnum("active", "completed", "abandoned", name="session_status"),
+        SQLEnum(
+            "active",
+            "completed",
+            "abandoned",
+            name="session_status",
+        ),
         default="active",
     )
     card_queue = Column(JSONB, nullable=True, default=list)

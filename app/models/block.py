@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
-    _roadmap_back_populates = "blocks"
+    # _roadmap_back_populates = "blocks"
 
     title: Mapped[str] = mapped_column(String(30), nullable=False)
     description: Mapped[str] = mapped_column(String(30))

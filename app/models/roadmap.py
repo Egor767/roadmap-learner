@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class Roadmap(IdMixin, TimestampMixin, UserRelationMixin, Base):
-    _user_back_populates = "roadmaps"
+    # _user_back_populates = "roadmaps"
 
     title: Mapped[str] = mapped_column(
         String(30),
