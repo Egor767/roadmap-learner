@@ -1,12 +1,16 @@
-from abc import ABC
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
 from core.handlers import repository_handler
+
 from models import User
 from repositories import BaseRepository
 from schemas.user import UserFilters
 from schemas.user import UserRead
+
+if TYPE_CHECKING:
+    from core.types import BaseIdType
 
 
 def map_to_schema(db_user: User | None) -> UserRead | None:
@@ -15,7 +19,7 @@ def map_to_schema(db_user: User | None) -> UserRead | None:
     return
 
 
-class UserRepository(BaseRepository, ABC):
+class UserRepository(BaseRepository):
     @repository_handler
     async def get_all(self) -> list[UserRead]:
         stmt = select(User)
@@ -35,3 +39,19 @@ class UserRepository(BaseRepository, ABC):
         result = await self.session.execute(stmt)
         users = result.scalars().all()
         return [map_to_schema(user) for user in users]
+
+    @repository_handler
+    async def get_by_id(self, user_id: "BaseIdType") -> UserRead | None:
+        raise NotImplementedError("get_by_id() is not implemented for UserRepository")
+
+    @repository_handler
+    async def create(self, user_data: dict) -> UserRead | None:
+        raise NotImplementedError("create() is not implemented for UserRepository")
+
+    @repository_handler
+    async def update(self, user_id: "BaseIdType", data: dict) -> UserRead | None:
+        raise NotImplementedError("update() is not implemented for UserRepository")
+
+    @repository_handler
+    async def delete(self, user_id: "BaseIdType") -> bool:
+        raise NotImplementedError("delete() is not implemented for UserRepository")

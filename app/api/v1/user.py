@@ -1,10 +1,11 @@
-from typing import Annotated, TYPE_CHECKING, List
+from typing import Annotated, TYPE_CHECKING
 
 from fastapi import APIRouter, Depends
 
 from core.authentication.fastapi_users import fastapi_users
 from core.config import settings
-from core.dependencies import get_users_db, get_user_service, get_user_filters
+from core.dependencies import get_users_db
+from core.dependencies.services import get_user_service
 from core.handlers import router_handler
 from schemas.user import UserRead, UserUpdate, UserFilters
 from services import UserService

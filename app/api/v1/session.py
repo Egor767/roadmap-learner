@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from starlette import status
 
 from core.config import settings
-from core.dependencies import get_session_manager_service
+from core.dependencies.services import get_session_manager_service
 from core.handlers import router_handler
 from core.types import BaseIdType
 from schemas.card import CardRead

@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy import select, insert, update, delete
 
-from core.db import transaction_manager
+from core.dependencies import transaction_manager
 from core.handlers import repository_handler
 from core.types import BaseIdType
 from models import Block
@@ -20,15 +20,19 @@ class BlockRepository(BaseRepository):
     @repository_handler
     async def get_by_id(self, block_id: BaseIdType) -> BlockRead:
         stmt = select(Block).where(Block.id == block_id)
+
         result = await self.session.execute(stmt)
         db_block = result.scalar_one_or_none()
+
         return map_to_schema(db_block)
 
     @repository_handler
     async def get_all(self) -> list[BlockRead]:
         stmt = select(Block)
+
         result = await self.session.execute(stmt)
         db_blocks = result.scalars().all()
+
         return [map_to_schema(block) for block in db_blocks]
 
     @repository_handler
@@ -42,35 +46,38 @@ class BlockRepository(BaseRepository):
             .where(Block.id == block_id)
             .where(Block.roadmap_id == roadmap_id)
         )
+
         result = await self.session.execute(stmt)
         block = result.scalar_one_or_none()
+
         return map_to_schema(block)
 
     @repository_handler
     async def get_by_filters(
         self,
-        roadmap_id: BaseIdType,
         filters: BlockFilters,
-    ) -> list[BlockRead]:
-        stmt = select(Block).where(Block.roadmap_id == roadmap_id)
+    ) -> list[BlockRead] | list[None]:
+        stmt = select(Block)
 
-        if filters.title:
-            stmt = stmt.where(Block.title == filters.title)
-        if filters.description:
-            stmt = stmt.where(Block.description == filters.description)
-        if filters.status:
-            stmt = stmt.where(Block.status == filters.status)
+        for field_name, value in vars(filters).items():
+            if value is not None:
+                column = getattr(Block, field_name, None)
+                if column is not None:
+                    stmt = stmt.where(column == value)
 
         result = await self.session.execute(stmt)
         db_blocks = result.scalars().all()
+
         return [map_to_schema(block) for block in db_blocks]
 
     @repository_handler
     async def create(self, block_data: dict) -> BlockRead:
         async with transaction_manager(self.session):
             stmt = insert(Block).values(**block_data).returning(Block)
+
             result = await self.session.execute(stmt)
             db_block = result.scalar_one_or_none()
+
             return map_to_schema(db_block)
 
     @repository_handler
@@ -85,7 +92,9 @@ class BlockRepository(BaseRepository):
                 .where(Block.id == block_id)
                 .where(Block.roadmap_id == roadmap_id)
             )
+
             result = await self.session.execute(stmt)
+
             return result.rowcount > 0
 
     @repository_handler
@@ -101,6 +110,8 @@ class BlockRepository(BaseRepository):
                 .values(**block_data)
                 .returning(Block)
             )
+
             result = await self.session.execute(stmt)
             db_roadmap = result.scalar_one_or_none()
+
             return map_to_schema(db_roadmap)

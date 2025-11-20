@@ -21,22 +21,22 @@ async def get_users_db(
     yield User.get_db(session=session)
 
 
-async def get_user_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
-) -> UserRepository:
-    yield UserRepository(session)
-
-
-async def get_user_service(
-    user_repo: Annotated[
-        UserRepository,
-        Depends(get_user_repository),
-    ],
-) -> UserService:
-    yield UserService(user_repo)
+# async def get_user_repository(
+#     session: Annotated[
+#         "AsyncSession",
+#         Depends(get_db_session),
+#     ],
+# ) -> UserRepository:
+#     yield UserRepository(session)
+#
+#
+# async def get_user_service(
+#     user_repo: Annotated[
+#         UserRepository,
+#         Depends(get_user_repository),
+#     ],
+# ) -> UserService:
+#     yield UserService(user_repo)
 
 
 async def get_user_filters(

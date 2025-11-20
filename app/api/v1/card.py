@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from core.authentication.fastapi_users import current_active_user
 from core.config import settings
-from core.dependencies import get_card_service
+from core.dependencies.services import get_card_service
 from core.handlers import router_handler
 from core.types import BaseIdType
 from models import User

@@ -1,6 +1,6 @@
 from sqlalchemy import select, insert, update, delete
 
-from core.db import transaction_manager
+from core.dependencies import transaction_manager
 from core.handlers import repository_handler
 from core.types import BaseIdType
 from models import Card

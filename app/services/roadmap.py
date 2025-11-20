@@ -4,21 +4,20 @@ from core.handlers import service_handler
 from core.logging import roadmap_service_logger as logger
 from shared.generate_id import generate_base_id
 
-from schemas.roadmap import (
-    RoadmapRead,
-    RoadmapCreate,
-    RoadmapUpdate,
-    RoadmapFilters,
-)
-
 if TYPE_CHECKING:
     from services import AccessService
     from repositories import RoadmapRepository
     from models import User
     from core.types import BaseIdType
+    from schemas.roadmap import (
+        RoadmapRead,
+        RoadmapCreate,
+        RoadmapUpdate,
+        RoadmapFilters,
+    )
 
 
-class RoadMapService:
+class RoadmapService:
     def __init__(
         self,
         repo: "RoadmapRepository",
@@ -51,7 +50,7 @@ class RoadMapService:
             logger.error("Roadmap(id=%r) not found", roadmap_id)
             raise ValueError("Roadmap not found")
 
-        self.access.ensure_can_view_roadmap(current_user, roadmap)
+        await self.access.ensure_can_view_roadmap(current_user, roadmap)
 
         return roadmap
 
@@ -72,9 +71,11 @@ class RoadMapService:
             # raise ValueError("Roadmaps not found")
             # and current_func() -> list[RoadmapRead]
 
-        roadmaps = self.access.filter_roadmaps_for_user(current_user, roadmaps)
+        filtered_roadmaps = await self.access.filter_roadmaps_for_user(
+            current_user, roadmaps
+        )
 
-        return roadmaps
+        return filtered_roadmaps
 
     @service_handler
     async def create_roadmap(
@@ -109,7 +110,7 @@ class RoadMapService:
             logger.error("Roadmap(id=%r) not found", roadmap_id)
             raise ValueError("Roadmap not found")
 
-        self.access.ensure_can_view_roadmap(current_user, roadmap)
+        await self.access.ensure_can_view_roadmap(current_user, roadmap)
 
         success = await self.repo.delete(roadmap_id)
         if success:
@@ -132,7 +133,7 @@ class RoadMapService:
             logger.error("Roadmap(id=%r) not found", roadmap_id)
             raise ValueError("Roadmap not found")
 
-        self.access.ensure_can_view_roadmap(current_user, roadmap)
+        await self.access.ensure_can_view_roadmap(current_user, roadmap)
 
         roadmap_data = roadmap_update_data.model_dump(exclude_unset=True)
 

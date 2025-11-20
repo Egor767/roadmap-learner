@@ -5,7 +5,7 @@ from starlette import status
 
 from core.authentication.fastapi_users import current_active_user
 from core.config import settings
-from core.dependencies import get_roadmap_service
+from core.dependencies.services import get_roadmap_service
 from core.handlers import router_handler
 from core.types import BaseIdType
 from schemas.roadmap import (
@@ -16,7 +16,7 @@ from schemas.roadmap import (
 )
 
 if TYPE_CHECKING:
-    from services import RoadMapService
+    from services import RoadmapService
     from models import User
 
 router = APIRouter(
@@ -33,7 +33,7 @@ router = APIRouter(
 @router_handler
 async def get_roadmaps(
     roadmap_service: Annotated[
-        "RoadMapService",
+        "RoadmapService",
         Depends(get_roadmap_service),
     ],
 ):
@@ -56,7 +56,7 @@ async def get_roadmaps(
         Depends(current_active_user),
     ],
     roadmap_service: Annotated[
-        "RoadMapService",
+        "RoadmapService",
         Depends(get_roadmap_service),
     ],
 ):
@@ -79,7 +79,7 @@ async def get_roadmap(
         Depends(current_active_user),
     ],
     roadmap_service: Annotated[
-        "RoadMapService",
+        "RoadmapService",
         Depends(get_roadmap_service),
     ],
 ):
@@ -103,7 +103,7 @@ async def create_roadmap(
     ],
     roadmap_create_data: RoadmapCreate,
     roadmap_service: Annotated[
-        "RoadMapService",
+        "RoadmapService",
         Depends(get_roadmap_service),
     ],
 ):
@@ -127,7 +127,7 @@ async def delete_roadmap(
         Depends(current_active_user),
     ],
     roadmap_service: Annotated[
-        "RoadMapService",
+        "RoadmapService",
         Depends(get_roadmap_service),
     ],
 ):
@@ -152,7 +152,7 @@ async def update_roadmap(
         Depends(current_active_user),
     ],
     roadmap_service: Annotated[
-        "RoadMapService",
+        "RoadmapService",
         Depends(get_roadmap_service),
     ],
 ):

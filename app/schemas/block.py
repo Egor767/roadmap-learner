@@ -41,7 +41,7 @@ class BlockRead(BaseBlock):
 
 
 class BlockFilters:
+    roadmap_id: BaseIdType | None = None
     title: str | None = None
     description: str | None = None
     status: BlockStatus | None = None
-    roadmap_id: BaseIdType | None = None
