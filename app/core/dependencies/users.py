@@ -1,12 +1,12 @@
 from typing import Annotated, TYPE_CHECKING
+
 from fastapi import Depends, Query
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
-from .db import get_db_session
-from schemas.user import UserFilters
 from models import User
-from repositories import UserRepository
-from services import UserService, UserManager
+from schemas.user import UserFilters
+from services import UserManager
+from .db import get_db_session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,24 +19,6 @@ async def get_users_db(
     ],
 ):
     yield User.get_db(session=session)
-
-
-# async def get_user_repository(
-#     session: Annotated[
-#         "AsyncSession",
-#         Depends(get_db_session),
-#     ],
-# ) -> UserRepository:
-#     yield UserRepository(session)
-#
-#
-# async def get_user_service(
-#     user_repo: Annotated[
-#         UserRepository,
-#         Depends(get_user_repository),
-#     ],
-# ) -> UserService:
-#     yield UserService(user_repo)
 
 
 async def get_user_filters(

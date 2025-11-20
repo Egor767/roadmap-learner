@@ -1,4 +1,5 @@
 from typing import Annotated, TYPE_CHECKING
+
 from fastapi import Depends
 from fastapi_users.authentication import AuthenticationBackend
 from fastapi_users.authentication.strategy import DatabaseStrategy
@@ -6,8 +7,8 @@ from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDataba
 
 from core.authentication.transport import bearer_transport
 from core.config import settings
-from .db import get_db_session
 from models import AccessToken
+from .db import get_db_session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

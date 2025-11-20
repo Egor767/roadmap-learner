@@ -1,6 +1,8 @@
 from typing import Annotated, TYPE_CHECKING
+
 from fastapi import Depends
 
+from services import AccessService, RoadmapService
 from services import BlockService, CardService, SessionManagerService, UserService
 from .repositories import (
     get_block_repository,
@@ -9,10 +11,8 @@ from .repositories import (
     get_roadmap_repository,
     get_user_repository,
 )
-from services import AccessService, RoadmapService
 
 if TYPE_CHECKING:
-    # from services import AccessService, RoadmapService
     from repositories import (
         RoadmapRepository,
         CardRepository,
@@ -37,9 +37,6 @@ async def get_access_service(
         Depends(get_roadmap_repository),
     ],
 ) -> AccessService:
-    # TODO ХУЕТА
-    # from services import AccessService
-
     yield AccessService(roadmap_repo)
 
 
@@ -53,8 +50,6 @@ async def get_roadmap_service(
         Depends(get_access_service),
     ],
 ) -> RoadmapService:
-    # from services.roadmap import RoadmapService
-
     yield RoadmapService(repo, access_service)
 
 
@@ -63,8 +58,12 @@ async def get_block_service(
         "BlockRepository",
         Depends(get_block_repository),
     ],
+    access_service: Annotated[
+        "AccessService",
+        Depends(get_access_service),
+    ],
 ) -> BlockService:
-    yield BlockService(repo)
+    yield BlockService(repo, access_service)
 
 
 async def get_card_service(

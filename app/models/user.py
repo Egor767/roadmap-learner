@@ -1,20 +1,17 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from fastapi_users_db_sqlalchemy import (
     SQLAlchemyBaseUserTable,
     SQLAlchemyUserDatabase as SQLAlchemyUserDatabaseGeneric,
 )
 from sqlalchemy import String, select
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from core.types import BaseIdType
 from .base import Base
 from .mixins import TimestampMixin, IdMixin
 
 if TYPE_CHECKING:
-    from .roadmap import Roadmap
-    from .session_manager import Session
-    from .access_token import AccessToken
     from sqlalchemy.ext.asyncio import AsyncSession
 
 

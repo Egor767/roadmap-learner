@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select
 
 from core.handlers import repository_handler
-
 from models import User
 from repositories import BaseRepository
 from schemas.user import UserFilters

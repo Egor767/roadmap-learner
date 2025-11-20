@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from core.handlers import service_handler
 from core.logging import block_service_logger as logger
 from core.types import BaseIdType
-
 from shared.generate_id import generate_base_id
 
 if TYPE_CHECKING:

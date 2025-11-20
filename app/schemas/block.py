@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -40,7 +39,7 @@ class BlockRead(BaseBlock):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BlockFilters:
+class BlockFilters(BaseModel):
     roadmap_id: BaseIdType | None = None
     title: str | None = None
     description: str | None = None

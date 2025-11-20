@@ -43,7 +43,6 @@ class AccessService:
         )
         raise PermissionError("Access denied")
 
-    @staticmethod
     async def filter_blocks_for_user(
         self,
         user: "User",
@@ -61,7 +60,6 @@ class AccessService:
 
         return [b for b in blocks if b.roadmap_id in allowed_ids]
 
-    @staticmethod
     async def ensure_can_view_block(
         self,
         user: "User",

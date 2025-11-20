@@ -46,6 +46,7 @@ async def get_roadmaps(
     name="roadmaps:filter_roadmaps",
     response_model=list[RoadmapRead],
 )
+@router_handler
 async def get_roadmaps(
     filters: Annotated[
         RoadmapFilters,
