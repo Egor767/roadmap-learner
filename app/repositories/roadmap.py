@@ -32,11 +32,11 @@ class RoadmapRepository(BaseRepository):
     @repository_handler
     async def get_by_filters(
         self,
-        filters: RoadmapFilters,
+        filters: dict,
     ) -> list[RoadmapRead] | list[None]:
         stmt = select(Roadmap)
 
-        for field_name, value in vars(filters).items():
+        for field_name, value in filters.items():
             if value is not None:
                 column = getattr(Roadmap, field_name, None)
                 if column is not None:

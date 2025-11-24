@@ -8,8 +8,12 @@ from app.core.config import settings
 from app.core.dependencies.services import get_roadmap_service
 from app.core.handlers import router_handler
 from app.core.types import BaseIdType
-from app.schemas.roadmap import RoadmapFilters
-from app.schemas.roadmap import RoadmapRead, RoadmapCreate, RoadmapUpdate
+from app.schemas.roadmap import (
+    RoadmapRead,
+    RoadmapCreate,
+    RoadmapUpdate,
+    RoadmapFilters,
+)
 
 if TYPE_CHECKING:
     from app.services import RoadmapService
@@ -95,11 +99,11 @@ async def get_roadmap(
 )
 @router_handler
 async def create_roadmap(
+    roadmap_create_data: RoadmapCreate,
     current_user: Annotated[
         "User",
         Depends(current_active_user),
     ],
-    roadmap_create_data: RoadmapCreate,
     roadmap_service: Annotated[
         "RoadmapService",
         Depends(get_roadmap_service),
@@ -144,7 +148,7 @@ async def delete_roadmap(
 @router_handler
 async def update_roadmap(
     roadmap_id: BaseIdType,
-    roadmap_data: RoadmapUpdate,
+    roadmap_update_data: RoadmapUpdate,
     current_user: Annotated[
         "User",
         Depends(current_active_user),
@@ -157,5 +161,5 @@ async def update_roadmap(
     return await roadmap_service.update_roadmap(
         current_user,
         roadmap_id,
-        roadmap_data,
+        roadmap_update_data,
     )
