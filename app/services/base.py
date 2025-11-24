@@ -1,6 +1,6 @@
 from abc import ABC
 
-from repositories import BaseRepository
+from app.repositories import BaseRepository
 
 
 class BaseService(ABC):

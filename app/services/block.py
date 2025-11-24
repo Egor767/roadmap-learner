@@ -1,15 +1,15 @@
 from typing import TYPE_CHECKING
 
-from core.handlers import service_handler
-from core.logging import block_service_logger as logger
-from core.types import BaseIdType
-from shared.generate_id import generate_base_id
+from app.core.handlers import service_handler
+from app.core.logging import block_service_logger as logger
+from app.core.types import BaseIdType
+from app.shared.generate_id import generate_base_id
 
 if TYPE_CHECKING:
-    from services import AccessService
-    from models import User
-    from repositories.block import BlockRepository
-    from schemas.block import (
+    from app.services import AccessService
+    from app.models import User
+    from app.repositories.block import BlockRepository
+    from app.schemas.block import (
         BlockCreate,
         BlockRead,
         BlockUpdate,
@@ -27,12 +27,12 @@ class BlockService:
         self.access = access_service
 
     @service_handler
-    async def get_all_blocks(self) -> list["BlockRead"]:
+    async def get_all_blocks(self) -> list["BlockRead"] | list[None]:
         blocks = await self.repo.get_all()
-        logger.info(
-            "Successful get all blocks, count: %r",
-            len(blocks),
-        )
+        if not blocks:
+            logger.warning("Blocks not found in DB")
+            return []
+
         return blocks
 
     @service_handler

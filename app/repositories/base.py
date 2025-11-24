@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from core.types import BaseIdType
+from app.core.types import BaseIdType
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession

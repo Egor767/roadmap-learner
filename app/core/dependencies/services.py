@@ -2,8 +2,8 @@ from typing import Annotated, TYPE_CHECKING
 
 from fastapi import Depends
 
-from services import AccessService, RoadmapService
-from services import BlockService, CardService, SessionManagerService, UserService
+from app.services import AccessService, RoadmapService
+from app.services import BlockService, CardService, SessionManagerService, UserService
 from .repositories import (
     get_block_repository,
     get_card_repository,

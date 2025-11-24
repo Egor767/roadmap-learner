@@ -2,14 +2,14 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
-from core.handlers import repository_handler
-from models import User
-from repositories import BaseRepository
-from schemas.user import UserFilters
-from schemas.user import UserRead
+from app.core.handlers import repository_handler
+from app.models import User
+from app.repositories import BaseRepository
+from app.schemas.user import UserFilters
+from app.schemas.user import UserRead
 
 if TYPE_CHECKING:
-    from core.types import BaseIdType
+    from app.core.types import BaseIdType
 
 
 def map_to_schema(db_user: User | None) -> UserRead | None:

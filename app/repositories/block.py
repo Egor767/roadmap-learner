@@ -1,11 +1,11 @@
 from sqlalchemy import select, insert, update, delete
 
-from core.dependencies import transaction_manager
-from core.handlers import repository_handler
-from core.types import BaseIdType
-from models import Block
-from repositories import BaseRepository
-from schemas.block import BlockRead, BlockFilters
+from app.core.dependencies import transaction_manager
+from app.core.handlers import repository_handler
+from app.core.types import BaseIdType
+from app.models import Block
+from app.repositories import BaseRepository
+from app.schemas.block import BlockRead, BlockFilters
 
 
 def map_to_schema(db_block: Block | None) -> BlockRead | None:

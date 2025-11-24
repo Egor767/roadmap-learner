@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
-from core.types import BaseIdType
+from app.core.types import BaseIdType
 
 
 class BaseBlock(BaseModel):
@@ -22,7 +22,9 @@ class BlockStatus(str, Enum):
     ARCHIVED = "archived"
 
 
-class BlockUpdate(BaseBlock):
+class BlockUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
     status: BlockStatus | None = None
     order_index: int | None = None
     roadmap_id: BaseIdType | None = None
@@ -44,3 +46,4 @@ class BlockFilters(BaseModel):
     title: str | None = None
     description: str | None = None
     status: BlockStatus | None = None
+    order_index: int | None = None

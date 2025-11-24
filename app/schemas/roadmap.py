@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict
 
-from core.types import BaseIdType
+from app.core.types import BaseIdType
 
 
 class BaseRoadmap(BaseModel):

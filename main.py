@@ -5,8 +5,8 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.responses import RedirectResponse
 
-from api import router as api_router
-from core.config import settings
+from app.api import router as api_router
+from app.core.config import settings
 
 
 @asynccontextmanager

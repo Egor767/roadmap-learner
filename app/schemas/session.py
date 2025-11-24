@@ -5,8 +5,8 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
-from core.types import BaseIdType
-from schemas.card import CardStatus
+from app.core.types import BaseIdType
+from app.schemas.card import CardStatus
 
 
 class SessionSettings(BaseModel): ...

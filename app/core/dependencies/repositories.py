@@ -2,7 +2,7 @@ from typing import Annotated, TYPE_CHECKING
 
 from fastapi import Depends
 
-from repositories import (
+from app.repositories import (
     BlockRepository,
     CardRepository,
     RoadmapRepository,

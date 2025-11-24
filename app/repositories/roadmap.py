@@ -1,11 +1,11 @@
 from sqlalchemy import select, insert, update, delete
 
-from core.dependencies import transaction_manager
-from core.handlers import repository_handler
-from core.types import BaseIdType
-from models import Roadmap
-from repositories import BaseRepository
-from schemas.roadmap import RoadmapRead, RoadmapFilters
+from app.core.dependencies import transaction_manager
+from app.core.handlers import repository_handler
+from app.core.types import BaseIdType
+from app.models import Roadmap
+from app.repositories import BaseRepository
+from app.schemas.roadmap import RoadmapRead, RoadmapFilters
 
 
 def map_to_schema(db_user: Roadmap | None) -> RoadmapRead | None:
@@ -59,7 +59,7 @@ class RoadmapRepository(BaseRepository):
         async with transaction_manager(self.session):
             stmt = delete(Roadmap).where(Roadmap.id == roadmap_id)
             result = await self.session.execute(stmt)
-            return result.rowcount() > 0
+            return result.rowcount > 0
 
     @repository_handler
     async def update(

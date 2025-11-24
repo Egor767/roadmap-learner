@@ -2,11 +2,11 @@ from typing import Optional, TYPE_CHECKING
 
 from fastapi_users import BaseUserManager
 
-from core.config import settings
-from core.logging import user_manager_logger as logger
-from core.types import BaseIdType
-from models import User
-from models.mixins import IdMixin
+from app.core.config import settings
+from app.core.logging import user_manager_logger as logger
+from app.core.types import BaseIdType
+from app.models import User
+from app.models.mixins import IdMixin
 
 if TYPE_CHECKING:
     from fastapi import Request

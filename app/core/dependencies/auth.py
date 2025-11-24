@@ -5,9 +5,9 @@ from fastapi_users.authentication import AuthenticationBackend
 from fastapi_users.authentication.strategy import DatabaseStrategy
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 
-from core.authentication.transport import bearer_transport
-from core.config import settings
-from models import AccessToken
+from app.core.authentication.transport import bearer_transport
+from app.core.config import settings
+from app.models import AccessToken
 from .db import get_db_session
 
 if TYPE_CHECKING:

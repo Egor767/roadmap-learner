@@ -1,7 +1,7 @@
 from fastapi_users import schemas
 from pydantic import BaseModel, EmailStr, ConfigDict
 
-from core.types import BaseIdType
+from app.core.types import BaseIdType
 
 
 class UserRead(schemas.BaseUser[BaseIdType]):

@@ -4,7 +4,7 @@ from fastapi import (
 )
 from fastapi.security import HTTPBearer
 
-from core.config import settings
+from app.core.config import settings
 from .auth import router as auth_router
 from .block import (
     router as block_router,

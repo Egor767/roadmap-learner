@@ -1,15 +1,15 @@
 from typing import TYPE_CHECKING
 
-from core.handlers import service_handler
-from core.logging import roadmap_service_logger as logger
-from shared.generate_id import generate_base_id
+from app.core.handlers import service_handler
+from app.core.logging import roadmap_service_logger as logger
+from app.shared.generate_id import generate_base_id
 
 if TYPE_CHECKING:
-    from services import AccessService
-    from repositories import RoadmapRepository
-    from models import User
-    from core.types import BaseIdType
-    from schemas.roadmap import (
+    from app.services import AccessService
+    from app.repositories import RoadmapRepository
+    from app.models import User
+    from app.core.types import BaseIdType
+    from app.schemas.roadmap import (
         RoadmapRead,
         RoadmapCreate,
         RoadmapUpdate,
@@ -28,7 +28,6 @@ class RoadmapService:
 
     @service_handler
     async def get_all_roadmaps(self) -> list["RoadmapRead"] | list[None]:
-
         roadmaps = await self.repo.get_all()
         if not roadmaps:
             logger.warning("Roadmaps not found in DB")

@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import db_helper
+from app.models import db_helper
 
 
 @asynccontextmanager

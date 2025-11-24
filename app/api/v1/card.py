@@ -2,14 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from core.authentication.fastapi_users import current_active_user
-from core.config import settings
-from core.dependencies.services import get_card_service
-from core.handlers import router_handler
-from core.types import BaseIdType
-from models import User
-from schemas.card import CardRead, CardCreate, CardUpdate, CardFilters
-from services import CardService
+from app.core.authentication.fastapi_users import current_active_user
+from app.core.config import settings
+from app.core.dependencies.services import get_card_service
+from app.core.handlers import router_handler
+from app.core.types import BaseIdType
+from app.models import User
+from app.schemas.card import CardRead, CardCreate, CardUpdate, CardFilters
+from app.services import CardService
 
 router = APIRouter(
     prefix=settings.api.v1.cards,

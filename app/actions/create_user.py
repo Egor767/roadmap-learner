@@ -3,10 +3,9 @@ import contextlib
 import logging
 from os import getenv
 
-from fastapi_users.exceptions import UserAlreadyExists
-
 from core.dependencies import get_users_db
 from core.dependencies.users import get_user_manager
+from fastapi_users.exceptions import UserAlreadyExists
 from models import User, db_helper
 from schemas.user import UserCreate
 from services import UserManager

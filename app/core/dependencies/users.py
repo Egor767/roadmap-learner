@@ -3,9 +3,9 @@ from typing import Annotated, TYPE_CHECKING
 from fastapi import Depends, Query
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
-from models import User
-from schemas.user import UserFilters
-from services import UserManager
+from app.models import User
+from app.schemas.user import UserFilters
+from app.services import UserManager
 from .db import get_db_session
 
 if TYPE_CHECKING:

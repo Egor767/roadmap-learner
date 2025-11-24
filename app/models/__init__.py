@@ -14,5 +14,4 @@ from .block import Block
 from .card import Card
 from .db_helper import db_helper
 from .roadmap import Roadmap
-from .session_manager import Session
 from .user import User

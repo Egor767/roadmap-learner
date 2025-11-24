@@ -5,8 +5,8 @@ from fastapi_users import exceptions
 from sqlalchemy import ForeignKey, DateTime, func, text
 from sqlalchemy.orm import declared_attr, Mapped, mapped_column, relationship
 
-from core.types import BaseIdType
-from utils.generators import server_id_generator, id_generator
+from app.core.types import BaseIdType
+from app.utils.generators import server_id_generator, id_generator
 
 if TYPE_CHECKING:
     from .user import User

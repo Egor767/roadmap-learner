@@ -2,16 +2,15 @@ from typing import Annotated, TYPE_CHECKING
 
 from fastapi import APIRouter, Depends
 
-from core.authentication.fastapi_users import fastapi_users, current_active_user
-from core.config import settings
-from core.dependencies.services import get_user_service
-from core.handlers import router_handler
-from schemas.user import UserRead, UserUpdate, UserFilters
-
+from app.core.authentication.fastapi_users import fastapi_users, current_active_user
+from app.core.config import settings
+from app.core.dependencies.services import get_user_service
+from app.core.handlers import router_handler
+from app.schemas.user import UserRead, UserUpdate, UserFilters
 
 if TYPE_CHECKING:
-    from models import User
-    from services import UserService
+    from app.models import User
+    from app.services import UserService
 
 router = APIRouter(
     prefix=settings.api.v1.users,

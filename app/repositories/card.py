@@ -1,11 +1,11 @@
 from sqlalchemy import select, insert, update, delete
 
-from core.dependencies import transaction_manager
-from core.handlers import repository_handler
-from core.types import BaseIdType
-from models import Card
-from repositories import BaseRepository
-from schemas.card import CardRead, CardFilters
+from app.core.dependencies import transaction_manager
+from app.core.handlers import repository_handler
+from app.core.types import BaseIdType
+from app.models import Card
+from app.repositories import BaseRepository
+from app.schemas.card import CardRead, CardFilters
 
 
 def map_to_schema(db_card: Card | None) -> CardRead | None:

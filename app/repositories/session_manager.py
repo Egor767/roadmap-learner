@@ -2,13 +2,13 @@ from typing import List, Optional
 
 from sqlalchemy import select, insert, update, delete, func
 
-from core.dependencies import transaction_manager
-from core.handlers import repository_handler
-from core.types import BaseIdType
-from models.session_manager import Session
-from repositories import BaseRepository
-from schemas.card import CardStatus
-from schemas.session import (
+from app.core.dependencies import transaction_manager
+from app.core.handlers import repository_handler
+from app.core.types import BaseIdType
+from app.models.session_manager import Session
+from app.repositories import BaseRepository
+from app.schemas.card import CardStatus
+from app.schemas.session import (
     SessionInDB,
     SessionCreate,
     SessionFilters,

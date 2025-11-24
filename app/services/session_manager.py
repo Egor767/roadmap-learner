@@ -2,21 +2,21 @@ from typing import List
 
 from fastapi import HTTPException
 
-from core.handlers import service_handler
-from core.logging import session_manager_service_logger as logger
-from core.types import BaseIdType
-from external.card_service import get_card_from_service
-from external.session_manager_service import calculate_session_stats
-from repositories import SessionManagerRepository
-from schemas.card import CardRead
-from schemas.session import (
+from app.core.handlers import service_handler
+from app.core.logging import session_manager_service_logger as logger
+from app.core.types import BaseIdType
+from app.external.card_service import get_card_from_service
+from app.external.session_manager_service import calculate_session_stats
+from app.repositories import SessionManagerRepository
+from app.schemas.card import CardRead
+from app.schemas.session import (
     SessionResponse,
     SessionCreate,
     SessionFilters,
     SessionResult,
     SubmitAnswerRequest,
 )
-from shared.generate_id import generate_base_id
+from app.shared.generate_id import generate_base_id
 
 
 class SessionManagerService:

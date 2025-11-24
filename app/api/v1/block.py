@@ -3,12 +3,12 @@ from typing import Annotated, TYPE_CHECKING
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from core.authentication.fastapi_users import current_active_user
-from core.config import settings
-from core.dependencies.services import get_block_service
-from core.handlers import router_handler
-from core.types import BaseIdType
-from schemas.block import (
+from app.core.authentication.fastapi_users import current_active_user
+from app.core.config import settings
+from app.core.dependencies.services import get_block_service
+from app.core.handlers import router_handler
+from app.core.types import BaseIdType
+from app.schemas.block import (
     BlockRead,
     BlockCreate,
     BlockUpdate,
@@ -16,8 +16,8 @@ from schemas.block import (
 )
 
 if TYPE_CHECKING:
-    from services import BlockService
-    from models import User
+    from app.services import BlockService
+    from app.models import User
 
 
 router = APIRouter(
@@ -29,7 +29,7 @@ router = APIRouter(
 @router.get(
     "",
     name="blocks:all_blocks",
-    response_model=list[BlockRead],
+    response_model=list[BlockRead] | list[None],
 )
 @router_handler
 async def get_blocks(

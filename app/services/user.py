@@ -1,14 +1,13 @@
 from typing import TYPE_CHECKING
 
-from core.handlers import service_handler
-from core.logging import user_service_logger as logger
-from repositories import UserRepository
-from schemas.user import UserRead, UserFilters
-
+from app.core.handlers import service_handler
+from app.core.logging import user_service_logger as logger
+from app.repositories import UserRepository
+from app.schemas.user import UserRead, UserFilters
 
 if TYPE_CHECKING:
-    from models import User
-    from services import AccessService
+    from app.models import User
+    from app.services import AccessService
 
 
 class UserService:

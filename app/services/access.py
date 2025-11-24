@@ -1,14 +1,14 @@
 import logging
 from typing import TYPE_CHECKING
 
-from schemas.roadmap import RoadmapFilters
+from app.schemas.roadmap import RoadmapFilters
 
 if TYPE_CHECKING:
-    from models import User
-    from schemas.user import UserRead
-    from schemas.roadmap import RoadmapRead
-    from repositories import RoadmapRepository
-    from schemas.block import BlockRead
+    from app.models import User
+    from app.schemas.user import UserRead
+    from app.schemas.roadmap import RoadmapRead
+    from app.repositories import RoadmapRepository
+    from app.schemas.block import BlockRead
 
 
 logger = logging.getLogger("AccessService-Logger")
@@ -90,4 +90,4 @@ class AccessService:
             block.id,
             user.id,
         )
-        raise PermissionError(f"Forbidden")
+        raise PermissionError("Forbidden")
