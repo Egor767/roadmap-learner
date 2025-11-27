@@ -38,7 +38,7 @@ async def get_all_cards(
         Depends(get_card_service),
     ],
 ) -> list[CardRead]:
-    return await card_service.get_all_cards()
+    return await card_service.get_all()
 
 
 # -------------------------------------- GET ----------------------------------------------
@@ -62,7 +62,7 @@ async def get_cards(
         Depends(get_card_service),
     ],
 ) -> list[CardRead]:
-    return await card_service.get_cards_by_filters(
+    return await card_service.get_by_filters(
         current_user,
         filters,
     )
@@ -85,7 +85,7 @@ async def get_card(
         Depends(get_card_service),
     ],
 ) -> CardRead:
-    return await card_service.get_card_by_id(
+    return await card_service.get_by_id(
         current_user,
         card_id,
     )
@@ -109,7 +109,7 @@ async def create_card(
         Depends(get_card_service),
     ],
 ) -> CardRead:
-    return await card_service.create_card(
+    return await card_service.create(
         current_user,
         card_create_data,
     )
@@ -133,7 +133,7 @@ async def delete_card(
         Depends(get_card_service),
     ],
 ) -> None:
-    await card_service.delete_card(
+    await card_service.delete(
         current_user,
         card_id,
     )
@@ -158,7 +158,7 @@ async def update_card(
         Depends(get_card_service),
     ],
 ) -> CardRead:
-    return await card_service.update_card(
+    return await card_service.update(
         current_user,
         card_id,
         card_update_data,

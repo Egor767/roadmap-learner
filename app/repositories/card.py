@@ -1,39 +1,40 @@
-from sqlalchemy import select, insert, update, delete
+from typing import TYPE_CHECKING
+from sqlalchemy import (
+    select,
+    insert,
+    update,
+    delete,
+)
 
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.core.types import BaseIdType
-from app.models import Card
 from app.repositories import BaseRepository
-from app.schemas.card import CardRead
+from app.models import Card
 
-
-def map_to_schema(db_card: Card | None) -> CardRead | None:
-    if db_card:
-        return CardRead.model_validate(db_card)
-    return
+if TYPE_CHECKING:
+    from app.core.types import BaseIdType
 
 
 class CardRepository(BaseRepository):
     @repository_handler
-    async def get_all(self) -> list[CardRead] | list[None]:
+    async def get_all(self) -> list[Card]:
         stmt = select(Card)
         result = await self.session.execute(stmt)
-        db_cards = result.scalars().all()
-        return [map_to_schema(card) for card in db_cards]
+        cards = list(result.scalars().all())
+        return cards
 
     @repository_handler
-    async def get_by_id(self, card_id: BaseIdType) -> CardRead | None:
+    async def get_by_id(self, card_id: "BaseIdType") -> Card | None:
         stmt = select(Card).where(Card.id == card_id)
         result = await self.session.execute(stmt)
         card = result.scalar_one_or_none()
-        return map_to_schema(card)
+        return card
 
     @repository_handler
     async def get_by_filters(
         self,
         filters: dict,
-    ) -> list[CardRead] | list[None]:
+    ) -> list[Card]:
         stmt = select(Card)
         for field_name, value in filters.items():
             if value is not None:
@@ -44,21 +45,21 @@ class CardRepository(BaseRepository):
                     else:
                         stmt = stmt.where(column == value)
         result = await self.session.execute(stmt)
-        db_cards = result.scalars().all()
-        return [map_to_schema(card) for card in db_cards]
+        cards = list(result.scalars().all())
+        return cards
 
     @repository_handler
-    async def create(self, card_data: dict) -> CardRead | None:
+    async def create(self, card_data: dict) -> Card | None:
         async with transaction_manager(self.session):
             stmt = insert(Card).values(**card_data).returning(Card)
             result = await self.session.execute(stmt)
-            db_card = result.scalar_one_or_none()
-            return map_to_schema(db_card)
+            card = result.scalar_one_or_none()
+            return card
 
     @repository_handler
     async def delete(
         self,
-        card_id: BaseIdType,
+        card_id: "BaseIdType",
     ) -> bool:
         async with transaction_manager(self.session):
             stmt = delete(Card).where(Card.id == card_id)
@@ -68,9 +69,9 @@ class CardRepository(BaseRepository):
     @repository_handler
     async def update(
         self,
-        card_id: BaseIdType,
+        card_id: "BaseIdType",
         card_data: dict,
-    ) -> CardRead | None:
+    ) -> Card | None:
         async with transaction_manager(self.session):
             stmt = (
                 update(Card)
@@ -79,5 +80,5 @@ class CardRepository(BaseRepository):
                 .returning(Card)
             )
             result = await self.session.execute(stmt)
-            db_card = result.scalar_one_or_none()
-            return map_to_schema(db_card)
+            card = result.scalar_one_or_none()
+            return card

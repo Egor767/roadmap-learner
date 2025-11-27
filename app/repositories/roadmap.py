@@ -1,39 +1,40 @@
-from sqlalchemy import select, insert, update, delete
+from typing import TYPE_CHECKING
+from sqlalchemy import (
+    select,
+    insert,
+    update,
+    delete,
+)
 
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.core.types import BaseIdType
-from app.models import Roadmap
 from app.repositories import BaseRepository
-from app.schemas.roadmap import RoadmapRead
+from app.models import Roadmap
 
-
-def map_to_schema(db_user: Roadmap | None) -> RoadmapRead | None:
-    if db_user:
-        return RoadmapRead.model_validate(db_user)
-    return
+if TYPE_CHECKING:
+    from app.core.types import BaseIdType
 
 
 class RoadmapRepository(BaseRepository):
     @repository_handler
-    async def get_all(self) -> list[RoadmapRead] | list[None]:
+    async def get_all(self) -> list[Roadmap]:
         stmt = select(Roadmap)
         result = await self.session.execute(stmt)
-        db_roadmaps = result.scalars().all()
-        return [map_to_schema(roadmap) for roadmap in db_roadmaps]
+        roadmaps = list(result.scalars().all())
+        return roadmaps
 
     @repository_handler
-    async def get_by_id(self, roadmap_id: BaseIdType) -> RoadmapRead | None:
+    async def get_by_id(self, roadmap_id: "BaseIdType") -> Roadmap | None:
         stmt = select(Roadmap).where(Roadmap.id == roadmap_id)
         result = await self.session.execute(stmt)
-        db_roadmap = result.scalar_one_or_none()
-        return map_to_schema(db_roadmap)
+        roadmap = result.scalar_one_or_none()
+        return roadmap
 
     @repository_handler
     async def get_by_filters(
         self,
         filters: dict,
-    ) -> list[RoadmapRead] | list[None]:
+    ) -> list[Roadmap]:
         stmt = select(Roadmap)
 
         for field_name, value in filters.items():
@@ -43,19 +44,19 @@ class RoadmapRepository(BaseRepository):
                     stmt = stmt.where(column == value)
 
         result = await self.session.execute(stmt)
-        db_roadmaps = result.scalars().all()
-        return [map_to_schema(roadmap) for roadmap in db_roadmaps]
+        roadmaps = list(result.scalars().all())
+        return roadmaps
 
     @repository_handler
-    async def create(self, roadmap_data: dict) -> RoadmapRead | None:
+    async def create(self, roadmap_data: dict) -> Roadmap | None:
         async with transaction_manager(self.session):
             stmt = insert(Roadmap).values(**roadmap_data).returning(Roadmap)
             result = await self.session.execute(stmt)
-            db_roadmap = result.scalar_one_or_none()
-            return map_to_schema(db_roadmap)
+            roadmap = result.scalar_one_or_none()
+            return roadmap
 
     @repository_handler
-    async def delete(self, roadmap_id: BaseIdType) -> bool:
+    async def delete(self, roadmap_id: "BaseIdType") -> bool:
         async with transaction_manager(self.session):
             stmt = delete(Roadmap).where(Roadmap.id == roadmap_id)
             result = await self.session.execute(stmt)
@@ -64,9 +65,9 @@ class RoadmapRepository(BaseRepository):
     @repository_handler
     async def update(
         self,
-        roadmap_id: BaseIdType,
+        roadmap_id: "BaseIdType",
         roadmap_data: dict,
-    ) -> RoadmapRead | None:
+    ) -> Roadmap | None:
         async with transaction_manager(self.session):
             stmt = (
                 update(Roadmap)
@@ -75,5 +76,5 @@ class RoadmapRepository(BaseRepository):
                 .returning(Roadmap)
             )
             result = await self.session.execute(stmt)
-            db_roadmap = result.scalar_one_or_none()
-            return map_to_schema(db_roadmap)
+            roadmap = result.scalar_one_or_none()
+            return roadmap

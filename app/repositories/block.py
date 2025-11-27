@@ -1,39 +1,40 @@
-from sqlalchemy import select, insert, update, delete
+from typing import TYPE_CHECKING
+from sqlalchemy import (
+    select,
+    insert,
+    update,
+    delete,
+)
 
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.core.types import BaseIdType
-from app.models import Block
 from app.repositories import BaseRepository
-from app.schemas.block import BlockRead
+from app.models import Block
 
-
-def map_to_schema(db_block: Block | None) -> BlockRead | None:
-    if db_block:
-        return BlockRead.model_validate(db_block)
-    return
+if TYPE_CHECKING:
+    from app.core.types import BaseIdType
 
 
 class BlockRepository(BaseRepository):
     @repository_handler
-    async def get_by_id(self, block_id: BaseIdType) -> BlockRead:
-        stmt = select(Block).where(Block.id == block_id)
-        result = await self.session.execute(stmt)
-        db_block = result.scalar_one_or_none()
-        return map_to_schema(db_block)
-
-    @repository_handler
-    async def get_all(self) -> list[BlockRead]:
+    async def get_all(self) -> list[Block]:
         stmt = select(Block)
         result = await self.session.execute(stmt)
-        db_blocks = result.scalars().all()
-        return [map_to_schema(block) for block in db_blocks]
+        blocks = list(result.scalars().all())
+        return blocks
+
+    @repository_handler
+    async def get_by_id(self, block_id: "BaseIdType") -> Block | None:
+        stmt = select(Block).where(Block.id == block_id)
+        result = await self.session.execute(stmt)
+        block = result.scalar_one_or_none()
+        return block
 
     @repository_handler
     async def get_by_filters(
         self,
         filters: dict,
-    ) -> list[BlockRead] | list[None]:
+    ) -> list[Block]:
         stmt = select(Block)
         for field_name, value in filters.items():
             if value is not None:
@@ -44,19 +45,19 @@ class BlockRepository(BaseRepository):
                     else:
                         stmt = stmt.where(column == value)
         result = await self.session.execute(stmt)
-        db_blocks = result.scalars().all()
-        return [map_to_schema(block) for block in db_blocks]
+        blocks = list(result.scalars().all())
+        return blocks
 
     @repository_handler
-    async def create(self, block_data: dict) -> BlockRead | None:
+    async def create(self, block_data: dict) -> Block | None:
         async with transaction_manager(self.session):
             stmt = insert(Block).values(**block_data).returning(Block)
             result = await self.session.execute(stmt)
-            db_block = result.scalar_one_or_none()
-            return map_to_schema(db_block)
+            block = result.scalar_one_or_none()
+            return block
 
     @repository_handler
-    async def delete(self, block_id: BaseIdType) -> bool:
+    async def delete(self, block_id: "BaseIdType") -> bool:
         async with transaction_manager(self.session):
             stmt = delete(Block).where(Block.id == block_id)
             result = await self.session.execute(stmt)
@@ -65,9 +66,9 @@ class BlockRepository(BaseRepository):
     @repository_handler
     async def update(
         self,
-        block_id: BaseIdType,
+        block_id: "BaseIdType",
         block_data: dict,
-    ) -> BlockRead | None:
+    ) -> Block | None:
         async with transaction_manager(self.session):
             stmt = (
                 update(Block)
@@ -76,5 +77,5 @@ class BlockRepository(BaseRepository):
                 .returning(Block)
             )
             result = await self.session.execute(stmt)
-            db_roadmap = result.scalar_one_or_none()
-            return map_to_schema(db_roadmap)
+            block = result.scalar_one_or_none()
+            return block

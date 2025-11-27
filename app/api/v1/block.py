@@ -38,7 +38,7 @@ async def get_all_blocks(
         Depends(get_block_service),
     ],
 ) -> list[BlockRead]:
-    return await block_service.get_all_blocks()
+    return await block_service.get_all()
 
 
 # -------------------------------------- GET ----------------------------------------------
@@ -62,7 +62,7 @@ async def get_blocks(
         Depends(get_block_service),
     ],
 ) -> list[BlockRead]:
-    return await block_service.get_blocks_by_filters(
+    return await block_service.get_by_filters(
         current_user,
         filters,
     )
@@ -85,7 +85,7 @@ async def get_block(
         Depends(get_block_service),
     ],
 ) -> BlockRead:
-    return await block_service.get_block_by_id(
+    return await block_service.get_by_id(
         current_user,
         block_id,
     )
@@ -109,7 +109,7 @@ async def create_block(
         Depends(get_block_service),
     ],
 ) -> BlockRead:
-    return await block_service.create_block(
+    return await block_service.create(
         current_user,
         block_create_data,
     )
@@ -133,7 +133,7 @@ async def delete_block(
         Depends(get_block_service),
     ],
 ) -> None:
-    await block_service.delete_block(
+    await block_service.delete(
         current_user,
         block_id,
     )
@@ -158,7 +158,7 @@ async def update_block(
         Depends(get_block_service),
     ],
 ) -> BlockRead:
-    return await block_service.update_block(
+    return await block_service.update(
         current_user,
         block_id,
         block_update_data,

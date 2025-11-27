@@ -38,7 +38,7 @@ async def get_all_roadmaps(
         Depends(get_roadmap_service),
     ],
 ) -> list[RoadmapRead]:
-    return await roadmap_service.get_all_roadmaps()
+    return await roadmap_service.get_all()
 
 
 # -------------------------------------- GET ----------------------------------------------
@@ -62,7 +62,7 @@ async def get_roadmaps(
         Depends(get_roadmap_service),
     ],
 ) -> list[RoadmapRead]:
-    return await roadmap_service.get_roadmaps_by_filters(
+    return await roadmap_service.get_by_filters(
         current_user,
         filters,
     )
@@ -85,7 +85,7 @@ async def get_roadmap(
         Depends(get_roadmap_service),
     ],
 ) -> RoadmapRead:
-    return await roadmap_service.get_roadmap_by_id(
+    return await roadmap_service.get_by_id(
         current_user,
         roadmap_id,
     )
@@ -109,7 +109,7 @@ async def create_roadmap(
         Depends(get_roadmap_service),
     ],
 ) -> RoadmapRead:
-    return await roadmap_service.create_roadmap(
+    return await roadmap_service.create(
         current_user,
         roadmap_create_data,
     )
@@ -133,7 +133,7 @@ async def delete_roadmap(
         Depends(get_roadmap_service),
     ],
 ) -> None:
-    await roadmap_service.delete_roadmap(
+    await roadmap_service.delete(
         current_user,
         roadmap_id,
     )
@@ -158,7 +158,7 @@ async def update_roadmap(
         Depends(get_roadmap_service),
     ],
 ) -> RoadmapRead:
-    return await roadmap_service.update_roadmap(
+    return await roadmap_service.update(
         current_user,
         roadmap_id,
         roadmap_update_data,

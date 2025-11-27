@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
-from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
     from app.core.types import BaseIdType
+    from app.models import Base
 
 
 class BaseRepository(ABC):
@@ -12,25 +12,19 @@ class BaseRepository(ABC):
         self.session = session
 
     @abstractmethod
-    async def get_all(self) -> list[BaseModel] | list[None]:
+    async def get_all(self) -> list["Base"]:
         pass
 
     @abstractmethod
-    async def get_by_filters(self, filters: dict) -> list[BaseModel] | list[None]:
+    async def get_by_filters(self, filters: dict) -> list["Base"]:
         pass
 
     @abstractmethod
-    async def get_by_id(self, object_id: "BaseIdType") -> BaseModel | None:
+    async def get_by_id(self, object_id: "BaseIdType") -> "Base" | None:
         pass
 
-    # @abstractmethod
-    # async def get_by_parent(
-    #     self, parent_id: BaseIdType, child_id: BaseIdType
-    # ) -> BaseModel | None:
-    #     pass
-
     @abstractmethod
-    async def create(self, create_data: dict) -> BaseModel | None:
+    async def create(self, create_data: dict) -> "Base" | None:
         pass
 
     @abstractmethod
@@ -38,9 +32,5 @@ class BaseRepository(ABC):
         pass
 
     @abstractmethod
-    async def update(
-        self,
-        object_id: "BaseIdType",
-        update_data: dict,
-    ) -> BaseModel | None:
+    async def update(self, object_id: "BaseIdType", update_data: dict) -> "Base" | None:
         pass

@@ -29,7 +29,7 @@ async def get_users(
         Depends(get_user_service),
     ],
 ):
-    return await user_service.get_all_users()
+    return await user_service.get_all()
 
 
 @router.get(
@@ -52,7 +52,7 @@ async def get_users_by_filters(
         Depends(get_user_service),
     ],
 ):
-    return await user_service.get_users_by_filters(
+    return await user_service.get_by_filters(
         current_user,
         filters,
     )

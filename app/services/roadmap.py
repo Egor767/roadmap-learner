@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from app.core.handlers import service_handler
 from app.core.logging import roadmap_service_logger as logger
 from app.shared.generate_id import generate_base_id
+from app.utils.mappers.orm_to_models import roadmap_orm_to_model
 
 if TYPE_CHECKING:
     from app.core.types import BaseIdType
@@ -27,50 +28,61 @@ class RoadmapService:
         self.access = access_service
 
     @service_handler
-    async def get_all_roadmaps(self) -> list["RoadmapRead"] | list[None]:
-        roadmaps = await self.repo.get_all()
-        if not roadmaps:
+    async def get_all(self) -> list["RoadmapRead"]:
+        db_roadmaps = await self.repo.get_all()
+        if not db_roadmaps:
             logger.warning("Roadmaps not found in DB")
             return []
 
-        return roadmaps
+        validated_roadmaps = [
+            await roadmap_orm_to_model(db_roadmap) for db_roadmap in db_roadmaps
+        ]
+
+        return validated_roadmaps
 
     @service_handler
-    async def get_roadmaps_by_filters(
+    async def get_by_filters(
         self,
         current_user: "User",
         filters: "RoadmapFilters",
-    ) -> list["RoadmapRead"] | list[None]:
+    ) -> list["RoadmapRead"]:
         filters_dict = filters.model_dump()
         accessed_filters = await self.access.filter_roadmaps_for_user(
             current_user,
             filters_dict,
         )
 
-        roadmaps = await self.repo.get_by_filters(accessed_filters)
-        if not roadmaps:
+        db_roadmaps = await self.repo.get_by_filters(accessed_filters)
+        if not db_roadmaps:
             logger.warning("Roadmaps with filters(%r) not found", filters)
             return []
 
-        return roadmaps
+        validated_roadmaps = [
+            await roadmap_orm_to_model(db_roadmap) for db_roadmap in db_roadmaps
+        ]
+
+        return validated_roadmaps
 
     @service_handler
-    async def get_roadmap_by_id(
+    async def get_by_id(
         self,
         current_user: "User",
         roadmap_id: "BaseIdType",
     ) -> "RoadmapRead":
-        roadmap = await self.repo.get_by_id(roadmap_id)
-        if not roadmap:
+        db_roadmap = await self.repo.get_by_id(roadmap_id)
+        if not db_roadmap:
             logger.error("Roadmap(id=%r) not found", roadmap_id)
             raise ValueError("NOT_FOUND")
 
-        await self.access.ensure_can_view_roadmap(current_user, roadmap.model_dump())
+        validated_roadmap = await roadmap_orm_to_model(db_roadmap)
+        await self.access.ensure_can_view_roadmap(
+            current_user, validated_roadmap.model_dump()
+        )
 
-        return roadmap
+        return validated_roadmap
 
     @service_handler
-    async def create_roadmap(
+    async def create(
         self,
         current_user: "User",
         roadmap_create_data: "RoadmapCreate",
@@ -88,15 +100,17 @@ class RoadmapService:
             )
             raise ValueError("OPERATION_FAILED")
 
-        return created_roadmap
+        validated_created_roadmap = await roadmap_orm_to_model(created_roadmap)
+
+        return validated_created_roadmap
 
     @service_handler
-    async def delete_roadmap(
+    async def delete(
         self,
         current_user: "User",
         roadmap_id: "BaseIdType",
     ) -> None:
-        await self.get_roadmap_by_id(current_user, roadmap_id)
+        await self.get_by_id(current_user, roadmap_id)
 
         success = await self.repo.delete(roadmap_id)
         if success:
@@ -106,13 +120,13 @@ class RoadmapService:
             raise ValueError("OPERATION_FAILED")
 
     @service_handler
-    async def update_roadmap(
+    async def update(
         self,
         current_user: "User",
         roadmap_id: "BaseIdType",
         roadmap_update_data: "RoadmapUpdate",
     ) -> "RoadmapRead":
-        await self.get_roadmap_by_id(current_user, roadmap_id)
+        await self.get_by_id(current_user, roadmap_id)
 
         roadmap_dict = roadmap_update_data.model_dump(exclude_unset=True)
 
@@ -121,4 +135,6 @@ class RoadmapService:
             logger.error("Failed to update Roadmap(id=%r)", roadmap_id)
             raise ValueError("OPERATION_FAILED")
 
-        return updated_roadmap
+        validated_updated_roadmap = await roadmap_orm_to_model(updated_roadmap)
+
+        return validated_updated_roadmap
