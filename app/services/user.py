@@ -28,23 +28,13 @@ class UserService:
 
     @service_handler
     async def get_all(self) -> list["UserRead"]:
-        cache_key = "users:all"
-        cached = await self.redis.get(cache_key)
-        if cached:
-            logging.info("Hit cache for key: %r", cache_key)
-            return await users_cache_to_model(cached)
-
         db_users = await self.repo.get_all()
         if len(db_users) == 0:
             logger.warning("Users not found in DB")
             return []
 
-        validated_users = [await user_orm_to_model(user) for user in db_users]
-        await self.redis.set(
-            cache_key,
-            json.dumps([u.model_dump_json() for u in validated_users]),
-            ex=self.ttl,
-        )
+        validated_users = [user_orm_to_model(user) for user in db_users]
+
         return validated_users
 
     @service_handler
@@ -53,8 +43,11 @@ class UserService:
         current_user: "User",
         filters: "UserFilters",
     ) -> list["UserRead"]:
-        filters_dict = filters.model_dump()
-        accessed_filters = await get_accessed_filters(
+        filters_dict = filters.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
+        accessed_filters = get_accessed_filters(
             current_user,
             filters_dict,
         )
@@ -64,6 +57,6 @@ class UserService:
             logger.warning("Users with filters(%r) not found", filters)
             return []
 
-        validated_users = [await user_orm_to_model(user) for user in db_users]
+        validated_users = [user_orm_to_model(user) for user in db_users]
 
         return validated_users

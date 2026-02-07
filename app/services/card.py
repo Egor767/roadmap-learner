@@ -46,7 +46,6 @@ class CardService:
             exclude_none=True,
             exclude_unset=True,
         )
-
         if is_single_parent_filter(filters_dict, "block_id"):
             key = get_cache_key(
                 "cards",

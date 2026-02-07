@@ -53,6 +53,7 @@ class RoadmapService:
         current_user: "User",
         filters: "RoadmapFilters",
     ) -> list["RoadmapRead"]:
+        logger.warning("REDIS: %r", self.redis)
         filters_dict = filters.model_dump(
             exclude_none=True,
             exclude_unset=True,

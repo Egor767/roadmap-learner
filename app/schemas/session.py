@@ -67,6 +67,11 @@ class SessionFilters(BaseModel):
     status: SessionStatus | None = None
 
 
+class SessionCardsFilter(BaseModel):
+    limit: int | None = 0
+    offset: int | None = 0
+
+
 class SessionResult(BaseModel):
     id: BaseIdType
     user_id: BaseIdType

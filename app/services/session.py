@@ -7,12 +7,16 @@ from app.core.loggers import session_manager_service_logger as logger
 from app.external.requests import (
     get_cards_by_filters,
     get_blocks_by_filters,
-    get_block_by_id,
 )
 from app.shared.access import get_accessed_filters, user_can_read_entity
 from app.shared.generate_id import generate_base_id
 from app.utils.mappers.orm_to_models import session_orm_to_model
-from app.schemas.session import SessionMode, SessionStatus, SessionResult
+from app.schemas.session import (
+    SessionMode,
+    SessionStatus,
+    SessionResult,
+    SessionCardsFilter,
+)
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
@@ -44,7 +48,7 @@ class SessionService:
             return []
 
         validated_sessions = [
-            await session_orm_to_model(db_session) for db_session in db_sessions
+            session_orm_to_model(db_session) for db_session in db_sessions
         ]
 
         return validated_sessions
@@ -55,8 +59,11 @@ class SessionService:
         current_user: "User",
         filters: "SessionFilters",
     ) -> list["SessionRead"]:
-        filters_dict = filters.model_dump()
-        accessed_filters = await get_accessed_filters(
+        filters_dict = filters.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
+        accessed_filters = get_accessed_filters(
             current_user,
             filters_dict,
         )
@@ -70,7 +77,7 @@ class SessionService:
             return []
 
         validated_sessions = [
-            await session_orm_to_model(db_session) for db_session in db_sessions
+            session_orm_to_model(db_session) for db_session in db_sessions
         ]
 
         return validated_sessions
@@ -86,37 +93,34 @@ class SessionService:
             logger.error("Session(id=%r) not found", session_id)
             raise ValueError("NOT_FOUND")
 
-        validated_session = await session_orm_to_model(db_session)
-        await user_can_read_entity(current_user, validated_session.model_dump())
+        validated_session = session_orm_to_model(db_session)
+        user_can_read_entity(current_user, validated_session.model_dump())
 
         return validated_session
 
     @service_handler
-    async def get_next_card_id(
+    async def get_cards(
         self,
         current_user: "User",
         session_id: "BaseIdType",
-    ) -> "BaseIdType":
+        filters: "SessionCardsFilter",
+    ) -> list["BaseIdType"]:
         session = await self.get_by_id(current_user, session_id)
-
         try:
-            next_card_id = session.card_ids_queue[session.current_card_index]
-        except (IndexError, TypeError, AttributeError) as e:
+            cards = session.card_ids_queue[
+                filters.offset : filters.offset + filters.limit
+            ]
+        except Exception as e:
             logger.warning(
-                "Next card access failed for session %r: queue=%r, index=%r, error=%r",
+                "Cards access failed for session %r: queue=%r, index=%r, error=%r",
                 session_id,
                 getattr(session, "card_ids_queue", None),
                 getattr(session, "current_card_index", None),
                 e,
             )
-            raise ValueError("Next card id not found or invalid session state") from e
+            raise ValueError("Cards ids not found or invalid session state") from e
 
-        await self.repo.update(
-            session.id,
-            {"current_card_index": session.current_card_index + 1},
-        )
-
-        return next_card_id
+        return cards
 
     @service_handler
     async def create(
@@ -126,12 +130,14 @@ class SessionService:
         token: str,
     ) -> "SessionRead":
         filters = session_create_data.model_dump(
-            exclude={"mode", "mix"}, exclude_none=True
+            exclude={"mode", "mix"},
+            exclude_none=True,
+            exclude_unset=True,
         )
         if session_create_data.mode is SessionMode.REVIEW:
             filters["status"] = "review"
 
-        accessed_filters = await get_accessed_filters(
+        accessed_filters = get_accessed_filters(
             current_user,
             filters,
         )
@@ -160,7 +166,7 @@ class SessionService:
 
         session_dict = session_create_data.model_dump(exclude={"mix"})
         session_dict["user_id"] = current_user.id
-        session_dict["id"] = await generate_base_id()
+        session_dict["id"] = generate_base_id()
         if session_create_data.mix:
             random.shuffle(cards_ids_queue)
         session_dict["card_ids_queue"] = cards_ids_queue
@@ -174,7 +180,7 @@ class SessionService:
             )
             raise ValueError("OPERATION_FAILED")
 
-        validated_created_session = await session_orm_to_model(created_session)
+        validated_created_session = session_orm_to_model(created_session)
 
         return validated_created_session
 
@@ -200,16 +206,19 @@ class SessionService:
         session_id: "BaseIdType",
         session_update_data: "SessionUpdate",
     ) -> "SessionRead":
-        await self.get_by_id(current_user, session_id)
+        session = await self.get_by_id(current_user, session_id)
 
-        session_dict = session_update_data.model_dump(exclude_unset=True)
+        session_dict = session_update_data.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
 
         updated_session = await self.repo.update(session_id, session_dict)
         if not updated_session:
             logger.error("Failed to update Session(id=%r)", session_id)
             raise ValueError("OPERATION_FAILED")
 
-        validated_updated_session = await session_orm_to_model(updated_session)
+        validated_updated_session = session_orm_to_model(updated_session)
 
         return validated_updated_session
 
@@ -219,7 +228,7 @@ class SessionService:
         current_user: "User",
         session_id: "BaseIdType",
     ) -> SessionResult:
-        await self.get_by_id(current_user, session_id)
+        session = await self.get_by_id(current_user, session_id)
 
         update_data = {
             "status": SessionStatus.COMPLETED,
@@ -231,7 +240,7 @@ class SessionService:
             logger.error("Failed to update Session(id=%r)", session_id)
             raise ValueError("OPERATION_FAILED")
 
-        session = await session_orm_to_model(updated_session)
+        session = session_orm_to_model(updated_session)
 
         reviewed_answers = session.review_answers
         cards_len = len(session.card_ids_queue)

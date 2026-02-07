@@ -16,6 +16,7 @@ from app.schemas.session import (
     SessionFilters,
     SessionResult,
     SessionUpdate,
+    SessionCardsFilter,
 )
 
 if TYPE_CHECKING:
@@ -95,11 +96,15 @@ async def get_session(
 
 
 @router.get(
-    "/{session_id}/next-card-id",
+    "/{session_id}/cards",
 )
 @router_handler
-async def get_next_card_id(
+async def get_cards(
     session_id: BaseIdType,
+    filters: Annotated[
+        SessionCardsFilter,
+        Depends(),
+    ],
     current_user: Annotated[
         "User",
         Depends(current_active_user),
@@ -109,9 +114,10 @@ async def get_next_card_id(
         Depends(get_session_service),
     ],
 ):
-    return await session_service.get_next_card_id(
+    return await session_service.get_cards(
         current_user,
         session_id,
+        filters,
     )
 
 
