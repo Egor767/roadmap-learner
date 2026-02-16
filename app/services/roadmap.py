@@ -53,7 +53,7 @@ class RoadmapService:
         current_user: "User",
         filters: "RoadmapFilters",
     ) -> list["RoadmapRead"]:
-        logger.warning("REDIS: %r", self.redis)
+
         filters_dict = filters.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -86,7 +86,8 @@ class RoadmapService:
 
         if not filters_dict:
             cache_data = json.dumps(
-                [u.model_dump(mode="json") for u in validated_roadmaps], default=str
+                [u.model_dump(mode="json") for u in validated_roadmaps],
+                default=str,
             )
             await self.redis.set(
                 key,
@@ -160,7 +161,6 @@ class RoadmapService:
 
         await self.redis.delete(
             get_cache_key("roadmaps", "user", str(current_user.id), "list"),
-            get_cache_key("roadmaps", "user", str(current_user.id), "detail"),
         )
 
         return validated_created_roadmap
@@ -179,12 +179,7 @@ class RoadmapService:
             raise ValueError("OPERATION_FAILED")
 
         await self.redis.delete(
-            get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "list",
-            ),
+            get_cache_key("roadmaps", "user", str(current_user.id), "list"),
             get_cache_key(
                 "roadmaps",
                 "user",
@@ -217,12 +212,7 @@ class RoadmapService:
         validated_updated_roadmap = roadmap_orm_to_model(updated_roadmap)
 
         await self.redis.delete(
-            get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "list",
-            ),
+            get_cache_key("roadmaps", "user", str(current_user.id), "list"),
             get_cache_key(
                 "roadmaps",
                 "user",

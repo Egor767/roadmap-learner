@@ -1,13 +1,8 @@
-import json
-import logging
 from typing import TYPE_CHECKING
-
-from redis.asyncio import Redis
 
 from app.core.handlers import service_handler
 from app.core.loggers import user_service_logger as logger
 from app.shared.access import get_accessed_filters
-from app.utils.mappers.cache_to_model import users_cache_to_model
 from app.utils.mappers.orm_to_models import user_orm_to_model
 
 if TYPE_CHECKING:
@@ -17,14 +12,8 @@ if TYPE_CHECKING:
 
 
 class UserService:
-    def __init__(
-        self,
-        repo: "UserRepository",
-        redis: "Redis",
-    ):
+    def __init__(self, repo: "UserRepository"):
         self.repo = repo
-        self.redis = redis
-        self.ttl = 60
 
     @service_handler
     async def get_all(self) -> list["UserRead"]:

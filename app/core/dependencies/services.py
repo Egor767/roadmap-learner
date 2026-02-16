@@ -35,15 +35,8 @@ async def get_user_service(
         "UserRepository",
         Depends(get_user_repository),
     ],
-    redis: Annotated[
-        "Redis",
-        Depends(get_redis),
-    ],
 ) -> UserService:
-    yield UserService(
-        user_repo,
-        redis,
-    )
+    yield UserService(user_repo)
 
 
 async def get_roadmap_service(

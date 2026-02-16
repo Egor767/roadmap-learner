@@ -1,7 +1,9 @@
 from datetime import datetime
 from enum import Enum
+from typing import Annotated, List
 
-from pydantic import BaseModel, ConfigDict
+from fastapi import Query
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
 
@@ -46,7 +48,6 @@ class CardRead(BaseCard):
 
 class CardFilters(BaseModel):
     user_id: BaseIdType | None = None
-    block_id: BaseIdType | None = None
     term: str | None = None
     definition: str | None = None
     example: str | None = None

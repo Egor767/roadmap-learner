@@ -45,7 +45,10 @@ class BlockService:
     async def get_by_filters(
         self, current_user: "User", filters: "BlockFilters"
     ) -> list["BlockRead"]:
-        filters_dict = filters.model_dump(exclude_none=True, exclude_unset=True)
+        filters_dict = filters.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
 
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
@@ -73,7 +76,11 @@ class BlockService:
             cache_data = json.dumps(
                 [u.model_dump(mode="json") for u in validated_blocks], default=str
             )
-            await self.redis.set(key, cache_data, ex=settings.cache.block_list_ttl)
+            await self.redis.set(
+                key,
+                cache_data,
+                ex=settings.cache.block_list_ttl,
+            )
 
         return validated_blocks
 
@@ -141,16 +148,7 @@ class BlockService:
                 "roadmap",
                 str(block_dict["roadmap_id"]),
                 "list",
-            ),
-            get_cache_key(
-                "blocks",
-                settings.cache.version,
-                "user",
-                str(current_user.id),
-                "block",
-                str(block_dict["id"]),
-                "detail",
-            ),
+            )
         )
 
         return validated_created_block

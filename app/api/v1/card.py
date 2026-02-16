@@ -1,6 +1,6 @@
 from typing import Annotated, TYPE_CHECKING
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
@@ -61,10 +61,12 @@ async def get_cards(
         "CardService",
         Depends(get_card_service),
     ],
+    block_id: Annotated[list[BaseIdType] | None, Query()] = None,
 ) -> list[CardRead]:
     return await card_service.get_by_filters(
         current_user,
         filters,
+        block_id,
     )
 
 

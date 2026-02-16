@@ -40,12 +40,17 @@ class CardService:
 
     @service_handler
     async def get_by_filters(
-        self, current_user: "User", filters: "CardFilters"
+        self,
+        current_user: "User",
+        filters: "CardFilters",
+        block_id: list["BaseIdType"] | None,
     ) -> list["CardRead"]:
-        filters_dict = filters.model_dump(
-            exclude_none=True,
-            exclude_unset=True,
-        )
+        filters_dump = {
+            **filters.model_dump(exclude_none=True, exclude_unset=True),
+            "block_id": block_id,
+        }
+        filters_dict = {k: v for k, v in filters_dump.items() if v is not None}
+
         if is_single_parent_filter(filters_dict, "block_id"):
             key = get_cache_key(
                 "cards",
@@ -70,7 +75,6 @@ class CardService:
             return []
 
         validated_cards = [card_orm_to_model(db_card) for db_card in db_cards]
-
         if is_single_parent_filter(filters_dict, "block_id"):
             cache_data = json.dumps(
                 [u.model_dump(mode="json") for u in validated_cards],
@@ -148,15 +152,6 @@ class CardService:
                 "block",
                 str(card_dict["block_id"]),
                 "list",
-            ),
-            get_cache_key(
-                "cards",
-                settings.cache.version,
-                "user",
-                str(current_user.id),
-                "card",
-                str(card_dict["id"]),
-                "detail",
             ),
         )
 

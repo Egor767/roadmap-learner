@@ -152,24 +152,18 @@ class SessionService:
         else:
             blocks_ids = [accessed_filters.get("block_id")]
 
-        cards_ids_queue = []
-        for block_id in blocks_ids:
-            accessed_filters["block_id"] = block_id
-            cards_ids_for_block = [
-                card.get("id")
-                for card in await get_cards_by_filters(
-                    token,
-                    accessed_filters,
-                )
-            ]
-            cards_ids_queue += cards_ids_for_block
+        cards_ids = []
+        if blocks_ids:
+            accessed_filters["block_id"] = blocks_ids.copy()
+            cards_data = await get_cards_by_filters(token, accessed_filters)
+            cards_ids = [card["id"] for card in cards_data]
 
         session_dict = session_create_data.model_dump(exclude={"mix"})
         session_dict["user_id"] = current_user.id
         session_dict["id"] = generate_base_id()
         if session_create_data.mix:
-            random.shuffle(cards_ids_queue)
-        session_dict["card_ids_queue"] = cards_ids_queue
+            random.shuffle(cards_ids)
+        session_dict["card_ids_queue"] = cards_ids
 
         created_session = await self.repo.create(session_dict)
         if not created_session:
@@ -242,12 +236,13 @@ class SessionService:
 
         session = session_orm_to_model(updated_session)
 
-        reviewed_answers = session.review_answers
+        reviewed_answers = session.correct_answers + session.incorrect_answers
         cards_len = len(session.card_ids_queue)
+
         accuracy = (
-            (session.correct_answers / reviewed_answers * 100)
+            int((session.correct_answers / reviewed_answers) * 100)
             if reviewed_answers != 0
-            else 0.0
+            else 0
         )
 
         result = SessionResult(
