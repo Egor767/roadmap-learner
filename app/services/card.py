@@ -58,7 +58,7 @@ class CardService:
                 "user",
                 str(current_user.id),
                 "block",
-                str(filters_dict["block_id"]),
+                str(filters_dict["block_id"][0]),
                 "list",
             )
             cached = await self.redis.get(key)
@@ -150,7 +150,7 @@ class CardService:
                 "user",
                 str(current_user.id),
                 "block",
-                str(card_dict["block_id"]),
+                str(created_card.block_id),
                 "list",
             ),
         )
