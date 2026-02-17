@@ -54,9 +54,9 @@ async def root():
     return RedirectResponse(url="/docs")
 
 
-@app.get("/hello")
+@app.get("/health")
 async def hello():
-    return "Hello!"
+    return {"status": "ok"}
 
 
 app.include_router(api_router)

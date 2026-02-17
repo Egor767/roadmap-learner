@@ -1,12 +1,15 @@
-aiohttp==3.13.2
-alembic==1.17.1
-asyncpg==0.30.0
-fastapi==0.117.1
-fastapi-users[oauth,sqlalchemy]==15.0.1
-pydantic-settings==2.11.0
-sqlalchemy==2.0.43
-uvicorn==0.37.0
+aiohttp>=3.13.2
+alembic>=1.17.1
+asyncpg>=0.30.0
+dotenv>=0.9.9
+fastapi>=0.117.1
+fastapi-users[oauth,sqlalchemy]>=15.0.1
+httpx>=0.28.1
+pydantic-settings>=2.11.0
+redis>=5.0.0
+setuptools>=80.9.0
+sqlalchemy>=2.0.43
+uvicorn>=0.37.0
 
-starlette~=0.49.1
-pydantic~=2.11.9
-redis~=7.1.0
+# Dev dependencies
+black>=24.10.0
