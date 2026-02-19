@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     pass
 
 
-class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, UserRelationMixin, Base):
+class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
     # _roadmap_back_populates = "blocks"
 
     title: Mapped[str] = mapped_column(

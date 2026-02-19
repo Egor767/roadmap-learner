@@ -36,7 +36,6 @@ class CardUpdate(BaseModel):
 class CardRead(BaseCard):
     id: BaseIdType
     block_id: BaseIdType
-    user_id: BaseIdType
     example: str | None = None
     comment: str | None = None
     status: CardStatus
@@ -47,7 +46,6 @@ class CardRead(BaseCard):
 
 
 class CardFilters(BaseModel):
-    user_id: BaseIdType | None = None
     term: str | None = None
     definition: str | None = None
     example: str | None = None

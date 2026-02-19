@@ -1166,7 +1166,7 @@ wheels = [
 ]
 
 [[package]]
-name = "roadmap-learner"
+name = "roadmap-learner-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

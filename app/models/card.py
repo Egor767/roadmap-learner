@@ -10,7 +10,7 @@ from .mixins import (
 )
 
 
-class Card(IdMixin, TimestampMixin, BlockRelationMixin, UserRelationMixin, Base):
+class Card(IdMixin, TimestampMixin, BlockRelationMixin, Base):
     # _block_back_populates = "cards"
 
     term: Mapped[str] = mapped_column(
