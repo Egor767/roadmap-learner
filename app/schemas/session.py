@@ -60,7 +60,6 @@ class SessionRead(BaseSession):
 
 
 class SessionFilters(BaseModel):
-    user_id: BaseIdType | None = None
     mode: SessionMode | None = None
     roadmap_id: BaseIdType | None = None
     block_id: BaseIdType | None = None
