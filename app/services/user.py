@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from app.core.handlers import service_handler
 from app.core.loggers import user_service_logger as logger
 from app.shared.access import get_accessed_filters
-from app.utils.mappers.orm_to_models import user_orm_to_model
+from app.utils.mappers.orm_to_schema import user_orm_to_model
 
 if TYPE_CHECKING:
     from app.repositories import UserRepository
