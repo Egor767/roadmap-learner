@@ -1,9 +1,16 @@
 import logging
 from functools import wraps
 
+from asyncpg import ForeignKeyViolationError
 from fastapi import HTTPException
 from fastapi import status
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+
+from app.core.custom_exceptions import (
+    EntityConflictError,
+    EntityNotFoundError,
+    PersistenceError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -67,30 +74,28 @@ def repository_handler(func):
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
+
         except IntegrityError as e:
-            # Проверяем, что это именно нарушение FK
             if isinstance(e.orig, ForeignKeyViolationError):
                 logger.error(
-                    f"ForeignKey violation in {func.__name__}: {str(e)}",
-                    exc_info=True,
+                    f"ForeignKey violation in {func.__name__}: {str(e)}", exc_info=True
                 )
-                raise ValueError("FOREIGN_KEY_VIOLATION") from e
-            logger.error(
-                f"IntegrityError in {func.__name__}: {str(e)}",
-                exc_info=True,
-            )
-            raise
+                raise EntityConflictError("Foreign key constraint violated") from e
+            logger.error(f"IntegrityError in {func.__name__}: {str(e)}", exc_info=True)
+            raise EntityConflictError(str(e)) from e
+
+        # Любые другие ошибки SQLAlchemy
         except SQLAlchemyError as e:
-            logger.error(
-                f"Database error in {func.__name__}: {str(e)}",
-                exc_info=True,
-            )
+            logger.error(f"Database error in {func.__name__}: {str(e)}", exc_info=True)
+            raise PersistenceError(str(e)) from e
+
+        except EntityNotFoundError:
             raise
+
         except Exception as e:
             logger.error(
-                f"Unexpected error in {func.__name__}: {str(e)}",
-                exc_info=True,
+                f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
             )
-            raise
+            raise PersistenceError(str(e)) from e
 
     return wrapper
