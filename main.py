@@ -56,7 +56,7 @@ async def root():
 
 @app.get("/health")
 async def hello():
-    return {"status": "ok"}
+    return {"status": "active"}
 
 
 app.include_router(api_router)
