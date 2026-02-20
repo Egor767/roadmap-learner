@@ -1,3 +1,7 @@
+from typing import TypeVar, Type
+
+from pydantic import BaseModel
+
 from app.models.session import Session
 from app.schemas.block import BlockRead
 from app.schemas.card import CardRead
@@ -10,6 +14,16 @@ from app.models import (
     Block,
     Card,
 )
+
+T = TypeVar("T", bound=BaseModel)
+
+
+def orm_to_schema(schema_cls: Type[T], orm_obj) -> T:
+    return schema_cls.model_validate(orm_obj)
+
+
+def orms_to_schemas(schema_cls: Type[T], orm_list: list) -> list[T]:
+    return [schema_cls.model_validate(obj) for obj in orm_list]
 
 
 def user_orm_to_model(db_user: User | None) -> UserRead | None:
