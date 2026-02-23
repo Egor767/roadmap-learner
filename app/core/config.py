@@ -61,7 +61,7 @@ class CacheConfig(BaseModel):
 
 
 class RunConfig(BaseModel):
-    host: str = "127.0.0.1"
+    host: str = "0.0.0.0"
     port: int = 8080
 
 

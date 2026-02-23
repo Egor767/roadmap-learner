@@ -2,23 +2,19 @@ import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
+from app.api import router as api_router
+from app.core.cache.helper import CacheHelper
+from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
-from redis.asyncio import Redis
-
-from app.api import router as api_router
-from app.core.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.redis = Redis.from_url(
-        settings.redis.url,
-        decode_responses=True,
-    )
+    app.state.cache = CacheHelper(settings.redis.url)
     yield
-    await app.state.redis.close()
+    await app.state.cache.close()
 
 
 logging.basicConfig(
@@ -54,9 +50,9 @@ async def root():
     return RedirectResponse(url="/docs")
 
 
-@app.get("/hello")
+@app.get("/health")
 async def hello():
-    return "Hello!"
+    return {"status": "active"}
 
 
 app.include_router(api_router)

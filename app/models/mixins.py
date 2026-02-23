@@ -2,16 +2,16 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from fastapi_users import exceptions
-from sqlalchemy import ForeignKey, DateTime, func, text
-from sqlalchemy.orm import declared_attr, Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, ForeignKey, func, text
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from app.core.custom_types import BaseIdType
-from app.utils.generators import server_id_generator, id_generator
+from app.utils.generators import id_generator, server_id_generator
 
 if TYPE_CHECKING:
-    from .user import User
-    from .roadmap import Roadmap
     from .block import Block
+    from .roadmap import Roadmap
+    from .user import User
 
 
 class IdMixin:
@@ -31,9 +31,7 @@ class IdMixin:
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=func.now(), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         onupdate=func.now(),

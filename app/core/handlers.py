@@ -1,9 +1,15 @@
 import logging
 from functools import wraps
 
-from fastapi import HTTPException
-from fastapi import status
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+from asyncpg import ForeignKeyViolationError
+from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+from app.core.custom_exceptions import (
+    EntityConflictError,
+    EntityNotFoundError,
+    PersistenceError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +27,7 @@ def router_handler(func):
                 detail=str(e),
             )
         except Exception as e:
-            logger.error(
-                f"Unexpected error in {func.__name__}: {str(e)}", exc_info=True
-            )
+            logger.error(f"Unexpected error in {func.__name__}: {e!s}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
@@ -41,10 +45,10 @@ def service_handler(func):
             raise
         except Exception as e:
             logger.error(
-                f"Service error in {func.__name__}: {str(e)}",
+                f"Service error in {func.__name__}: {e!s}",
                 exc_info=True,
             )
-            raise ValueError(f"Service operation failed: {str(e)}")
+            raise ValueError(f"Service operation failed: {e!s}")
 
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
@@ -54,10 +58,10 @@ def service_handler(func):
             raise
         except Exception as e:
             logger.error(
-                f"Service error in {func.__name__}: {str(e)}",
+                f"Service error in {func.__name__}: {e!s}",
                 exc_info=True,
             )
-            raise ValueError(f"Service operation failed: {str(e)}")
+            raise ValueError(f"Service operation failed: {e!s}")
 
     return async_wrapper if func.__code__.co_flags & 0x80 else sync_wrapper
 
@@ -67,30 +71,24 @@ def repository_handler(func):
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
+
         except IntegrityError as e:
-            # Проверяем, что это именно нарушение FK
             if isinstance(e.orig, ForeignKeyViolationError):
-                logger.error(
-                    f"ForeignKey violation in {func.__name__}: {str(e)}",
-                    exc_info=True,
-                )
-                raise ValueError("FOREIGN_KEY_VIOLATION") from e
-            logger.error(
-                f"IntegrityError in {func.__name__}: {str(e)}",
-                exc_info=True,
-            )
-            raise
+                logger.error(f"ForeignKey violation in {func.__name__}: {e!s}", exc_info=True)
+                raise EntityConflictError("Foreign key constraint violated") from e
+            logger.error(f"IntegrityError in {func.__name__}: {e!s}", exc_info=True)
+            raise EntityConflictError(str(e)) from e
+
+        # Любые другие ошибки SQLAlchemy
         except SQLAlchemyError as e:
-            logger.error(
-                f"Database error in {func.__name__}: {str(e)}",
-                exc_info=True,
-            )
+            logger.error(f"Database error in {func.__name__}: {e!s}", exc_info=True)
+            raise PersistenceError(str(e)) from e
+
+        except EntityNotFoundError:
             raise
+
         except Exception as e:
-            logger.error(
-                f"Unexpected error in {func.__name__}: {str(e)}",
-                exc_info=True,
-            )
-            raise
+            logger.error(f"Unexpected error in {func.__name__}: {e!s}", exc_info=True)
+            raise PersistenceError(str(e)) from e
 
     return wrapper

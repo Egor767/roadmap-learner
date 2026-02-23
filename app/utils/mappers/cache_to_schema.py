@@ -1,13 +1,24 @@
 import json
+from typing import TypeVar, Type
+
+from pydantic import BaseModel
 
 from app.schemas.block import BlockRead
-from app.schemas.user import UserRead
 from app.schemas.roadmap import RoadmapRead
 from app.schemas.card import CardRead
 
 
-def users_cache_to_model(cache: str) -> list[UserRead]:
-    return [UserRead.model_validate_json(u) for u in json.loads(cache)]
+T = TypeVar("T", bound=BaseModel)
+
+
+def cache_to_schema(schema_cls: Type[T], cached: str) -> T:
+    data_list = json.loads(cached)
+    return [schema_cls.model_validate(data) for data in data_list][0]
+
+
+def cache_to_schemas(schema_cls: Type[T], cached: str) -> list[T]:
+    data_list = json.loads(cached)
+    return [schema_cls.model_validate(data) for data in data_list]
 
 
 def roadmap_cache_to_models(

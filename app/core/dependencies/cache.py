@@ -1,6 +1,6 @@
 from fastapi import Request
-from redis.asyncio import Redis
+from app.core.cache import CacheHelper
 
 
-async def get_redis(request: Request) -> Redis:
-    return request.app.state.redis
+def get_cache(request: Request) -> CacheHelper:
+    return request.app.state.cache
