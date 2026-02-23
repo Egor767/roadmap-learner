@@ -1,7 +1,6 @@
 import json
 from typing import TYPE_CHECKING
 
-from app.core.config import settings
 from app.core.handlers import service_handler
 from app.shared.generate_id import generate_base_id
 from app.utils.mappers.orm_to_schema import orm_to_schema, orms_to_schemas
@@ -20,19 +19,15 @@ from app.schemas.roadmap import (
 from app.core.custom_types import BaseIdType
 
 if TYPE_CHECKING:
-    from redis.asyncio import Redis
+    from app.core.cache import CacheHelper
     from app.repositories import RoadmapRepository
     from app.models import User
 
 
 class RoadmapService:
-    def __init__(
-        self,
-        repo: "RoadmapRepository",
-        redis: "Redis",
-    ):
+    def __init__(self, repo: "RoadmapRepository", cache: "CacheHelper"):
         self.repo = repo
-        self.redis = redis
+        self.cache = cache
 
     @service_handler
     async def get_all(self) -> list[RoadmapRead]:
@@ -42,9 +37,7 @@ class RoadmapService:
 
     @service_handler
     async def get_by_filters(
-        self,
-        current_user: "User",
-        filters: RoadmapFilters,
+        self, current_user: "User", filters: RoadmapFilters
     ) -> list[RoadmapRead]:
         filters_dict = filters.model_dump(
             exclude_none=True,
@@ -58,7 +51,7 @@ class RoadmapService:
                 str(current_user.id),
                 "list",
             )
-            cache = await self.redis.get(key)
+            cache = await self.cache.get(key)
             if cache:
                 return cache_to_schemas(RoadmapRead, cache)
 
@@ -71,19 +64,13 @@ class RoadmapService:
                 [u.model_dump(mode="json") for u in roadmaps_schema],
                 default=str,
             )
-            await self.redis.set(
-                key,
-                cache_data,
-                ex=settings.cache.roadmap_list_ttl,
-            )
+            await self.cache.set(key, cache_data)
 
         return roadmaps_schema
 
     @service_handler
     async def get_by_id(
-        self,
-        current_user: "User",
-        roadmap_id: BaseIdType,
+        self, current_user: "User", roadmap_id: BaseIdType
     ) -> RoadmapRead:
         key = get_cache_key(
             "roadmaps",
@@ -93,7 +80,7 @@ class RoadmapService:
             str(roadmap_id),
             "detail",
         )
-        cache = await self.redis.get(key)
+        cache = await self.cache.get(key)
         if cache:
             return cache_to_schema(RoadmapRead, cache)
 
@@ -101,19 +88,13 @@ class RoadmapService:
 
         roadmap_schema = orm_to_schema(RoadmapRead, roadmap_orm)
 
-        await self.redis.set(
-            key,
-            json.dumps([roadmap_schema.model_dump(mode="json")]),
-            ex=settings.cache.roadmap_detail_ttl,
-        )
+        await self.cache.set(key, json.dumps([roadmap_schema.model_dump(mode="json")]))
 
         return roadmap_schema
 
     @service_handler
     async def create(
-        self,
-        current_user: "User",
-        roadmap_create_data: RoadmapCreate,
+        self, current_user: "User", roadmap_create_data: RoadmapCreate
     ) -> RoadmapRead:
         roadmap_dict = roadmap_create_data.model_dump(
             exclude_none=True,
@@ -126,31 +107,11 @@ class RoadmapService:
 
         roadmap_schema = orm_to_schema(RoadmapRead, roadmap_orm)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key("roadmaps", "user", str(current_user.id), "list"),
         )
 
         return roadmap_schema
-
-    @service_handler
-    async def delete(
-        self,
-        current_user: "User",
-        roadmap_id: BaseIdType,
-    ):
-        await self.repo.delete(roadmap_id, current_user.id)
-
-        await self.redis.delete(
-            get_cache_key("roadmaps", "user", str(current_user.id), "list"),
-            get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(roadmap_id),
-                "detail",
-            ),
-        )
 
     @service_handler
     async def update(
@@ -168,7 +129,7 @@ class RoadmapService:
 
         roadmap_schema = orm_to_schema(RoadmapRead, roadmap_orm)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key("roadmaps", "user", str(current_user.id), "list"),
             get_cache_key(
                 "roadmaps",
@@ -181,3 +142,19 @@ class RoadmapService:
         )
 
         return roadmap_schema
+
+    @service_handler
+    async def delete(self, current_user: "User", roadmap_id: BaseIdType):
+        await self.repo.delete(roadmap_id, current_user.id)
+
+        await self.cache.delete(
+            get_cache_key("roadmaps", "user", str(current_user.id), "list"),
+            get_cache_key(
+                "roadmaps",
+                "user",
+                str(current_user.id),
+                "roadmap",
+                str(roadmap_id),
+                "detail",
+            ),
+        )

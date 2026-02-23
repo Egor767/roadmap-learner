@@ -63,10 +63,7 @@ class CardRepository(BaseRepository):
 
     @repository_handler
     async def update(
-        self,
-        card_id: BaseIdType,
-        card_data: dict,
-        user_id: BaseIdType,
+        self, card_id: BaseIdType, card_data: dict, user_id: BaseIdType
     ) -> Card:
         async with transaction_manager(self.session):
             allowed_block_ids = (

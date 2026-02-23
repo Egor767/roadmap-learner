@@ -5,20 +5,17 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
-from redis.asyncio import Redis
 
 from app.api import router as api_router
+from app.core.cache.helper import CacheHelper
 from app.core.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.redis = Redis.from_url(
-        settings.redis.url,
-        decode_responses=True,
-    )
+    app.state.cache = CacheHelper(settings.cache.url)
     yield
-    await app.state.redis.close()
+    await app.state.cache.close()
 
 
 logging.basicConfig(

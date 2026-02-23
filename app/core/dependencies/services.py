@@ -17,10 +17,11 @@ from .repositories import (
     get_session_repository,
 )
 
-from .cache import get_redis
+from .cache import get_cache
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
+    from cache import CacheHelper
     from repositories import (
         UserRepository,
         RoadmapRepository,
@@ -30,74 +31,74 @@ if TYPE_CHECKING:
     )
 
 
-async def get_user_service(
+def get_user_service(
     user_repo: Annotated[
         "UserRepository",
         Depends(get_user_repository),
     ],
 ) -> UserService:
-    yield UserService(user_repo)
+    return UserService(user_repo)
 
 
-async def get_roadmap_service(
+def get_roadmap_service(
     repo: Annotated[
         "RoadmapRepository",
         Depends(get_roadmap_repository),
     ],
-    redis: Annotated[
-        "Redis",
-        Depends(get_redis),
+    cache: Annotated[
+        "CacheHelper",
+        Depends(get_cache),
     ],
 ) -> RoadmapService:
-    yield RoadmapService(
+    return RoadmapService(
         repo,
-        redis,
+        cache,
     )
 
 
-async def get_block_service(
+def get_block_service(
     repo: Annotated[
         "BlockRepository",
         Depends(get_block_repository),
     ],
     redis: Annotated[
         "Redis",
-        Depends(get_redis),
+        Depends(get_cache),
     ],
 ) -> BlockService:
-    yield BlockService(
+    return BlockService(
         repo,
         redis,
     )
 
 
-async def get_card_service(
+def get_card_service(
     repo: Annotated[
         "CardRepository",
         Depends(get_card_repository),
     ],
     redis: Annotated[
         "Redis",
-        Depends(get_redis),
+        Depends(get_cache),
     ],
 ) -> CardService:
-    yield CardService(
+    return CardService(
         repo,
         redis,
     )
 
 
-async def get_session_service(
+def get_session_service(
     repo: Annotated[
         "SessionRepository",
         Depends(get_session_repository),
     ],
     redis: Annotated[
         "Redis",
-        Depends(get_redis),
+        Depends(get_cache),
     ],
 ) -> SessionService:
-    yield SessionService(
+    return SessionService(
         repo,
         redis,
     )

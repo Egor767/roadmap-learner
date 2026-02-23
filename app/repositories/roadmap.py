@@ -56,10 +56,7 @@ class RoadmapRepository(BaseRepository):
 
     @repository_handler
     async def update(
-        self,
-        roadmap_id: BaseIdType,
-        roadmap_data: dict,
-        user_id: BaseIdType,
+        self, roadmap_id: BaseIdType, roadmap_data: dict, user_id: BaseIdType
     ) -> Roadmap:
         async with transaction_manager(self.session):
             stmt = (

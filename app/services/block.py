@@ -1,7 +1,6 @@
 import json
 from typing import TYPE_CHECKING
 
-from app.core.config import settings
 from app.core.handlers import service_handler
 from app.shared.generate_id import generate_base_id
 from app.utils.cache import get_cache_key, is_single_parent_filter
@@ -22,15 +21,15 @@ from app.schemas.block import (
 )
 
 if TYPE_CHECKING:
-    from redis.asyncio import Redis
+    from app.core.cache import CacheHelper
     from app.repositories.block import BlockRepository
     from app.models import User
 
 
 class BlockService:
-    def __init__(self, repo: "BlockRepository", redis: "Redis"):
+    def __init__(self, repo: "BlockRepository", cache: "CacheHelper"):
         self.repo = repo
-        self.redis = redis
+        self.cache = cache
 
     @service_handler
     async def get_all(self) -> list[BlockRead]:
@@ -40,9 +39,7 @@ class BlockService:
 
     @service_handler
     async def get_by_filters(
-        self,
-        current_user: "User",
-        filters: BlockFilters,
+        self, current_user: "User", filters: BlockFilters
     ) -> list[BlockRead]:
         filters_dict = filters.model_dump(
             exclude_none=True,
@@ -52,14 +49,13 @@ class BlockService:
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
                 "blocks",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "roadmap",
                 str(filters_dict["roadmap_id"]),
                 "list",
             )
-            cache = await self.redis.get(key)
+            cache = await self.cache.get(key)
             if cache:
                 return cache_to_schemas(BlockRead, cache)
 
@@ -72,30 +68,21 @@ class BlockService:
                 [u.model_dump(mode="json") for u in blocks_schema],
                 default=str,
             )
-            await self.redis.set(
-                key,
-                cache_data,
-                ex=settings.cache.block_list_ttl,
-            )
+            await self.cache.set(key, cache_data)
 
         return blocks_schema
 
     @service_handler
-    async def get_by_id(
-        self,
-        current_user: "User",
-        block_id: BaseIdType,
-    ) -> BlockRead:
+    async def get_by_id(self, current_user: "User", block_id: BaseIdType) -> BlockRead:
         key = get_cache_key(
             "blocks",
-            settings.cache.version,
             "user",
             str(current_user.id),
             "block",
             str(block_id),
             "detail",
         )
-        cache = await self.redis.get(key)
+        cache = await self.cache.get(key)
         if cache:
             return cache_to_schema(BlockRead, cache)
 
@@ -103,19 +90,16 @@ class BlockService:
 
         block_schema = orm_to_schema(BlockRead, block_orm)
 
-        await self.redis.set(
+        await self.cache.set(
             key,
             json.dumps([block_schema.model_dump(mode="json")]),
-            ex=settings.cache.block_detail_ttl,
         )
 
         return block_schema
 
     @service_handler
     async def create(
-        self,
-        current_user: "User",
-        block_create_data: BlockCreate,
+        self, current_user: "User", block_create_data: BlockCreate
     ) -> BlockRead:
         block_dict = block_create_data.model_dump(
             exclude_none=True,
@@ -128,10 +112,9 @@ class BlockService:
 
         block_schema = orm_to_schema(BlockRead, block_orm)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key(
                 "blocks",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "roadmap",
@@ -143,40 +126,8 @@ class BlockService:
         return block_schema
 
     @service_handler
-    async def delete(
-        self,
-        current_user: "User",
-        block_id: BaseIdType,
-    ):
-        block_orm = await self.repo.delete(block_id, current_user.id)
-
-        await self.redis.delete(
-            get_cache_key(
-                "blocks",
-                settings.cache.version,
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(block_orm.roadmap_id),
-                "list",
-            ),
-            get_cache_key(
-                "blocks",
-                settings.cache.version,
-                "user",
-                str(current_user.id),
-                "block",
-                str(block_id),
-                "detail",
-            ),
-        )
-
-    @service_handler
     async def update(
-        self,
-        current_user: "User",
-        block_id: BaseIdType,
-        block_update_data: BlockUpdate,
+        self, current_user: "User", block_id: BaseIdType, block_update_data: BlockUpdate
     ) -> BlockRead:
         block_dict = block_update_data.model_dump(
             exclude_none=True,
@@ -187,10 +138,9 @@ class BlockService:
 
         block_schema = orm_to_schema(BlockRead, block_orm)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key(
                 "blocks",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "roadmap",
@@ -199,7 +149,6 @@ class BlockService:
             ),
             get_cache_key(
                 "blocks",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "block",
@@ -209,3 +158,26 @@ class BlockService:
         )
 
         return block_schema
+
+    @service_handler
+    async def delete(self, current_user: "User", block_id: BaseIdType):
+        block_orm = await self.repo.delete(block_id, current_user.id)
+
+        await self.cache.delete(
+            get_cache_key(
+                "blocks",
+                "user",
+                str(current_user.id),
+                "roadmap",
+                str(block_orm.roadmap_id),
+                "list",
+            ),
+            get_cache_key(
+                "blocks",
+                "user",
+                str(current_user.id),
+                "block",
+                str(block_id),
+                "detail",
+            ),
+        )

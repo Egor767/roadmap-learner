@@ -61,10 +61,7 @@ class BlockRepository(BaseRepository):
 
     @repository_handler
     async def update(
-        self,
-        block_id: BaseIdType,
-        block_data: dict,
-        user_id: BaseIdType,
+        self, block_id: BaseIdType, block_data: dict, user_id: BaseIdType
     ) -> Block:
         async with transaction_manager(self.session):
             stmt = (

@@ -1,7 +1,6 @@
 import json
 from typing import TYPE_CHECKING
 
-from app.core.config import settings
 from app.core.handlers import service_handler
 from app.shared.generate_id import generate_base_id
 from app.utils.cache import is_single_parent_filter, get_cache_key
@@ -22,15 +21,15 @@ from app.schemas.card import (
 )
 
 if TYPE_CHECKING:
-    from redis.asyncio import Redis
+    from app.core.cache import CacheHelper
     from app.repositories import CardRepository
     from app.models import User
 
 
 class CardService:
-    def __init__(self, repo: "CardRepository", redis: "Redis"):
+    def __init__(self, repo: "CardRepository", cache: "CacheHelper"):
         self.repo = repo
-        self.redis = redis
+        self.cache = cache
 
     @service_handler
     async def get_all(self) -> list[CardRead]:
@@ -40,10 +39,7 @@ class CardService:
 
     @service_handler
     async def get_by_filters(
-        self,
-        current_user: "User",
-        filters: CardFilters,
-        block_id: list[BaseIdType] | None,
+        self, current_user: "User", filters: CardFilters, block_id: list[BaseIdType]
     ) -> list[CardRead]:
         filters_dump = {
             **filters.model_dump(exclude_none=True, exclude_unset=True),
@@ -54,14 +50,13 @@ class CardService:
         if is_single_parent_filter(filters_dict, "block_id"):
             key = get_cache_key(
                 "cards",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "block",
                 str(filters_dict["block_id"][0]),
                 "list",
             )
-            cache = await self.redis.get(key)
+            cache = await self.cache.get(key)
             if cache:
                 return cache_to_schemas(CardRead, cache)
 
@@ -74,30 +69,21 @@ class CardService:
                 [u.model_dump(mode="json") for u in cards_schema],
                 default=str,
             )
-            await self.redis.set(
-                key,
-                cache_data,
-                ex=settings.cache.card_list_ttl,
-            )
+            await self.cache.set(key, cache_data)
 
         return cards_schema
 
     @service_handler
-    async def get_by_id(
-        self,
-        current_user: "User",
-        card_id: BaseIdType,
-    ) -> CardRead:
+    async def get_by_id(self, current_user: "User", card_id: BaseIdType) -> CardRead:
         key = get_cache_key(
             "cards",
-            settings.cache.version,
             "user",
             str(current_user.id),
             "card",
             str(card_id),
             "detail",
         )
-        cache = await self.redis.get(key)
+        cache = await self.cache.get(key)
         if cache:
             result_card = cache_to_schema(CardRead, cache)
             return result_card
@@ -106,19 +92,16 @@ class CardService:
 
         cards_schema = orm_to_schema(CardRead, cards_orm)
 
-        await self.redis.set(
+        await self.cache.set(
             key,
             json.dumps([cards_schema.model_dump(mode="json")]),
-            ex=settings.cache.card_detail_ttl,
         )
 
         return cards_schema
 
     @service_handler
     async def create(
-        self,
-        current_user: "User",
-        card_create_data: CardCreate,
+        self, current_user: "User", card_create_data: CardCreate
     ) -> CardRead:
         card_dict = card_create_data.model_dump(
             exclude_none=True,
@@ -131,10 +114,9 @@ class CardService:
 
         card_schema = orm_to_schema(CardRead, card_orm)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key(
                 "cards",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "block",
@@ -147,10 +129,7 @@ class CardService:
 
     @service_handler
     async def update(
-        self,
-        current_user: "User",
-        card_id: BaseIdType,
-        card_update_data: CardUpdate,
+        self, current_user: "User", card_id: BaseIdType, card_update_data: CardUpdate
     ) -> CardRead:
         card_dict = card_update_data.model_dump(
             exclude_none=True,
@@ -161,10 +140,9 @@ class CardService:
 
         card_schema = orm_to_schema(CardRead, card_orm)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key(
                 "cards",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "block",
@@ -173,7 +151,6 @@ class CardService:
             ),
             get_cache_key(
                 "cards",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "card",
@@ -192,10 +169,9 @@ class CardService:
     ):
         card_orm = await self.repo.delete(card_id, current_user.id)
 
-        await self.redis.delete(
+        await self.cache.delete(
             get_cache_key(
                 "cards",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "block",
@@ -204,7 +180,6 @@ class CardService:
             ),
             get_cache_key(
                 "cards",
-                settings.cache.version,
                 "user",
                 str(current_user.id),
                 "card",
