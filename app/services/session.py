@@ -28,18 +28,14 @@ from app.schemas.session import (
 from app.models import User
 
 if TYPE_CHECKING:
-    from redis.asyncio import Redis
+    from app.core.cache import CacheHelper
     from app.repositories import SessionRepository
 
 
 class SessionService:
-    def __init__(
-        self,
-        repo: "SessionRepository",
-        redis: "Redis",
-    ):
+    def __init__(self, repo: "SessionRepository", cache: "CacheHelper"):
         self.repo = repo
-        self.redis = redis
+        self.cache = cache
 
     @service_handler
     async def get_all(self) -> list[SessionRead]:
@@ -49,9 +45,7 @@ class SessionService:
 
     @service_handler
     async def get_by_filters(
-        self,
-        current_user: "User",
-        filters: SessionFilters,
+        self, current_user: "User", filters: SessionFilters
     ) -> list[SessionRead]:
         filters_dict = filters.model_dump(
             exclude_none=True,
@@ -63,9 +57,7 @@ class SessionService:
 
     @service_handler
     async def get_by_id(
-        self,
-        current_user: "User",
-        session_id: BaseIdType,
+        self, current_user: "User", session_id: BaseIdType
     ) -> SessionRead:
         session_orm = await self.repo.get_by_id(session_id, current_user.id)
         session_schema = orm_to_schema(SessionRead, session_orm)
@@ -73,10 +65,7 @@ class SessionService:
 
     @service_handler
     async def get_cards(
-        self,
-        current_user: "User",
-        session_id: BaseIdType,
-        filters: SessionCardsFilter,
+        self, current_user: "User", session_id: BaseIdType, filters: SessionCardsFilter
     ) -> list[BaseIdType]:
         session = await self.get_by_id(current_user, session_id)
         cards = session.card_ids_queue[filters.offset : filters.offset + filters.limit]
@@ -84,10 +73,7 @@ class SessionService:
 
     @service_handler
     async def create(
-        self,
-        current_user: "User",
-        session_create_data: SessionCreate,
-        token: str,
+        self, current_user: "User", session_create_data: SessionCreate, token: str
     ) -> SessionRead:
         filters = session_create_data.model_dump(
             exclude={"mode", "mix"},
@@ -127,14 +113,6 @@ class SessionService:
         return session_schema
 
     @service_handler
-    async def delete(
-        self,
-        current_user: "User",
-        session_id: BaseIdType,
-    ):
-        await self.repo.delete(session_id, current_user.id)
-
-    @service_handler
     async def update(
         self,
         current_user: "User",
@@ -154,9 +132,7 @@ class SessionService:
 
     @service_handler
     async def finish(
-        self,
-        current_user: "User",
-        session_id: BaseIdType,
+        self, current_user: "User", session_id: BaseIdType
     ) -> SessionResult:
         update_data = {
             "status": SessionStatus.COMPLETED,
@@ -193,3 +169,7 @@ class SessionService:
         )
 
         return session_result
+
+    @service_handler
+    async def delete(self, current_user: "User", session_id: BaseIdType):
+        await self.repo.delete(session_id, current_user.id)
