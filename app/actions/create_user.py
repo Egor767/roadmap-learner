@@ -3,9 +3,10 @@ import contextlib
 import logging
 from os import getenv
 
+from fastapi_users.exceptions import UserAlreadyExists
+
 from app.core.dependencies import get_users_db
 from app.core.dependencies.users import get_user_manager
-from fastapi_users.exceptions import UserAlreadyExists
 from app.models import User, db_helper
 from app.schemas.user import UserCreate
 from app.services import UserManager
@@ -56,7 +57,7 @@ async def create_superuser(
                         user_manager=user_manager,
                         user_create=user_create,
                     )
-                except UserAlreadyExists as e:
+                except UserAlreadyExists:
                     logger.error("User(%r) already exist", default_email)
 
 

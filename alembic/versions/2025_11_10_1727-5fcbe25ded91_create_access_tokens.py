@@ -6,17 +6,18 @@ Create Date: 2025-11-10 17:27:04.100355
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import fastapi_users_db_sqlalchemy
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "5fcbe25ded91"
-down_revision: Union[str, Sequence[str], None] = "3643046ad461"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "3643046ad461"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -31,9 +32,7 @@ def upgrade() -> None:
             fastapi_users_db_sqlalchemy.generics.TIMESTAMPAware(timezone=True),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], name=op.f("fk_access_tokens_user_id_users")
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_access_tokens_user_id_users")),
         sa.PrimaryKeyConstraint("token", name=op.f("pk_access_tokens")),
     )
     op.create_index(

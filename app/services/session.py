@@ -2,30 +2,28 @@ import random
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
 from app.external.requests import (
-    get_cards_by_filters,
     get_blocks_by_filters,
+    get_cards_by_filters,
+)
+from app.models import User
+from app.schemas.session import (
+    SessionCardsFilter,
+    SessionCreate,
+    SessionFilters,
+    SessionMode,
+    SessionRead,
+    SessionResult,
+    SessionStatus,
+    SessionUpdate,
 )
 from app.shared.generate_id import generate_base_id
 from app.utils.mappers.orm_to_schema import (
-    orms_to_schemas,
+    orm_list_to_schemas,
     orm_to_schema,
 )
-from app.schemas.session import (
-    SessionMode,
-    SessionStatus,
-    SessionResult,
-    SessionCardsFilter,
-)
-from app.core.custom_types import BaseIdType
-from app.schemas.session import (
-    SessionRead,
-    SessionCreate,
-    SessionFilters,
-    SessionUpdate,
-)
-from app.models import User
 
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
@@ -40,25 +38,21 @@ class SessionService:
     @service_handler
     async def get_all(self) -> list[SessionRead]:
         sessions_orm = await self.repo.get_all()
-        sessions_schema = orms_to_schemas(SessionRead, sessions_orm)
+        sessions_schema = orm_list_to_schemas(SessionRead, sessions_orm)
         return sessions_schema
 
     @service_handler
-    async def get_by_filters(
-        self, current_user: "User", filters: SessionFilters
-    ) -> list[SessionRead]:
+    async def get_by_filters(self, current_user: "User", filters: SessionFilters) -> list[SessionRead]:
         filters_dict = filters.model_dump(
             exclude_none=True,
             exclude_unset=True,
         )
         sessions_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
-        sessions_schema = orms_to_schemas(SessionRead, sessions_orm)
+        sessions_schema = orm_list_to_schemas(SessionRead, sessions_orm)
         return sessions_schema
 
     @service_handler
-    async def get_by_id(
-        self, current_user: "User", session_id: BaseIdType
-    ) -> SessionRead:
+    async def get_by_id(self, current_user: "User", session_id: BaseIdType) -> SessionRead:
         session_orm = await self.repo.get_by_id(session_id, current_user.id)
         session_schema = orm_to_schema(SessionRead, session_orm)
         return session_schema
@@ -72,9 +66,7 @@ class SessionService:
         return cards
 
     @service_handler
-    async def create(
-        self, current_user: "User", session_create_data: SessionCreate, token: str
-    ) -> SessionRead:
+    async def create(self, current_user: "User", session_create_data: SessionCreate, token: str) -> SessionRead:
         filters = session_create_data.model_dump(
             exclude={"mode", "mix"},
             exclude_none=True,
@@ -86,10 +78,7 @@ class SessionService:
         if filters.get("block_id", None) is None:
             blocks_filters = filters.copy()
             blocks_filters.pop("status", None)
-            blocks_ids = [
-                block.get("id")
-                for block in await get_blocks_by_filters(token, blocks_filters)
-            ]
+            blocks_ids = [block.get("id") for block in await get_blocks_by_filters(token, blocks_filters)]
         else:
             blocks_ids = [filters.get("block_id")]
 
@@ -131,9 +120,7 @@ class SessionService:
         return session_schema
 
     @service_handler
-    async def finish(
-        self, current_user: "User", session_id: BaseIdType
-    ) -> SessionResult:
+    async def finish(self, current_user: "User", session_id: BaseIdType) -> SessionResult:
         update_data = {
             "status": SessionStatus.COMPLETED,
             "completed_at": datetime.now(),
@@ -143,16 +130,10 @@ class SessionService:
 
         session_schema = orm_to_schema(SessionRead, session_orm)
 
-        reviewed_answers = (
-            session_schema.correct_answers + session_schema.incorrect_answers
-        )
+        reviewed_answers = session_schema.correct_answers + session_schema.incorrect_answers
         cards_len = len(session_schema.card_ids_queue)
 
-        accuracy = (
-            int((session_schema.correct_answers / reviewed_answers) * 100)
-            if reviewed_answers != 0
-            else 0
-        )
+        accuracy = int((session_schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
 
         session_result = SessionResult(
             **session_schema.model_dump(

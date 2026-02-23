@@ -1,16 +1,16 @@
 from sqlalchemy import (
-    select,
-    insert,
-    update,
     delete,
+    insert,
+    select,
+    update,
 )
 
 from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.repositories import BaseRepository
 from app.models import Roadmap
+from app.repositories import BaseRepository
 
 
 class RoadmapRepository(BaseRepository):
@@ -55,9 +55,7 @@ class RoadmapRepository(BaseRepository):
             return roadmap
 
     @repository_handler
-    async def update(
-        self, roadmap_id: BaseIdType, roadmap_data: dict, user_id: BaseIdType
-    ) -> Roadmap:
+    async def update(self, roadmap_id: BaseIdType, roadmap_data: dict, user_id: BaseIdType) -> Roadmap:
         async with transaction_manager(self.session):
             stmt = (
                 update(Roadmap)
@@ -74,9 +72,7 @@ class RoadmapRepository(BaseRepository):
     @repository_handler
     async def delete(self, roadmap_id: BaseIdType, user_id: BaseIdType):
         async with transaction_manager(self.session):
-            stmt = delete(Roadmap).where(
-                Roadmap.user_id == user_id, Roadmap.id == roadmap_id
-            )
+            stmt = delete(Roadmap).where(Roadmap.user_id == user_id, Roadmap.id == roadmap_id)
             result = await self.session.execute(stmt)
             if result.rowcount == 0:
                 raise EntityNotFoundError(Roadmap, roadmap_id)

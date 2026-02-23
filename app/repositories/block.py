@@ -1,16 +1,16 @@
 from sqlalchemy import (
-    select,
-    insert,
-    update,
     delete,
+    insert,
+    select,
+    update,
 )
 
 from app.core.custom_exceptions import EntityNotFoundError
+from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.core.custom_types import BaseIdType
-from app.repositories import BaseRepository
 from app.models import Block, Roadmap
+from app.repositories import BaseRepository
 
 
 class BlockRepository(BaseRepository):
@@ -36,11 +36,7 @@ class BlockRepository(BaseRepository):
 
     @repository_handler
     async def get_by_filters(self, filters: dict, user_id: BaseIdType) -> list[Block]:
-        stmt = (
-            select(Block)
-            .join(Roadmap, Block.roadmap_id == Roadmap.id)
-            .where(Roadmap.user_id == user_id)
-        )
+        stmt = select(Block).join(Roadmap, Block.roadmap_id == Roadmap.id).where(Roadmap.user_id == user_id)
         for field_name, value in filters.items():
             column = getattr(Block, field_name)
             if isinstance(value, list):
@@ -60,17 +56,13 @@ class BlockRepository(BaseRepository):
             return block
 
     @repository_handler
-    async def update(
-        self, block_id: BaseIdType, block_data: dict, user_id: BaseIdType
-    ) -> Block:
+    async def update(self, block_id: BaseIdType, block_data: dict, user_id: BaseIdType) -> Block:
         async with transaction_manager(self.session):
             stmt = (
                 update(Block)
                 .where(
                     Block.id == block_id,
-                    Block.roadmap_id.in_(
-                        select(Roadmap.id).where(Roadmap.user_id == user_id)
-                    ),
+                    Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user_id)),
                 )
                 .values(**block_data)
                 .returning(Block)
@@ -88,9 +80,7 @@ class BlockRepository(BaseRepository):
                 delete(Block)
                 .where(
                     Block.id == block_id,
-                    Block.roadmap_id.in_(
-                        select(Roadmap.id).where(Roadmap.user_id == user_id)
-                    ),
+                    Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user_id)),
                 )
                 .returning(Block)
             )

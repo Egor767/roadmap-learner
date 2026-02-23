@@ -1,29 +1,29 @@
 import json
 from typing import TYPE_CHECKING
 
+from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
+from app.schemas.card import (
+    CardCreate,
+    CardFilters,
+    CardRead,
+    CardUpdate,
+)
 from app.shared.generate_id import generate_base_id
-from app.utils.cache import is_single_parent_filter, get_cache_key
+from app.utils.cache import get_cache_key, is_single_parent_filter
 from app.utils.mappers.cache_to_schema import (
-    cache_to_schemas,
     cache_to_schema,
+    cache_to_schemas,
 )
 from app.utils.mappers.orm_to_schema import (
-    orms_to_schemas,
+    orm_list_to_schemas,
     orm_to_schema,
-)
-from app.core.custom_types import BaseIdType
-from app.schemas.card import (
-    CardRead,
-    CardCreate,
-    CardUpdate,
-    CardFilters,
 )
 
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
-    from app.repositories import CardRepository
     from app.models import User
+    from app.repositories import CardRepository
 
 
 class CardService:
@@ -34,7 +34,7 @@ class CardService:
     @service_handler
     async def get_all(self) -> list[CardRead]:
         cards_orm = await self.repo.get_all()
-        cards_schemas = orms_to_schemas(CardRead, cards_orm)
+        cards_schemas = orm_list_to_schemas(CardRead, cards_orm)
         return cards_schemas
 
     @service_handler
@@ -62,7 +62,7 @@ class CardService:
 
         cards_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
 
-        cards_schema = orms_to_schemas(CardRead, cards_orm)
+        cards_schema = orm_list_to_schemas(CardRead, cards_orm)
 
         if is_single_parent_filter(filters_dict, "block_id"):
             cache_data = json.dumps(
@@ -100,9 +100,7 @@ class CardService:
         return cards_schema
 
     @service_handler
-    async def create(
-        self, current_user: "User", card_create_data: CardCreate
-    ) -> CardRead:
+    async def create(self, current_user: "User", card_create_data: CardCreate) -> CardRead:
         card_dict = card_create_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -128,9 +126,7 @@ class CardService:
         return card_schema
 
     @service_handler
-    async def update(
-        self, current_user: "User", card_id: BaseIdType, card_update_data: CardUpdate
-    ) -> CardRead:
+    async def update(self, current_user: "User", card_id: BaseIdType, card_update_data: CardUpdate) -> CardRead:
         card_dict = card_update_data.model_dump(
             exclude_none=True,
             exclude_unset=True,

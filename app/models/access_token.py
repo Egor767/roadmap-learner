@@ -1,17 +1,21 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 from fastapi_users_db_sqlalchemy.access_token import (
     SQLAlchemyAccessTokenDatabase as SQLAlchemyAccessTokenDatabaseGeneric,
+)
+from fastapi_users_db_sqlalchemy.access_token import (
     SQLAlchemyBaseAccessTokenTable,
 )
 from fastapi_users_db_sqlalchemy.generics import TIMESTAMPAware, now_utc
-from sqlalchemy import delete, select, asc
+from sqlalchemy import asc, delete, select
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.custom_types import BaseIdType
 from app.core.config import settings
-from .db_helper import db_helper
+from app.core.custom_types import BaseIdType
+
 from .base import Base
+from .db_helper import db_helper
 from .mixins import UserRelationMixin
 
 logger = logging.getLogger("ACCESS-TOKEN")
@@ -41,9 +45,7 @@ class SQLAlchemyAccessTokenDatabase(SQLAlchemyAccessTokenDatabaseGeneric[AccessT
     async def create(self, token_dict: dict) -> AccessToken:
         now = now_utc()
         token_dict["created_at"] = now
-        token_dict["expires_at"] = now + timedelta(
-            seconds=settings.access_token.lifetime_seconds
-        )
+        token_dict["expires_at"] = now + timedelta(seconds=settings.access_token.lifetime_seconds)
         token = AccessToken(**token_dict)
 
         async with db_helper.session_factory() as session:
@@ -56,18 +58,14 @@ class SQLAlchemyAccessTokenDatabase(SQLAlchemyAccessTokenDatabaseGeneric[AccessT
     async def delete_expired_for_user(self, user_id) -> int:
         stmt = delete(AccessToken).where(
             AccessToken.user_id == user_id,
-            AccessToken.expires_at <= datetime.now(timezone.utc),
+            AccessToken.expires_at <= datetime.now(UTC),
         )
         result = await self.session.execute(stmt)
         await self.session.commit()
         return result.rowcount or 0
 
     async def enforce_max_active_tokens(self, user_id) -> int:
-        stmt = (
-            select(AccessToken.token)
-            .where(AccessToken.user_id == user_id)
-            .order_by(asc(AccessToken.created_at))
-        )
+        stmt = select(AccessToken.token).where(AccessToken.user_id == user_id).order_by(asc(AccessToken.created_at))
         tokens = (await self.session.execute(stmt)).scalars().all()
 
         max_tokens = settings.access_token.max_active_tokens
@@ -76,9 +74,7 @@ class SQLAlchemyAccessTokenDatabase(SQLAlchemyAccessTokenDatabaseGeneric[AccessT
 
         tokens_to_delete = tokens[: len(tokens) - max_tokens]
 
-        result = await self.session.execute(
-            delete(AccessToken).where(AccessToken.token.in_(tokens_to_delete))
-        )
+        result = await self.session.execute(delete(AccessToken).where(AccessToken.token.in_(tokens_to_delete)))
         await self.session.commit()
         return result.rowcount or 0
 

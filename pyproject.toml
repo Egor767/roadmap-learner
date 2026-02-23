@@ -3,7 +3,7 @@ name = "roadmap-learner-api"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "aiohttp>=3.13.2",
     "alembic>=1.17.1",
@@ -12,9 +12,9 @@ dependencies = [
     "fastapi>=0.117.1",
     "fastapi-users[oauth,sqlalchemy]>=15.0.1",
     "httpx>=0.28.1",
+    "pydantic>=2.11.9",
     "pydantic-settings>=2.11.0",
     "redis>=5.0.0",
-    "setuptools>=80.9.0",
     "sqlalchemy>=2.0.43",
     "uvicorn>=0.37.0",
 ]
@@ -22,4 +22,55 @@ dependencies = [
 [dependency-groups]
 dev = [
     "black>=24.10.0",
+    "pytest",
+    "ruff",
+    "setuptools>=80.9.0",
 ]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+src = ["app"]
+
+[tool.ruff.lint]
+preview = true
+select = [
+    "UP",   # pyupgrade
+    "I",    # isort
+    "E",    # flake8-errors
+    "W",    # flake8-warnings
+    "F",    # flake8-pyflakes
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "S",    # flake8-bandit
+    "BLE",  # flake8-blind-except
+    "T20",  # flake8-print
+    "T10",  # flake8-debugger
+    "PT",   # flake8-pytest-style
+    "RUF",  # Ruff
+    "DTZ",  # flake8-datetimez
+    "ERA",  # eradicate
+    "FURB", # refurb
+]
+ignore = [
+    "C408",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "S110",
+]
+exclude = [
+    "tests/**",
+]
+fixable = [
+    "I",  # сортировка импортов
+    "ALL", # все остальное, что можно
+]
+
+[tool.ruff.lint.flake8-bandit]
+check-typed-exception = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+

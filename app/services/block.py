@@ -1,7 +1,14 @@
 import json
 from typing import TYPE_CHECKING
 
+from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
+from app.schemas.block import (
+    BlockCreate,
+    BlockFilters,
+    BlockRead,
+    BlockUpdate,
+)
 from app.shared.generate_id import generate_base_id
 from app.utils.cache import get_cache_key, is_single_parent_filter
 from app.utils.mappers.cache_to_schema import (
@@ -9,21 +16,14 @@ from app.utils.mappers.cache_to_schema import (
     cache_to_schemas,
 )
 from app.utils.mappers.orm_to_schema import (
-    orms_to_schemas,
+    orm_list_to_schemas,
     orm_to_schema,
-)
-from app.core.custom_types import BaseIdType
-from app.schemas.block import (
-    BlockCreate,
-    BlockRead,
-    BlockUpdate,
-    BlockFilters,
 )
 
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
-    from app.repositories.block import BlockRepository
     from app.models import User
+    from app.repositories.block import BlockRepository
 
 
 class BlockService:
@@ -34,13 +34,11 @@ class BlockService:
     @service_handler
     async def get_all(self) -> list[BlockRead]:
         blocks_orm = await self.repo.get_all()
-        blocks_schemas = orms_to_schemas(BlockRead, blocks_orm)
+        blocks_schemas = orm_list_to_schemas(BlockRead, blocks_orm)
         return blocks_schemas
 
     @service_handler
-    async def get_by_filters(
-        self, current_user: "User", filters: BlockFilters
-    ) -> list[BlockRead]:
+    async def get_by_filters(self, current_user: "User", filters: BlockFilters) -> list[BlockRead]:
         filters_dict = filters.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -61,7 +59,7 @@ class BlockService:
 
         blocks_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
 
-        blocks_schema = orms_to_schemas(BlockRead, blocks_orm)
+        blocks_schema = orm_list_to_schemas(BlockRead, blocks_orm)
 
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             cache_data = json.dumps(
@@ -98,9 +96,7 @@ class BlockService:
         return block_schema
 
     @service_handler
-    async def create(
-        self, current_user: "User", block_create_data: BlockCreate
-    ) -> BlockRead:
+    async def create(self, current_user: "User", block_create_data: BlockCreate) -> BlockRead:
         block_dict = block_create_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -126,9 +122,7 @@ class BlockService:
         return block_schema
 
     @service_handler
-    async def update(
-        self, current_user: "User", block_id: BaseIdType, block_update_data: BlockUpdate
-    ) -> BlockRead:
+    async def update(self, current_user: "User", block_id: BaseIdType, block_update_data: BlockUpdate) -> BlockRead:
         block_dict = block_update_data.model_dump(
             exclude_none=True,
             exclude_unset=True,

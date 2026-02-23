@@ -1,19 +1,19 @@
 from sqlalchemy import (
-    select,
-    insert,
-    update,
     delete,
     func,
+    insert,
+    select,
+    update,
 )
 
 from app.core.custom_exceptions import EntityNotFoundError
+from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
 from app.models import Roadmap
 from app.models.session import Session
 from app.repositories import BaseRepository
 from app.schemas.session import SessionStatus
-from app.core.custom_types import BaseIdType
 
 
 class SessionRepository(BaseRepository):
@@ -26,9 +26,7 @@ class SessionRepository(BaseRepository):
 
     @repository_handler
     async def get_by_id(self, session_id: BaseIdType, user_id: BaseIdType) -> Session:
-        stmt = select(Session).where(
-            Session.id == session_id, Session.user_id == user_id
-        )
+        stmt = select(Session).where(Session.id == session_id, Session.user_id == user_id)
         result = await self.session.execute(stmt)
         session = result.scalar_one_or_none()
         if session is None:
@@ -57,9 +55,7 @@ class SessionRepository(BaseRepository):
             return session
 
     @repository_handler
-    async def update(
-        self, object_id: BaseIdType, update_data: dict, user_id: BaseIdType
-    ) -> Session:
+    async def update(self, object_id: BaseIdType, update_data: dict, user_id: BaseIdType) -> Session:
         async with transaction_manager(self.session):
             stmt = (
                 update(Session)
@@ -74,9 +70,7 @@ class SessionRepository(BaseRepository):
             return roadmap
 
     @repository_handler
-    async def finish_session(
-        self, session_id: BaseIdType, user_id: BaseIdType
-    ) -> Session:
+    async def finish_session(self, session_id: BaseIdType, user_id: BaseIdType) -> Session:
         async with transaction_manager(self.session):
             stmt = (
                 update(Session)

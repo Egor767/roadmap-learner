@@ -1,16 +1,16 @@
 from sqlalchemy import (
-    select,
-    insert,
-    update,
     delete,
+    insert,
+    select,
+    update,
 )
 
 from app.core.custom_exceptions import EntityNotFoundError
+from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
+from app.models import Block, Card, Roadmap
 from app.repositories import BaseRepository
-from app.models import Card, Block, Roadmap
-from app.core.custom_types import BaseIdType
 
 
 class CardRepository(BaseRepository):
@@ -62,13 +62,9 @@ class CardRepository(BaseRepository):
             return card
 
     @repository_handler
-    async def update(
-        self, card_id: BaseIdType, card_data: dict, user_id: BaseIdType
-    ) -> Card:
+    async def update(self, card_id: BaseIdType, card_data: dict, user_id: BaseIdType) -> Card:
         async with transaction_manager(self.session):
-            allowed_block_ids = (
-                select(Block.id).join(Roadmap).where(Roadmap.user_id == user_id)
-            )
+            allowed_block_ids = select(Block.id).join(Roadmap).where(Roadmap.user_id == user_id)
 
             stmt = (
                 update(Card)
@@ -89,9 +85,7 @@ class CardRepository(BaseRepository):
                 delete(Card)
                 .where(
                     Card.id == card_id,
-                    Card.block_id.in_(
-                        select(Block.id).join(Roadmap).where(Roadmap.user_id == user_id)
-                    ),
+                    Card.block_id.in_(select(Block.id).join(Roadmap).where(Roadmap.user_id == user_id)),
                 )
                 .returning(Card)
             )

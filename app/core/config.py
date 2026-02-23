@@ -37,7 +37,7 @@ class RedisConfig(BaseModel):
     host: str = "localhost"
     port: int = 6379
     db: RedisDB = RedisDB()
-    url_prefix: str = "cache"
+    url_prefix: str = "redis"
 
     @property
     def url(self) -> str:

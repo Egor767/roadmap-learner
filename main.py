@@ -2,18 +2,17 @@ import logging
 from contextlib import asynccontextmanager
 
 import uvicorn
+from app.api import router as api_router
+from app.core.cache.helper import CacheHelper
+from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
-from app.api import router as api_router
-from app.core.cache.helper import CacheHelper
-from app.core.config import settings
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.cache = CacheHelper(settings.cache.url)
+    app.state.cache = CacheHelper(settings.redis.url)
     yield
     await app.state.cache.close()
 

@@ -1,17 +1,18 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ARRAY, UUID
+from sqlalchemy import ARRAY, UUID, DateTime
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.custom_types import BaseIdType
 
 from .base import Base
 from .mixins import (
+    IdMixin,
+    RoadmapRelationMixin,
     TimestampMixin,
     UserRelationMixin,
-    RoadmapRelationMixin,
-    IdMixin,
 )
-
-from app.core.custom_types import BaseIdType
 
 
 class Session(
@@ -79,10 +80,7 @@ class Session(
 
     def __str__(self):
         return (
-            f"{self.__class__.__name__}(id={self.id}, "
-            f"user_id={self.user_id!r}), "
-            f"mode={self.mode}, "
-            f"status={self.status}"
+            f"{self.__class__.__name__}(id={self.id}, user_id={self.user_id!r}), mode={self.mode}, status={self.status}"
         )
 
     def __repr__(self):

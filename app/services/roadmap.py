@@ -1,27 +1,26 @@
 import json
 from typing import TYPE_CHECKING
 
-from app.core.handlers import service_handler
-from app.shared.generate_id import generate_base_id
-from app.utils.mappers.orm_to_schema import orm_to_schema, orms_to_schemas
-from app.utils.mappers.cache_to_schema import (
-    cache_to_schemas,
-    cache_to_schema,
-)
-from app.utils.cache import get_cache_key
-
-from app.schemas.roadmap import (
-    RoadmapRead,
-    RoadmapCreate,
-    RoadmapUpdate,
-    RoadmapFilters,
-)
 from app.core.custom_types import BaseIdType
+from app.core.handlers import service_handler
+from app.schemas.roadmap import (
+    RoadmapCreate,
+    RoadmapFilters,
+    RoadmapRead,
+    RoadmapUpdate,
+)
+from app.shared.generate_id import generate_base_id
+from app.utils.cache import get_cache_key
+from app.utils.mappers.cache_to_schema import (
+    cache_to_schema,
+    cache_to_schemas,
+)
+from app.utils.mappers.orm_to_schema import orm_list_to_schemas, orm_to_schema
 
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
-    from app.repositories import RoadmapRepository
     from app.models import User
+    from app.repositories import RoadmapRepository
 
 
 class RoadmapService:
@@ -32,13 +31,11 @@ class RoadmapService:
     @service_handler
     async def get_all(self) -> list[RoadmapRead]:
         roadmaps_orm = await self.repo.get_all()
-        roadmap_schema = orms_to_schemas(RoadmapRead, roadmaps_orm)
+        roadmap_schema = orm_list_to_schemas(RoadmapRead, roadmaps_orm)
         return roadmap_schema
 
     @service_handler
-    async def get_by_filters(
-        self, current_user: "User", filters: RoadmapFilters
-    ) -> list[RoadmapRead]:
+    async def get_by_filters(self, current_user: "User", filters: RoadmapFilters) -> list[RoadmapRead]:
         filters_dict = filters.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -57,7 +54,7 @@ class RoadmapService:
 
         roadmaps_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
 
-        roadmaps_schema = orms_to_schemas(RoadmapRead, roadmaps_orm)
+        roadmaps_schema = orm_list_to_schemas(RoadmapRead, roadmaps_orm)
 
         if not filters_dict:
             cache_data = json.dumps(
@@ -69,9 +66,7 @@ class RoadmapService:
         return roadmaps_schema
 
     @service_handler
-    async def get_by_id(
-        self, current_user: "User", roadmap_id: BaseIdType
-    ) -> RoadmapRead:
+    async def get_by_id(self, current_user: "User", roadmap_id: BaseIdType) -> RoadmapRead:
         key = get_cache_key(
             "roadmaps",
             "user",
@@ -93,9 +88,7 @@ class RoadmapService:
         return roadmap_schema
 
     @service_handler
-    async def create(
-        self, current_user: "User", roadmap_create_data: RoadmapCreate
-    ) -> RoadmapRead:
+    async def create(self, current_user: "User", roadmap_create_data: RoadmapCreate) -> RoadmapRead:
         roadmap_dict = roadmap_create_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
