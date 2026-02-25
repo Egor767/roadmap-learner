@@ -10,8 +10,7 @@ from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.models import Roadmap
-from app.models.session import Session
+from app.models import Session
 from app.repositories import BaseRepository
 from app.schemas.session import SessionStatus
 
@@ -37,7 +36,7 @@ class SessionRepository(BaseRepository):
     async def get_by_filters(self, filters: dict, user_id: BaseIdType) -> list[Session]:
         stmt = select(Session).where(Session.user_id == user_id)
         for field_name, value in filters.items():
-            column = getattr(Roadmap, field_name)
+            column = getattr(Session, field_name)
             if isinstance(value, list):
                 stmt = stmt.where(column.in_(value))
             else:
