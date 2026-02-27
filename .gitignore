@@ -115,3 +115,85 @@ staticfiles/
 
 .idea
 .qodo
+
+# === Python ===
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+.cache
+coverage.xml
+
+# === Virtual environments / env files ===
+.env
+.env.*
+.venv/
+venv/
+venv*/
+ENV/
+env/
+.envrc
+.python-version
+
+# === IDEs / editors ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# === Linters / caches ===
+.mypy_cache/
+.ruff_cache/
+.pyre/
+pytest_cache/
+__pypackages__/
+
+# === Logs / runtime files ===
+*.log
+logs/
+*.pid
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === Git / misc ===
+.git
+# Keep .gitignore itself tracked
+# === End additions ===
+
+# === Документация: как удалить уже отслеживаемые файлы, которые теперь игнорируются ===
+# Команды для консоли (в корне репозитория):
+# 1) Посмотреть игнорируемые файлы:
+#    git status --ignored
+#    git ls-files -i --exclude-standard
+# 2) Удалить конкретный файл из индекса (оставить в рабочей директории):
+#    git rm --cached path/to/file
+# 3) Удалить все сейчас отслеживаемые файлы, соответствующие .gitignore, и закоммитить:
+#    git rm -r --cached .
+#    git add .
+#    git commit -m "Remove ignored files"
+# 4) Проверить, по какому правилу файл игнорируется:
+#    git check-ignore -v path/to/file
+# Примечание: команды не удаляют файлы из рабочей копии, если используется --cached.
