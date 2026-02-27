@@ -1,33 +1,33 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import Depends
 
 from app.services import (
-    UserService,
-    RoadmapService,
     BlockService,
     CardService,
+    RoadmapService,
     SessionService,
-)
-from .repositories import (
-    get_user_repository,
-    get_roadmap_repository,
-    get_block_repository,
-    get_card_repository,
-    get_session_repository,
+    UserService,
 )
 
 from .cache import get_cache
+from .repositories import (
+    get_block_repository,
+    get_card_repository,
+    get_roadmap_repository,
+    get_session_repository,
+    get_user_repository,
+)
 
 if TYPE_CHECKING:
-    from redis.asyncio import Redis
     from cache import CacheHelper
+
     from repositories import (
-        UserRepository,
-        RoadmapRepository,
         BlockRepository,
         CardRepository,
+        RoadmapRepository,
         SessionRepository,
+        UserRepository,
     )
 
 
@@ -61,14 +61,14 @@ def get_block_service(
         "BlockRepository",
         Depends(get_block_repository),
     ],
-    redis: Annotated[
-        "Redis",
+    cache: Annotated[
+        "CacheHelper",
         Depends(get_cache),
     ],
 ) -> BlockService:
     return BlockService(
         repo,
-        redis,
+        cache,
     )
 
 
@@ -77,14 +77,14 @@ def get_card_service(
         "CardRepository",
         Depends(get_card_repository),
     ],
-    redis: Annotated[
-        "Redis",
+    cache: Annotated[
+        "CacheHelper",
         Depends(get_cache),
     ],
 ) -> CardService:
     return CardService(
         repo,
-        redis,
+        cache,
     )
 
 
@@ -93,12 +93,12 @@ def get_session_service(
         "SessionRepository",
         Depends(get_session_repository),
     ],
-    redis: Annotated[
-        "Redis",
+    cache: Annotated[
+        "CacheHelper",
         Depends(get_cache),
     ],
 ) -> SessionService:
     return SessionService(
         repo,
-        redis,
+        cache,
     )

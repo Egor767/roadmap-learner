@@ -1,60 +1,61 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import Depends
 
 from app.repositories import (
-    UserRepository,
-    RoadmapRepository,
     BlockRepository,
     CardRepository,
+    RoadmapRepository,
     SessionRepository,
+    UserRepository,
 )
+
 from .db import get_db_session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def get_user_repository(
+def get_user_repository(
     session: Annotated[
         "AsyncSession",
         Depends(get_db_session),
     ],
 ) -> UserRepository:
-    yield UserRepository(session)
+    return UserRepository(session)
 
 
-async def get_roadmap_repository(
+def get_roadmap_repository(
     session: Annotated[
         "AsyncSession",
         Depends(get_db_session),
     ],
 ) -> RoadmapRepository:
-    yield RoadmapRepository(session)
+    return RoadmapRepository(session)
 
 
-async def get_block_repository(
+def get_block_repository(
     session: Annotated[
         "AsyncSession",
         Depends(get_db_session),
     ],
 ) -> BlockRepository:
-    yield BlockRepository(session)
+    return BlockRepository(session)
 
 
-async def get_card_repository(
+def get_card_repository(
     session: Annotated[
         "AsyncSession",
         Depends(get_db_session),
     ],
 ) -> CardRepository:
-    yield CardRepository(session)
+    return CardRepository(session)
 
 
-async def get_session_repository(
+def get_session_repository(
     session: Annotated[
         "AsyncSession",
         Depends(get_db_session),
     ],
 ) -> SessionRepository:
-    yield SessionRepository(session)
+    return SessionRepository(session)
