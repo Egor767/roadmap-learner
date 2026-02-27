@@ -44,7 +44,7 @@ class CardRepository(BaseRepository):
             .where(Roadmap.user_id == user_id)
         )
         for field_name, value in filters.items():
-            column = getattr(Card, field_name, None)
+            column = getattr(Card, field_name)
             if isinstance(value, list):
                 stmt = stmt.where(column.in_(value))
             else:
@@ -54,8 +54,17 @@ class CardRepository(BaseRepository):
         return cards
 
     @repository_handler
-    async def create(self, card_data: dict) -> Card:
+    async def create(self, card_data: dict, user_id: BaseIdType) -> Card:
         async with transaction_manager(self.session):
+            block_check_stmt = (
+                select(Block.id)
+                .join(Roadmap, Block.roadmap_id == Roadmap.id)
+                .where(Block.id == card_data.get("block_id"), Roadmap.user_id == user_id)
+            )
+            result = await self.session.execute(block_check_stmt)
+            if result.scalar_one_or_none() is None:
+                raise EntityNotFoundError(Block, card_data.get("block_id"))
+
             stmt = insert(Card).values(**card_data).returning(Card)
             result = await self.session.execute(stmt)
             card = result.scalar_one()

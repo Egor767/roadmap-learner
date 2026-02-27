@@ -106,9 +106,8 @@ class CardService:
             exclude_unset=True,
         )
         card_dict["id"] = generate_base_id()
-        card_dict["user_id"] = current_user.id
 
-        card_orm = await self.repo.create(card_dict)
+        card_orm = await self.repo.create(card_dict, current_user.id)
 
         card_schema = orm_to_schema(CardRead, card_orm)
 

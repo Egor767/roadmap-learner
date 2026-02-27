@@ -102,9 +102,8 @@ class BlockService:
             exclude_unset=True,
         )
         block_dict["id"] = generate_base_id()
-        block_dict["user_id"] = current_user.id
 
-        block_orm = await self.repo.create(block_dict)
+        block_orm = await self.repo.create(block_dict, current_user.id)
 
         block_schema = orm_to_schema(BlockRead, block_orm)
 
