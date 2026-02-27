@@ -180,20 +180,3 @@ Thumbs.db
 
 # === Git / misc ===
 .git
-# Keep .gitignore itself tracked
-# === End additions ===
-
-# === Документация: как удалить уже отслеживаемые файлы, которые теперь игнорируются ===
-# Команды для консоли (в корне репозитория):
-# 1) Посмотреть игнорируемые файлы:
-#    git status --ignored
-#    git ls-files -i --exclude-standard
-# 2) Удалить конкретный файл из индекса (оставить в рабочей директории):
-#    git rm --cached path/to/file
-# 3) Удалить все сейчас отслеживаемые файлы, соответствующие .gitignore, и закоммитить:
-#    git rm -r --cached .
-#    git add .
-#    git commit -m "Remove ignored files"
-# 4) Проверить, по какому правилу файл игнорируется:
-#    git check-ignore -v path/to/file
-# Примечание: команды не удаляют файлы из рабочей копии, если используется --cached.
