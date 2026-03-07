@@ -101,3 +101,45 @@ class BlockRelationMixin:
             "Block",
             back_populates=cls._block_back_populates,
         )
+
+
+class CardRelationMixin:
+    _card_id_nullable: bool = False
+    _card_id_unique: bool = False
+    _card_back_populates: str | None = None
+
+    @declared_attr
+    def card_id(cls) -> Mapped[BaseIdType]:
+        return mapped_column(
+            ForeignKey("cards.id", ondelete="CASCADE"),
+            unique=cls._card_id_unique,
+            nullable=cls._card_id_nullable,
+        )
+
+    @declared_attr
+    def card(cls) -> Mapped["Block"]:
+        return relationship(
+            "Card",
+            back_populates=cls._card_back_populates,
+        )
+
+
+class QuestionRelationMixin:
+    _question_id_nullable: bool = False
+    _question_id_unique: bool = False
+    _question_back_populates: str | None = None
+
+    @declared_attr
+    def question_id(cls) -> Mapped[BaseIdType]:
+        return mapped_column(
+            ForeignKey("questions.id", ondelete="CASCADE"),
+            unique=cls._question_id_unique,
+            nullable=cls._question_id_nullable,
+        )
+
+    @declared_attr
+    def question(cls) -> Mapped["Block"]:
+        return relationship(
+            "Question",
+            back_populates=cls._question_back_populates,
+        )
