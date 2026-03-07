@@ -22,11 +22,6 @@ class Session(
     RoadmapRelationMixin,
     Base,
 ):
-    # _user_back_populates = "sessions"
-    # _roadmap_back_populates = None
-    # _block_back_populates = None
-    # _block_id_nullable = True
-
     mode: Mapped[str] = mapped_column(
         SQLEnum(
             "review",
