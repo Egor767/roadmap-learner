@@ -22,6 +22,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "black>=24.10.0",
+    "mypy>=1.19.1",
     "pytest",
     "ruff",
     "setuptools>=80.9.0",

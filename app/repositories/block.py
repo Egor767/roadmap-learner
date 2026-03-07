@@ -48,8 +48,15 @@ class BlockRepository(BaseRepository):
         return blocks
 
     @repository_handler
-    async def create(self, block_data: dict) -> Block:
+    async def create(self, block_data: dict, user_id: BaseIdType) -> Block:
         async with transaction_manager(self.session):
+            roadmap_check_stmt = select(Roadmap.id).where(
+                Roadmap.id == block_data.get("roadmap_id"), Roadmap.user_id == user_id
+            )
+            result = await self.session.execute(roadmap_check_stmt)
+            if result.scalar_one_or_none() is None:
+                raise EntityNotFoundError(Roadmap, block_data.get("roadmap_id"))
+
             stmt = insert(Block).values(**block_data).returning(Block)
             result = await self.session.execute(stmt)
             block = result.scalar_one()
