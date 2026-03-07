@@ -1,20 +1,9 @@
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
-
-
-class BaseRoadmap(BaseModel):
-    title: str
-    description: str | None = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class RoadmapCreate(BaseRoadmap):
-    pass
 
 
 class RoadmapStatus(str, Enum):
@@ -23,9 +12,20 @@ class RoadmapStatus(str, Enum):
     ARCHIVED = "archived"
 
 
+class BaseRoadmap(BaseModel):
+    title: str = Field(..., max_length=100)
+    description: str | None = Field(default=None, max_length=500)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RoadmapCreate(BaseRoadmap):
+    pass
+
+
 class RoadmapUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
+    title: str | None = Field(default=None, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
     status: RoadmapStatus | None = None
 
 
@@ -35,8 +35,6 @@ class RoadmapRead(BaseRoadmap):
     status: RoadmapStatus
     created_at: datetime
     updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class RoadmapFilters(BaseModel):
