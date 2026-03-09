@@ -1,23 +1,23 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
+from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_card_service
 from app.core.handlers import router_handler
-from app.core.custom_types import BaseIdType
 from app.schemas.card import (
-    CardRead,
     CardCreate,
-    CardUpdate,
     CardFilters,
+    CardRead,
+    CardUpdate,
 )
 
 if TYPE_CHECKING:
-    from app.services import CardService
     from app.models import User
+    from app.services import CardService
 
 
 router = APIRouter(
@@ -61,12 +61,12 @@ async def get_cards(
         "CardService",
         Depends(get_card_service),
     ],
-    block_id: Annotated[list[BaseIdType] | None, Query()] = None,
+    roadmap_id: Annotated[list[BaseIdType] | None, Query()] = None,
 ) -> list[CardRead]:
     return await card_service.get_by_filters(
         current_user,
         filters,
-        block_id,
+        roadmap_id,
     )
 
 
