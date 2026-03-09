@@ -35,7 +35,6 @@ class CardRead(BaseCard):
 
 
 class CardFilters(BaseModel):
-    roadmap_id: BaseIdType | None = None
     term: str | None = None
     definition: str | None = None
     example: str | None = None

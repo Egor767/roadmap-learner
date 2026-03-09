@@ -9,7 +9,7 @@ from app.core.custom_types import BaseIdType
 class QuestionStatus(str, Enum):
     KNOWN = "known"
     UNKNOWN = "unknown"
-    REVIEW = "review"
+    REPEAT = "repeat"
 
 
 class BaseQuestion(BaseModel):
@@ -20,8 +20,8 @@ class BaseQuestion(BaseModel):
 
 
 class QuestionCreate(BaseQuestion):
-    order_index: float
     block_id: BaseIdType
+    order_index: float | None = None
 
 
 class QuestionUpdate(BaseModel):
@@ -35,12 +35,13 @@ class QuestionRead(BaseQuestion):
     id: BaseIdType
     block_id: BaseIdType
     order_index: float
-    status: QuestionStatus
+    status: QuestionStatus = QuestionStatus.UNKNOWN
     created_at: datetime
     updated_at: datetime
 
 
 class QuestionFilters(BaseModel):
-    block_id: BaseIdType | None = None
+    roadmap_id: BaseIdType | None = None
     status: QuestionStatus | None = None
     order_index: float | None = None
+    question: str | None = None
