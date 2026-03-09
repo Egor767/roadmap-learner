@@ -6,7 +6,7 @@ from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
 from app.external.requests import (
     get_blocks_by_filters,
-    get_cards_by_filters,
+    get_questions_by_filters,
 )
 from app.models import User
 from app.schemas.session import (
@@ -58,12 +58,12 @@ class SessionService:
         return schema
 
     @service_handler
-    async def get_cards(
+    async def get_questions(
         self, current_user: "User", session_id: BaseIdType, filters: SessionCardsFilter
     ) -> list[BaseIdType]:
         session = await self.get_by_id(current_user, session_id)
-        cards = session.card_ids_queue[filters.offset : filters.offset + filters.limit]
-        return cards
+        questions = session.questions[filters.offset : filters.offset + filters.limit]
+        return questions
 
     @service_handler
     async def create(self, current_user: "User", session_create_data: SessionCreate, token: str) -> SessionRead:
@@ -82,18 +82,18 @@ class SessionService:
         else:
             blocks_ids = [filters.get("block_id")]
 
-        cards_ids = []
+        questions = []
         if blocks_ids:
             filters["block_id"] = blocks_ids.copy()
-            cards_data = await get_cards_by_filters(token, filters)
-            cards_ids = [card["id"] for card in cards_data]
+            questions_data = await get_questions_by_filters(token, filters)
+            questions = [q["id"] for q in questions_data]
 
         session_dict = session_create_data.model_dump(exclude={"mix"})
         session_dict["user_id"] = current_user.id
         session_dict["id"] = generate_base_id()
         if session_create_data.mix:
-            random.shuffle(cards_ids)
-        session_dict["card_ids_queue"] = cards_ids
+            random.shuffle(questions)
+        session_dict["questions"] = questions
 
         orm = await self.repo.create(session_dict)
 
@@ -131,7 +131,7 @@ class SessionService:
         schema = orm_to_schema(SessionRead, orm)
 
         reviewed_answers = schema.correct_answers + schema.incorrect_answers
-        cards_len = len(schema.card_ids_queue)
+        questions_len = len(schema.questions)
 
         accuracy = int((schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
 
@@ -145,7 +145,7 @@ class SessionService:
                     "updated_at",
                 }
             ),
-            total_cards=cards_len,
+            total_answers=questions_len,
             accuracy_percentage=accuracy,
         )
 

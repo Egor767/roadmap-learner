@@ -1,27 +1,26 @@
 import logging
-
-from typing import Annotated, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, Request
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
+from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_session_service
 from app.core.handlers import router_handler
-from app.core.custom_types import BaseIdType
 from app.schemas.session import (
-    SessionRead,
+    SessionCardsFilter,
     SessionCreate,
     SessionFilters,
+    SessionRead,
     SessionResult,
     SessionUpdate,
-    SessionCardsFilter,
 )
 
 if TYPE_CHECKING:
-    from app.services import SessionService
     from app.models import User
+    from app.services import SessionService
 
 logger = logging.getLogger()
 
@@ -96,10 +95,10 @@ async def get_session(
 
 
 @router.get(
-    "/{session_id}/cards",
+    "/{session_id}/questions",
 )
 @router_handler
-async def get_cards(
+async def get_questions(
     session_id: BaseIdType,
     filters: Annotated[
         SessionCardsFilter,
@@ -114,7 +113,7 @@ async def get_cards(
         Depends(get_session_service),
     ],
 ):
-    return await session_service.get_cards(
+    return await session_service.get_questions(
         current_user,
         session_id,
         filters,

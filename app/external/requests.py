@@ -1,6 +1,6 @@
-import httpx
 import logging
-from app.core.config import settings
+
+import httpx
 
 logger = logging.getLogger("Request-Logger")
 
@@ -46,11 +46,11 @@ async def get_blocks_by_filters(
         return response.json()
 
 
-async def get_cards_by_filters(
+async def get_questions_by_filters(
     token: str,
     filters: dict,
 ) -> list[dict]:
-    url = "http://localhost:8080/api/v1/cards/filters"
+    url = "http://localhost:8080/api/v1/questions/filters"
 
     headers = {
         "Authorization": f"Bearer {token}",
