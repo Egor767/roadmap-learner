@@ -8,6 +8,7 @@ from app.repositories import (
     QuestionRepository,
     RoadmapRepository,
     SessionRepository,
+    UserCardProgressRepository,
     UserQuestionProgressRepository,
     UserRepository,
 )
@@ -70,6 +71,15 @@ def get_question_progress_repository(
     ],
 ) -> UserQuestionProgressRepository:
     return UserQuestionProgressRepository(session)
+
+
+def get_card_progress_repository(
+    session: Annotated[
+        "AsyncSession",
+        Depends(get_db_session),
+    ],
+) -> UserCardProgressRepository:
+    return UserCardProgressRepository(session)
 
 
 def get_session_repository(

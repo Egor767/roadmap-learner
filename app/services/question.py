@@ -19,7 +19,8 @@ from app.utils.mappers.cache_to_schema import (
 )
 from app.utils.mappers.orm_to_schema import (
     orm_list_to_schemas,
-    orm_to_schema,
+    orm_list_to_schemas_statuses,
+    orm_to_schema_status,
 )
 
 if TYPE_CHECKING:
@@ -30,23 +31,10 @@ if TYPE_CHECKING:
 
 
 class QuestionService:
-    def __init__(
-        self,
-        repo: "QuestionRepository",
-        progress_repo: "ProgressRepository",
-        cache: "CacheHelper",
-    ):
+    def __init__(self, repo: "QuestionRepository", progress_repo: "ProgressRepository", cache: "CacheHelper"):
         self.repo = repo
         self.progress_repo = progress_repo
         self.cache = cache
-
-    @staticmethod
-    def _inject_status(orm, status) -> QuestionRead:
-        return orm_to_schema(QuestionRead, orm).model_copy(update={"status": status})
-
-    @staticmethod
-    def _inject_statuses(orm_list, statuses) -> list[QuestionRead]:
-        return [orm_to_schema(QuestionRead, q).model_copy(update={"status": statuses[q.id]}) for q in orm_list]
 
     @service_handler
     async def get_all(self) -> list[QuestionRead]:
@@ -71,9 +59,10 @@ class QuestionService:
             self.repo.get_by_id(question_id, current_user.id),
             self.progress_repo.get_status(current_user.id, question_id),
         )
-        schema = self._inject_status(question, status)
+        schema = orm_to_schema_status(QuestionRead, question, status)
 
         await self.cache.set(key, json.dumps([schema.model_dump(mode="json")]))
+
         return schema
 
     @service_handler
@@ -105,28 +94,34 @@ class QuestionService:
             allowed_ids = await self.progress_repo.get_ids_by_status(current_user.id, status_filter)
             filters_dict["id"] = allowed_ids
 
-        orm_list = await self.repo.get_by_filters(filters_dict, current_user.id)
+        orm = await self.repo.get_by_filters(filters_dict, current_user.id)
 
-        statuses = await self.progress_repo.get_statuses(current_user.id, [q.id for q in orm_list])
-        schemas = self._inject_statuses(orm_list, statuses)
+        statuses = await self.progress_repo.get_statuses(current_user.id, [q.id for q in orm])
+        schemas = orm_list_to_schemas_statuses(QuestionRead, orm, statuses)
 
         if is_single_parent_filter(filters_dict, "block_id") and status_filter is None:
             await self.cache.set(
                 key,
-                json.dumps([s.model_dump(mode="json") for s in schemas], default=str),
+                json.dumps(
+                    [s.model_dump(mode="json") for s in schemas],
+                    default=str,
+                ),
             )
 
         return schemas
 
     @service_handler
     async def create(self, current_user: "User", question_create: QuestionCreate) -> QuestionRead:
-        question_dict = question_create.model_dump(exclude_none=True, exclude_unset=True)
+        question_dict = question_create.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
         question_dict["id"] = generate_base_id()
 
         orm = await self.repo.create(question_dict, current_user.id)
         await self.progress_repo.create(current_user.id, orm.id)
 
-        schema = self._inject_status(orm, QuestionStatus.UNKNOWN)
+        schema = orm_to_schema_status(QuestionRead, orm, QuestionStatus.UNKNOWN)
 
         await self.cache.delete(
             get_cache_key(
@@ -138,6 +133,7 @@ class QuestionService:
                 "list",
             )
         )
+
         return schema
 
     @service_handler
@@ -147,22 +143,24 @@ class QuestionService:
         question_id: BaseIdType,
         question_update_data: QuestionUpdate,
     ) -> QuestionRead:
-        update_dict = question_update_data.model_dump(exclude_none=True, exclude_unset=True)
-        status: QuestionStatus | None = update_dict.pop("status", None)
+        update_dict = question_update_data.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
+        status = update_dict.pop("status", None)
 
         tasks = []
         if update_dict:
             tasks.append(self.repo.update(question_id, update_dict, current_user.id))
         if status is not None:
             tasks.append(self.progress_repo.update(current_user.id, question_id, status))
-
         await asyncio.gather(*tasks)
 
         orm, final_status = await asyncio.gather(
             self.repo.get_by_id(question_id, current_user.id),
             self.progress_repo.get_status(current_user.id, question_id),
         )
-        schema = self._inject_status(orm, final_status)
+        schema = orm_to_schema_status(QuestionRead, orm, final_status)
 
         await self.cache.delete(
             get_cache_key(
@@ -182,14 +180,11 @@ class QuestionService:
                 "detail",
             ),
         )
+
         return schema
 
     @service_handler
-    async def delete(
-        self,
-        current_user: "User",
-        question_id: BaseIdType,
-    ):
+    async def delete(self, current_user: "User", question_id: BaseIdType):
         orm = await self.repo.delete(question_id, current_user.id)
 
         await self.cache.delete(

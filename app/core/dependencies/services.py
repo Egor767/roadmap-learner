@@ -82,6 +82,10 @@ def get_card_service(
         "CardRepository",
         Depends(get_card_repository),
     ],
+    progress_repo: Annotated[
+        "UserQuestionProgressRepository",
+        Depends(get_question_progress_repository),
+    ],
     cache: Annotated[
         "CacheHelper",
         Depends(get_cache),
@@ -89,6 +93,7 @@ def get_card_service(
 ) -> CardService:
     return CardService(
         repo,
+        progress_repo,
         cache,
     )
 
