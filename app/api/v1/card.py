@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
@@ -61,12 +61,10 @@ async def get_cards(
         "CardService",
         Depends(get_card_service),
     ],
-    roadmap_id: Annotated[list[BaseIdType] | None, Query()] = None,
 ) -> list[CardRead]:
     return await card_service.get_by_filters(
         current_user,
         filters,
-        roadmap_id,
     )
 
 

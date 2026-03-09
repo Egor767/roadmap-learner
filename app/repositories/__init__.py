@@ -5,6 +5,7 @@ __all__ = (
     "QuestionRepository",
     "RoadmapRepository",
     "SessionRepository",
+    "UserCardProgressRepository",
     "UserQuestionProgressRepository",
     "UserRepository",
 )
@@ -12,6 +13,7 @@ __all__ = (
 from .base import BaseRepository
 from .block import BlockRepository
 from .card import CardRepository
+from .card_progress import UserCardProgressRepository
 from .question import QuestionRepository
 from .question_progress import UserQuestionProgressRepository
 from .roadmap import RoadmapRepository

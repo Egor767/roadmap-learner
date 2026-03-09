@@ -1,8 +1,15 @@
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
+
+
+class CardStatus(str, Enum):
+    KNOWN = "known"
+    UNKNOWN = "unknown"
+    REPEAT = "repeat"
 
 
 class BaseCard(BaseModel):
@@ -35,6 +42,7 @@ class CardRead(BaseCard):
 
 
 class CardFilters(BaseModel):
+    roadmap_id: BaseIdType | None = None
     term: str | None = None
     definition: str | None = None
     example: str | None = None
