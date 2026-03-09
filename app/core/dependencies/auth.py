@@ -22,7 +22,7 @@ async def get_access_tokens_db(
         Depends(get_db_session),
     ],
 ):
-    return SQLAlchemyAccessTokenDatabase(session, AccessToken)
+    yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
 
 
 async def get_database_strategy(

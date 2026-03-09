@@ -6,6 +6,7 @@ from os import getenv
 from fastapi_users.exceptions import UserAlreadyExists
 
 from app.core.dependencies import get_users_db
+from app.core.dependencies.auth import get_access_tokens_db
 from app.core.dependencies.users import get_user_manager
 from app.models import User, db_helper
 from app.schemas.user import UserCreate
@@ -13,6 +14,7 @@ from app.services import UserManager
 
 logger = logging.getLogger("Actions-Logger")
 get_users_db_context = contextlib.asynccontextmanager(get_users_db)
+get_access_tokens_db_context = contextlib.asynccontextmanager(get_access_tokens_db)
 get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 
@@ -51,14 +53,15 @@ async def create_superuser(
     )
     async with db_helper.session_factory() as session:
         async with get_users_db_context(session) as users_db:
-            async with get_user_manager_context(users_db) as user_manager:
-                try:
-                    return await create_user(
-                        user_manager=user_manager,
-                        user_create=user_create,
-                    )
-                except UserAlreadyExists:
-                    logger.error("User(%r) already exist", default_email)
+            async with get_access_tokens_db_context(session) as access_tokens_db:  # ← add this
+                async with get_user_manager_context(users_db, access_tokens_db) as user_manager:  # ← pass both
+                    try:
+                        return await create_user(
+                            user_manager=user_manager,
+                            user_create=user_create,
+                        )
+                    except UserAlreadyExists:
+                        logger.error("User(%r) already exist", default_email)
 
 
 if __name__ == "__main__":
