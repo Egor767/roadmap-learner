@@ -18,24 +18,24 @@ class RoadmapRepository(BaseRepository):
     async def get_all(self) -> list[Roadmap]:
         stmt = select(Roadmap)
         result = await self.session.execute(stmt)
-        roadmaps = list(result.scalars().all())
-        return roadmaps
+        rows = list(result.scalars().all())
+        return rows
 
     @repository_handler
-    async def get_by_id(self, roadmap_id: BaseIdType, user_id: BaseIdType) -> Roadmap:
+    async def get_by_id(self, roadmap: BaseIdType, user: BaseIdType) -> Roadmap:
         stmt = select(Roadmap).where(
-            Roadmap.user_id == user_id,
-            Roadmap.id == roadmap_id,
+            Roadmap.user_id == user,
+            Roadmap.id == roadmap,
         )
         result = await self.session.execute(stmt)
-        roadmap = result.scalar_one_or_none()
-        if roadmap is None:
-            raise EntityNotFoundError(Roadmap, roadmap_id)
-        return roadmap
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise EntityNotFoundError(Roadmap, roadmap)
+        return row
 
     @repository_handler
-    async def get_by_filters(self, filters: dict, user_id: BaseIdType) -> list[Roadmap]:
-        stmt = select(Roadmap).where(Roadmap.user_id == user_id)
+    async def get_by_filters(self, filters: dict, user: BaseIdType) -> list[Roadmap]:
+        stmt = select(Roadmap).where(Roadmap.user_id == user)
         for field_name, value in filters.items():
             column = getattr(Roadmap, field_name)
             if isinstance(value, list):
@@ -43,36 +43,33 @@ class RoadmapRepository(BaseRepository):
             else:
                 stmt = stmt.where(column == value)
         result = await self.session.execute(stmt)
-        roadmaps = list(result.scalars().all())
-        return roadmaps
+        rows = list(result.scalars().all())
+        return rows
 
     @repository_handler
-    async def create(self, roadmap_data: dict) -> Roadmap:
+    async def create(self, data: dict) -> Roadmap:
         async with transaction_manager(self.session):
-            stmt = insert(Roadmap).values(**roadmap_data).returning(Roadmap)
+            stmt = insert(Roadmap).values(**data).returning(Roadmap)
             result = await self.session.execute(stmt)
-            roadmap = result.scalar_one()
-            return roadmap
+            row = result.scalar_one()
+            return row
 
     @repository_handler
-    async def update(self, roadmap_id: BaseIdType, roadmap_data: dict, user_id: BaseIdType) -> Roadmap:
+    async def update(self, roadmap: BaseIdType, data: dict, user: BaseIdType) -> Roadmap:
         async with transaction_manager(self.session):
             stmt = (
-                update(Roadmap)
-                .where(Roadmap.user_id == user_id, Roadmap.id == roadmap_id)
-                .values(**roadmap_data)
-                .returning(Roadmap)
+                update(Roadmap).where(Roadmap.user_id == user, Roadmap.id == roadmap).values(**data).returning(Roadmap)
             )
             result = await self.session.execute(stmt)
-            roadmap = result.scalar_one_or_none()
-            if roadmap is None:
-                raise EntityNotFoundError(Roadmap, roadmap_id)
-            return roadmap
+            row = result.scalar_one_or_none()
+            if row is None:
+                raise EntityNotFoundError(Roadmap, roadmap)
+            return row
 
     @repository_handler
-    async def delete(self, roadmap_id: BaseIdType, user_id: BaseIdType):
+    async def delete(self, roadmap: BaseIdType, user: BaseIdType):
         async with transaction_manager(self.session):
-            stmt = delete(Roadmap).where(Roadmap.user_id == user_id, Roadmap.id == roadmap_id)
+            stmt = delete(Roadmap).where(Roadmap.user_id == user, Roadmap.id == roadmap)
             result = await self.session.execute(stmt)
             if result.rowcount == 0:
-                raise EntityNotFoundError(Roadmap, roadmap_id)
+                raise EntityNotFoundError(Roadmap, roadmap)

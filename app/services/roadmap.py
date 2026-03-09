@@ -30,9 +30,9 @@ class RoadmapService:
 
     @service_handler
     async def get_all(self) -> list[RoadmapRead]:
-        roadmaps_orm = await self.repo.get_all()
-        roadmap_schema = orm_list_to_schemas(RoadmapRead, roadmaps_orm)
-        return roadmap_schema
+        orm = await self.repo.get_all()
+        schema = orm_list_to_schemas(RoadmapRead, orm)
+        return schema
 
     @service_handler
     async def get_by_filters(self, current_user: "User", filters: RoadmapFilters) -> list[RoadmapRead]:
@@ -52,18 +52,18 @@ class RoadmapService:
             if cache:
                 return cache_to_schemas(RoadmapRead, cache)
 
-        roadmaps_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
+        orm = await self.repo.get_by_filters(filters_dict, current_user.id)
 
-        roadmaps_schema = orm_list_to_schemas(RoadmapRead, roadmaps_orm)
+        schema = orm_list_to_schemas(RoadmapRead, orm)
 
         if not filters_dict:
             cache_data = json.dumps(
-                [u.model_dump(mode="json") for u in roadmaps_schema],
+                [u.model_dump(mode="json") for u in schema],
                 default=str,
             )
             await self.cache.set(key, cache_data)
 
-        return roadmaps_schema
+        return schema
 
     @service_handler
     async def get_by_id(self, current_user: "User", roadmap_id: BaseIdType) -> RoadmapRead:
@@ -79,13 +79,13 @@ class RoadmapService:
         if cache:
             return cache_to_schema(RoadmapRead, cache)
 
-        roadmap_orm = await self.repo.get_by_id(roadmap_id, current_user.id)
+        orm = await self.repo.get_by_id(roadmap_id, current_user.id)
 
-        roadmap_schema = orm_to_schema(RoadmapRead, roadmap_orm)
+        schema = orm_to_schema(RoadmapRead, orm)
 
-        await self.cache.set(key, json.dumps([roadmap_schema.model_dump(mode="json")]))
+        await self.cache.set(key, json.dumps([schema.model_dump(mode="json")]))
 
-        return roadmap_schema
+        return schema
 
     @service_handler
     async def create(self, current_user: "User", roadmap_create_data: RoadmapCreate) -> RoadmapRead:
@@ -96,15 +96,20 @@ class RoadmapService:
         roadmap_dict["id"] = generate_base_id()
         roadmap_dict["user_id"] = current_user.id
 
-        roadmap_orm = await self.repo.create(roadmap_dict)
+        orm = await self.repo.create(roadmap_dict)
 
-        roadmap_schema = orm_to_schema(RoadmapRead, roadmap_orm)
+        schema = orm_to_schema(RoadmapRead, orm)
 
         await self.cache.delete(
-            get_cache_key("roadmaps", "user", str(current_user.id), "list"),
+            get_cache_key(
+                "roadmaps",
+                "user",
+                str(current_user.id),
+                "list",
+            ),
         )
 
-        return roadmap_schema
+        return schema
 
     @service_handler
     async def update(
@@ -118,9 +123,9 @@ class RoadmapService:
             exclude_unset=True,
         )
 
-        roadmap_orm = await self.repo.update(roadmap_id, roadmap_dict, current_user.id)
+        orm = await self.repo.update(roadmap_id, roadmap_dict, current_user.id)
 
-        roadmap_schema = orm_to_schema(RoadmapRead, roadmap_orm)
+        schema = orm_to_schema(RoadmapRead, orm)
 
         await self.cache.delete(
             get_cache_key("roadmaps", "user", str(current_user.id), "list"),
@@ -134,7 +139,7 @@ class RoadmapService:
             ),
         )
 
-        return roadmap_schema
+        return schema
 
     @service_handler
     async def delete(self, current_user: "User", roadmap_id: BaseIdType):

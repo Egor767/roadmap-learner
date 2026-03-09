@@ -37,9 +37,9 @@ class SessionService:
 
     @service_handler
     async def get_all(self) -> list[SessionRead]:
-        sessions_orm = await self.repo.get_all()
-        sessions_schema = orm_list_to_schemas(SessionRead, sessions_orm)
-        return sessions_schema
+        orm = await self.repo.get_all()
+        schema = orm_list_to_schemas(SessionRead, orm)
+        return schema
 
     @service_handler
     async def get_by_filters(self, current_user: "User", filters: SessionFilters) -> list[SessionRead]:
@@ -47,15 +47,15 @@ class SessionService:
             exclude_none=True,
             exclude_unset=True,
         )
-        sessions_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
-        sessions_schema = orm_list_to_schemas(SessionRead, sessions_orm)
-        return sessions_schema
+        orm = await self.repo.get_by_filters(filters_dict, current_user.id)
+        schema = orm_list_to_schemas(SessionRead, orm)
+        return schema
 
     @service_handler
     async def get_by_id(self, current_user: "User", session_id: BaseIdType) -> SessionRead:
-        session_orm = await self.repo.get_by_id(session_id, current_user.id)
-        session_schema = orm_to_schema(SessionRead, session_orm)
-        return session_schema
+        orm = await self.repo.get_by_id(session_id, current_user.id)
+        schema = orm_to_schema(SessionRead, orm)
+        return schema
 
     @service_handler
     async def get_cards(
@@ -95,11 +95,11 @@ class SessionService:
             random.shuffle(cards_ids)
         session_dict["card_ids_queue"] = cards_ids
 
-        session_orm = await self.repo.create(session_dict)
+        orm = await self.repo.create(session_dict)
 
-        session_schema = orm_to_schema(SessionRead, session_orm)
+        schema = orm_to_schema(SessionRead, orm)
 
-        return session_schema
+        return schema
 
     @service_handler
     async def update(
@@ -113,11 +113,11 @@ class SessionService:
             exclude_unset=True,
         )
 
-        session_orm = await self.repo.update(session_id, session_dict, current_user.id)
+        orm = await self.repo.update(session_id, session_dict, current_user.id)
 
-        session_schema = orm_to_schema(SessionRead, session_orm)
+        schema = orm_to_schema(SessionRead, orm)
 
-        return session_schema
+        return schema
 
     @service_handler
     async def finish(self, current_user: "User", session_id: BaseIdType) -> SessionResult:
@@ -126,17 +126,17 @@ class SessionService:
             "completed_at": datetime.now(),
         }
 
-        session_orm = await self.repo.update(session_id, update_data, current_user.id)
+        orm = await self.repo.update(session_id, update_data, current_user.id)
 
-        session_schema = orm_to_schema(SessionRead, session_orm)
+        schema = orm_to_schema(SessionRead, orm)
 
-        reviewed_answers = session_schema.correct_answers + session_schema.incorrect_answers
-        cards_len = len(session_schema.card_ids_queue)
+        reviewed_answers = schema.correct_answers + schema.incorrect_answers
+        cards_len = len(schema.card_ids_queue)
 
-        accuracy = int((session_schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
+        accuracy = int((schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
 
-        session_result = SessionResult(
-            **session_schema.model_dump(
+        result = SessionResult(
+            **schema.model_dump(
                 exclude={
                     "card_ids_queue",
                     "current_card_index",
@@ -149,7 +149,7 @@ class SessionService:
             accuracy_percentage=accuracy,
         )
 
-        return session_result
+        return result
 
     @service_handler
     async def delete(self, current_user: "User", session_id: BaseIdType):

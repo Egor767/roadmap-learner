@@ -31,17 +31,17 @@ class UserRepository(BaseRepository):
         return users
 
     @repository_handler
-    async def get_by_id(self, user_id: "BaseIdType") -> User | None:
+    async def get_by_id(self, user: "BaseIdType") -> User | None:
         raise NotImplementedError("get_by_id() is not implemented for UserRepository")
 
     @repository_handler
-    async def create(self, user_data: dict) -> User | None:
+    async def create(self, data: dict) -> User | None:
         raise NotImplementedError("create() is not implemented for UserRepository")
 
     @repository_handler
-    async def update(self, user_id: "BaseIdType", data: dict) -> User | None:
+    async def update(self, user: "BaseIdType", data: dict) -> User | None:
         raise NotImplementedError("update() is not implemented for UserRepository")
 
     @repository_handler
-    async def delete(self, user_id: "BaseIdType") -> bool:
+    async def delete(self, user: "BaseIdType") -> bool:
         raise NotImplementedError("delete() is not implemented for UserRepository")

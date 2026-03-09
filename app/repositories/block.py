@@ -18,25 +18,25 @@ class BlockRepository(BaseRepository):
     async def get_all(self) -> list[Block]:
         stmt = select(Block)
         result = await self.session.execute(stmt)
-        blocks = list(result.scalars().all())
-        return blocks
+        rows = list(result.scalars().all())
+        return rows
 
     @repository_handler
-    async def get_by_id(self, block_id: BaseIdType, user_id: BaseIdType) -> Block:
+    async def get_by_id(self, block: BaseIdType, user: BaseIdType) -> Block:
         stmt = (
             select(Block)
             .join(Roadmap, Block.roadmap_id == Roadmap.id)
-            .where(Block.id == block_id, Roadmap.user_id == user_id)
+            .where(Block.id == block, Roadmap.user_id == user)
         )
         result = await self.session.execute(stmt)
-        block = result.scalar_one_or_none()
-        if block is None:
-            raise EntityNotFoundError(Block, block_id)
-        return block
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise EntityNotFoundError(Block, block)
+        return row
 
     @repository_handler
-    async def get_by_filters(self, filters: dict, user_id: BaseIdType) -> list[Block]:
-        stmt = select(Block).join(Roadmap, Block.roadmap_id == Roadmap.id).where(Roadmap.user_id == user_id)
+    async def get_by_filters(self, filters: dict, user: BaseIdType) -> list[Block]:
+        stmt = select(Block).join(Roadmap, Block.roadmap_id == Roadmap.id).where(Roadmap.user_id == user)
         for field_name, value in filters.items():
             column = getattr(Block, field_name)
             if isinstance(value, list):
@@ -44,55 +44,53 @@ class BlockRepository(BaseRepository):
             else:
                 stmt = stmt.where(column == value)
         result = await self.session.execute(stmt)
-        blocks = list(result.scalars().all())
-        return blocks
+        rows = list(result.scalars().all())
+        return rows
 
     @repository_handler
-    async def create(self, block_data: dict, user_id: BaseIdType) -> Block:
+    async def create(self, data: dict, user: BaseIdType) -> Block:
         async with transaction_manager(self.session):
-            roadmap_check_stmt = select(Roadmap.id).where(
-                Roadmap.id == block_data.get("roadmap_id"), Roadmap.user_id == user_id
-            )
+            roadmap_check_stmt = select(Roadmap.id).where(Roadmap.id == data.get("roadmap_id"), Roadmap.user_id == user)
             result = await self.session.execute(roadmap_check_stmt)
             if result.scalar_one_or_none() is None:
-                raise EntityNotFoundError(Roadmap, block_data.get("roadmap_id"))
+                raise EntityNotFoundError(Roadmap, data.get("roadmap_id"))
 
-            stmt = insert(Block).values(**block_data).returning(Block)
+            stmt = insert(Block).values(**data).returning(Block)
             result = await self.session.execute(stmt)
-            block = result.scalar_one()
-            return block
+            row = result.scalar_one()
+            return row
 
     @repository_handler
-    async def update(self, block_id: BaseIdType, block_data: dict, user_id: BaseIdType) -> Block:
+    async def update(self, block: BaseIdType, data: dict, user: BaseIdType) -> Block:
         async with transaction_manager(self.session):
             stmt = (
                 update(Block)
                 .where(
-                    Block.id == block_id,
-                    Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user_id)),
+                    Block.id == block,
+                    Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user)),
                 )
-                .values(**block_data)
+                .values(**data)
                 .returning(Block)
             )
             result = await self.session.execute(stmt)
-            block = result.scalar_one_or_none()
-            if block is None:
-                raise EntityNotFoundError(Block, block_id)
-            return block
+            row = result.scalar_one_or_none()
+            if row is None:
+                raise EntityNotFoundError(Block, block)
+            return row
 
     @repository_handler
-    async def delete(self, block_id: BaseIdType, user_id: BaseIdType) -> Block:
+    async def delete(self, block: BaseIdType, user: BaseIdType) -> Block:
         async with transaction_manager(self.session):
             stmt = (
                 delete(Block)
                 .where(
-                    Block.id == block_id,
-                    Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user_id)),
+                    Block.id == block,
+                    Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user)),
                 )
                 .returning(Block)
             )
             result = await self.session.execute(stmt)
-            block = result.scalar_one_or_none()
-            if block is None:
-                raise EntityNotFoundError(Block, block_id)
-            return block
+            row = result.scalar_one_or_none()
+            if row is None:
+                raise EntityNotFoundError(Block, block)
+            return row
