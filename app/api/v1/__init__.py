@@ -25,6 +25,6 @@ router.include_router(user_router)
 
 router.include_router(roadmap_router)
 router.include_router(block_router)
+router.include_router(question_router)
 router.include_router(card_router)
 router.include_router(session_router)
-router.include_router(question_router)
