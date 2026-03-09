@@ -4,10 +4,6 @@ services:
     container_name: roadmap-api
     ports:
       - "8080:8080"
-    volumes:
-      - .:/app
-      - /app/__pycache__
-      - /app/.pytest_cache
     env_file:
       - .env
     depends_on:
