@@ -46,13 +46,13 @@ class Session(
         default="active",
     )
 
-    card_ids_queue: Mapped[list[BaseIdType] | None] = mapped_column(
+    questions: Mapped[list[BaseIdType] | None] = mapped_column(
         ARRAY(UUID(as_uuid=True)),
         nullable=True,
         default=list,
     )
 
-    current_card_index: Mapped[int] = mapped_column(
+    index: Mapped[int] = mapped_column(
         default=0,
     )
 
