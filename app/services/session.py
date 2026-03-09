@@ -61,8 +61,8 @@ class SessionService:
     async def get_questions(
         self, current_user: "User", session_id: BaseIdType, filters: SessionCardsFilter
     ) -> list[BaseIdType]:
-        session = await self.get_by_id(current_user, session_id)
-        questions = session.questions[filters.offset : filters.offset + filters.limit]
+        orm = await self.repo.get_questions(session_id, current_user.id)
+        questions = orm[filters.offset : filters.offset + filters.limit]
         return questions
 
     @service_handler

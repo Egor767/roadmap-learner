@@ -67,8 +67,8 @@ class SessionFilters(BaseModel):
 
 
 class SessionCardsFilter(BaseModel):
-    limit: int = 0
-    offset: int = 10
+    limit: int = 10
+    offset: int = 0
 
 
 class SessionResult(BaseModel):

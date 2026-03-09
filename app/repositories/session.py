@@ -46,6 +46,15 @@ class SessionRepository(BaseRepository):
         return rows
 
     @repository_handler
+    async def get_questions(self, session: BaseIdType, user: BaseIdType) -> list[BaseIdType]:
+        stmt = select(Session.questions).where(Session.id == session, Session.user_id == user)
+        result = await self.session.execute(stmt)
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise EntityNotFoundError(Session, session)
+        return row or []
+
+    @repository_handler
     async def create(self, data: dict) -> Session:
         async with transaction_manager(self.session):
             stmt = insert(Session).values(**data).returning(Session)
