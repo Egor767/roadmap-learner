@@ -30,7 +30,7 @@ class SessionCreate(BaseSession):
 
 class SessionUpdate(BaseModel):
     status: SessionStatus | None = None
-    current_card_index: int | None = None
+    index: int | None = None
     correct_answers: int | None = None
     incorrect_answers: int | None = None
     review_answers: int | None = None
@@ -45,8 +45,8 @@ class SessionRead(BaseSession):
     mode: SessionMode
 
     status: SessionStatus
-    card_ids_queue: list[BaseIdType] = []
-    current_card_index: int
+    questions: list[BaseIdType] = []
+    index: int
 
     correct_answers: int
     incorrect_answers: int
@@ -67,8 +67,8 @@ class SessionFilters(BaseModel):
 
 
 class SessionCardsFilter(BaseModel):
-    limit: int = 0
-    offset: int = 10
+    limit: int = 10
+    offset: int = 0
 
 
 class SessionResult(BaseModel):
@@ -77,7 +77,7 @@ class SessionResult(BaseModel):
     roadmap_id: BaseIdType
     block_id: BaseIdType | None = None
     mode: SessionMode
-    total_cards: int
+    total_answers: int
     correct_answers: int
     incorrect_answers: int
     review_answers: int

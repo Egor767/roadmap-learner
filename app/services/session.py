@@ -6,7 +6,7 @@ from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
 from app.external.requests import (
     get_blocks_by_filters,
-    get_cards_by_filters,
+    get_questions_by_filters,
 )
 from app.models import User
 from app.schemas.session import (
@@ -37,9 +37,9 @@ class SessionService:
 
     @service_handler
     async def get_all(self) -> list[SessionRead]:
-        sessions_orm = await self.repo.get_all()
-        sessions_schema = orm_list_to_schemas(SessionRead, sessions_orm)
-        return sessions_schema
+        orm = await self.repo.get_all()
+        schema = orm_list_to_schemas(SessionRead, orm)
+        return schema
 
     @service_handler
     async def get_by_filters(self, current_user: "User", filters: SessionFilters) -> list[SessionRead]:
@@ -47,23 +47,23 @@ class SessionService:
             exclude_none=True,
             exclude_unset=True,
         )
-        sessions_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
-        sessions_schema = orm_list_to_schemas(SessionRead, sessions_orm)
-        return sessions_schema
+        orm = await self.repo.get_by_filters(filters_dict, current_user.id)
+        schema = orm_list_to_schemas(SessionRead, orm)
+        return schema
 
     @service_handler
     async def get_by_id(self, current_user: "User", session_id: BaseIdType) -> SessionRead:
-        session_orm = await self.repo.get_by_id(session_id, current_user.id)
-        session_schema = orm_to_schema(SessionRead, session_orm)
-        return session_schema
+        orm = await self.repo.get_by_id(session_id, current_user.id)
+        schema = orm_to_schema(SessionRead, orm)
+        return schema
 
     @service_handler
-    async def get_cards(
+    async def get_questions(
         self, current_user: "User", session_id: BaseIdType, filters: SessionCardsFilter
     ) -> list[BaseIdType]:
-        session = await self.get_by_id(current_user, session_id)
-        cards = session.card_ids_queue[filters.offset : filters.offset + filters.limit]
-        return cards
+        orm = await self.repo.get_questions(session_id, current_user.id)
+        questions = orm[filters.offset : filters.offset + filters.limit]
+        return questions
 
     @service_handler
     async def create(self, current_user: "User", session_create_data: SessionCreate, token: str) -> SessionRead:
@@ -82,24 +82,24 @@ class SessionService:
         else:
             blocks_ids = [filters.get("block_id")]
 
-        cards_ids = []
+        questions = []
         if blocks_ids:
             filters["block_id"] = blocks_ids.copy()
-            cards_data = await get_cards_by_filters(token, filters)
-            cards_ids = [card["id"] for card in cards_data]
+            questions_data = await get_questions_by_filters(token, filters)
+            questions = [q["id"] for q in questions_data]
 
         session_dict = session_create_data.model_dump(exclude={"mix"})
         session_dict["user_id"] = current_user.id
         session_dict["id"] = generate_base_id()
         if session_create_data.mix:
-            random.shuffle(cards_ids)
-        session_dict["card_ids_queue"] = cards_ids
+            random.shuffle(questions)
+        session_dict["questions"] = questions
 
-        session_orm = await self.repo.create(session_dict)
+        orm = await self.repo.create(session_dict)
 
-        session_schema = orm_to_schema(SessionRead, session_orm)
+        schema = orm_to_schema(SessionRead, orm)
 
-        return session_schema
+        return schema
 
     @service_handler
     async def update(
@@ -113,11 +113,11 @@ class SessionService:
             exclude_unset=True,
         )
 
-        session_orm = await self.repo.update(session_id, session_dict, current_user.id)
+        orm = await self.repo.update(session_id, session_dict, current_user.id)
 
-        session_schema = orm_to_schema(SessionRead, session_orm)
+        schema = orm_to_schema(SessionRead, orm)
 
-        return session_schema
+        return schema
 
     @service_handler
     async def finish(self, current_user: "User", session_id: BaseIdType) -> SessionResult:
@@ -126,17 +126,17 @@ class SessionService:
             "completed_at": datetime.now(),
         }
 
-        session_orm = await self.repo.update(session_id, update_data, current_user.id)
+        orm = await self.repo.update(session_id, update_data, current_user.id)
 
-        session_schema = orm_to_schema(SessionRead, session_orm)
+        schema = orm_to_schema(SessionRead, orm)
 
-        reviewed_answers = session_schema.correct_answers + session_schema.incorrect_answers
-        cards_len = len(session_schema.card_ids_queue)
+        reviewed_answers = schema.correct_answers + schema.incorrect_answers
+        questions_len = len(schema.questions)
 
-        accuracy = int((session_schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
+        accuracy = int((schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
 
-        session_result = SessionResult(
-            **session_schema.model_dump(
+        result = SessionResult(
+            **schema.model_dump(
                 exclude={
                     "card_ids_queue",
                     "current_card_index",
@@ -145,11 +145,11 @@ class SessionService:
                     "updated_at",
                 }
             ),
-            total_cards=cards_len,
+            total_answers=questions_len,
             accuracy_percentage=accuracy,
         )
 
-        return session_result
+        return result
 
     @service_handler
     async def delete(self, current_user: "User", session_id: BaseIdType):

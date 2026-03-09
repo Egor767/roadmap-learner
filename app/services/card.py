@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import TYPE_CHECKING
 
@@ -7,6 +8,7 @@ from app.schemas.card import (
     CardCreate,
     CardFilters,
     CardRead,
+    CardStatus,
     CardUpdate,
 )
 from app.shared.generate_id import generate_base_id
@@ -17,61 +19,70 @@ from app.utils.mappers.cache_to_schema import (
 )
 from app.utils.mappers.orm_to_schema import (
     orm_list_to_schemas,
-    orm_to_schema,
+    orm_list_to_schemas_statuses,
+    orm_to_schema_status,
 )
 
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
     from app.models import User
     from app.repositories import CardRepository
+    from app.repositories import UserCardProgressRepository as ProgressRepository
 
 
 class CardService:
-    def __init__(self, repo: "CardRepository", cache: "CacheHelper"):
+    def __init__(self, repo: "CardRepository", progress_repo: "ProgressRepository", cache: "CacheHelper"):
         self.repo = repo
+        self.progress_repo = progress_repo
         self.cache = cache
 
     @service_handler
     async def get_all(self) -> list[CardRead]:
-        cards_orm = await self.repo.get_all()
-        cards_schemas = orm_list_to_schemas(CardRead, cards_orm)
-        return cards_schemas
+        orm = await self.repo.get_all()
+        schema = orm_list_to_schemas(CardRead, orm)
+        return schema
 
     @service_handler
-    async def get_by_filters(
-        self, current_user: "User", filters: CardFilters, block_id: list[BaseIdType]
-    ) -> list[CardRead]:
-        filters_dump = {
-            **filters.model_dump(exclude_none=True, exclude_unset=True),
-            "block_id": block_id,
+    async def get_by_filters(self, current_user: "User", filters: CardFilters) -> list[CardRead]:
+        filters_dump = filters.model_dump(
+            exclude_none=True,
+            exclude_unset=True,
+        )
+        status_filter = filters_dump.pop("status", None)
+        filters_dict = {
+            **{k: v for k, v in filters_dump.items() if v is not None},
         }
-        filters_dict = {k: v for k, v in filters_dump.items() if v is not None}
 
-        if is_single_parent_filter(filters_dict, "block_id"):
+        if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(filters_dict["block_id"][0]),
+                "roadmap",
+                str(filters_dict["roadmap_id"]),
                 "list",
             )
             cache = await self.cache.get(key)
             if cache:
                 return cache_to_schemas(CardRead, cache)
 
-        cards_orm = await self.repo.get_by_filters(filters_dict, current_user.id)
+        if status_filter is not None:
+            allowed_ids = await self.progress_repo.get_ids_by_status(current_user.id, status_filter)
+            filters_dict["id"] = allowed_ids
 
-        cards_schema = orm_list_to_schemas(CardRead, cards_orm)
+        orm = await self.repo.get_by_filters(filters_dict, current_user.id)
 
-        if is_single_parent_filter(filters_dict, "block_id"):
+        statuses = await self.progress_repo.get_statuses(current_user.id, [q.id for q in orm])
+        schemas = orm_list_to_schemas_statuses(CardRead, orm, statuses)
+
+        if is_single_parent_filter(filters_dict, "roadmap_id"):
             cache_data = json.dumps(
-                [u.model_dump(mode="json") for u in cards_schema],
+                [u.model_dump(mode="json") for u in schemas],
                 default=str,
             )
             await self.cache.set(key, cache_data)
 
-        return cards_schema
+        return schemas
 
     @service_handler
     async def get_by_id(self, current_user: "User", card_id: BaseIdType) -> CardRead:
@@ -83,65 +94,81 @@ class CardService:
             str(card_id),
             "detail",
         )
-        cache = await self.cache.get(key)
-        if cache:
-            result_card = cache_to_schema(CardRead, cache)
-            return result_card
+        if cache := await self.cache.get(key):
+            return cache_to_schema(CardRead, cache)
 
-        cards_orm = await self.repo.get_by_id(card_id, current_user.id)
-
-        cards_schema = orm_to_schema(CardRead, cards_orm)
+        card, status = await asyncio.gather(
+            self.repo.get_by_id(card_id, current_user.id),
+            self.progress_repo.get_status(current_user.id, card_id),
+        )
+        schema = orm_to_schema_status(CardRead, card, status)
 
         await self.cache.set(
             key,
-            json.dumps([cards_schema.model_dump(mode="json")]),
+            json.dumps([schema.model_dump(mode="json")]),
         )
 
-        return cards_schema
+        return schema
 
     @service_handler
-    async def create(self, current_user: "User", card_create_data: CardCreate) -> CardRead:
-        card_dict = card_create_data.model_dump(
+    async def create(self, current_user: "User", create_data: CardCreate) -> CardRead:
+        data = create_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
         )
-        card_dict["id"] = generate_base_id()
+        data["id"] = generate_base_id()
 
-        card_orm = await self.repo.create(card_dict, current_user.id)
+        orm = await self.repo.create(data, current_user.id)
+        await self.progress_repo.create(current_user.id, orm.id)
 
-        card_schema = orm_to_schema(CardRead, card_orm)
+        schema = orm_to_schema_status(CardRead, orm, CardStatus.UNKNOWN)
 
         await self.cache.delete(
             get_cache_key(
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(card_schema.block_id),
+                "roadmap",
+                str(schema.roadmap_id),
                 "list",
             ),
         )
 
-        return card_schema
+        return schema
 
     @service_handler
-    async def update(self, current_user: "User", card_id: BaseIdType, card_update_data: CardUpdate) -> CardRead:
-        card_dict = card_update_data.model_dump(
+    async def update(
+        self,
+        current_user: "User",
+        card_id: BaseIdType,
+        update_data: CardUpdate,
+    ) -> CardRead:
+        data = update_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
         )
+        status = data.pop("status", None)
 
-        card_orm = await self.repo.update(card_id, card_dict, current_user.id)
+        tasks = []
+        if data:
+            tasks.append(self.repo.update(card_id, data, current_user.id))
+        if status is not None:
+            tasks.append(self.progress_repo.update(current_user.id, card_id, status))
+        await asyncio.gather(*tasks)
 
-        card_schema = orm_to_schema(CardRead, card_orm)
+        orm, final_status = await asyncio.gather(
+            self.repo.get_by_id(card_id, current_user.id),
+            self.progress_repo.get_status(current_user.id, card_id),
+        )
+        schema = orm_to_schema_status(CardRead, orm, final_status)
 
         await self.cache.delete(
             get_cache_key(
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(card_schema.block_id),
+                "roadmap",
+                str(schema.roadmap_id),
                 "list",
             ),
             get_cache_key(
@@ -154,23 +181,19 @@ class CardService:
             ),
         )
 
-        return card_schema
+        return schema
 
     @service_handler
-    async def delete(
-        self,
-        current_user: "User",
-        card_id: BaseIdType,
-    ):
-        card_orm = await self.repo.delete(card_id, current_user.id)
+    async def delete(self, current_user: "User", card_id: BaseIdType):
+        orm = await self.repo.delete(card_id, current_user.id)
 
         await self.cache.delete(
             get_cache_key(
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(card_orm.block_id),
+                "roadmap",
+                str(orm.roadmap_id),
                 "list",
             ),
             get_cache_key(

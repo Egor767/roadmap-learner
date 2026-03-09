@@ -43,6 +43,7 @@ class TimestampMixin:
 class UserRelationMixin:
     _user_id_nullable: bool = False
     _user_id_unique: bool = False
+    _user_id_primary_key: bool = False
     _user_back_populates: str | None = None
 
     @declared_attr
@@ -51,6 +52,7 @@ class UserRelationMixin:
             ForeignKey("users.id", ondelete="CASCADE"),
             unique=cls._user_id_unique,
             nullable=cls._user_id_nullable,
+            primary_key=cls._user_id_primary_key,
         )
 
     @declared_attr
@@ -64,6 +66,7 @@ class UserRelationMixin:
 class RoadmapRelationMixin:
     _roadmap_id_nullable: bool = False
     _roadmap_id_unique: bool = False
+    _roadmap_id_primary_key: bool = False
     _roadmap_back_populates: str | None = None
 
     @declared_attr
@@ -72,6 +75,7 @@ class RoadmapRelationMixin:
             ForeignKey("roadmaps.id", ondelete="CASCADE"),
             unique=cls._roadmap_id_unique,
             nullable=cls._roadmap_id_nullable,
+            primary_key=cls._roadmap_id_primary_key,
         )
 
     @declared_attr
@@ -100,4 +104,50 @@ class BlockRelationMixin:
         return relationship(
             "Block",
             back_populates=cls._block_back_populates,
+        )
+
+
+class CardRelationMixin:
+    _card_id_nullable: bool = False
+    _card_id_unique: bool = False
+    _card_id_primary_key: bool = False
+    _card_back_populates: str | None = None
+
+    @declared_attr
+    def card_id(cls) -> Mapped[BaseIdType]:
+        return mapped_column(
+            ForeignKey("cards.id", ondelete="CASCADE"),
+            unique=cls._card_id_unique,
+            nullable=cls._card_id_nullable,
+            primary_key=cls._card_id_primary_key,
+        )
+
+    @declared_attr
+    def card(cls) -> Mapped["Block"]:
+        return relationship(
+            "Card",
+            back_populates=cls._card_back_populates,
+        )
+
+
+class QuestionRelationMixin:
+    _question_id_nullable: bool = False
+    _question_id_unique: bool = False
+    _question_id_primary_key: bool = False
+    _question_back_populates: str | None = None
+
+    @declared_attr
+    def question_id(cls) -> Mapped[BaseIdType]:
+        return mapped_column(
+            ForeignKey("questions.id", ondelete="CASCADE"),
+            unique=cls._question_id_unique,
+            nullable=cls._question_id_nullable,
+            primary_key=cls._question_id_primary_key,
+        )
+
+    @declared_attr
+    def question(cls) -> Mapped["Block"]:
+        return relationship(
+            "Question",
+            back_populates=cls._question_back_populates,
         )

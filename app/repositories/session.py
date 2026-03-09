@@ -20,21 +20,21 @@ class SessionRepository(BaseRepository):
     async def get_all(self) -> list[Session]:
         stmt = select(Session)
         result = await self.session.execute(stmt)
-        sessions = list(result.scalars().all())
-        return sessions
+        rows = list(result.scalars().all())
+        return rows
 
     @repository_handler
-    async def get_by_id(self, session_id: BaseIdType, user_id: BaseIdType) -> Session:
-        stmt = select(Session).where(Session.id == session_id, Session.user_id == user_id)
+    async def get_by_id(self, session: BaseIdType, user: BaseIdType) -> Session:
+        stmt = select(Session).where(Session.id == session, Session.user_id == user)
         result = await self.session.execute(stmt)
-        session = result.scalar_one_or_none()
-        if session is None:
-            raise EntityNotFoundError(Session, session_id)
-        return session
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise EntityNotFoundError(Session, session)
+        return row
 
     @repository_handler
-    async def get_by_filters(self, filters: dict, user_id: BaseIdType) -> list[Session]:
-        stmt = select(Session).where(Session.user_id == user_id)
+    async def get_by_filters(self, filters: dict, user: BaseIdType) -> list[Session]:
+        stmt = select(Session).where(Session.user_id == user)
         for field_name, value in filters.items():
             column = getattr(Session, field_name)
             if isinstance(value, list):
@@ -42,71 +42,77 @@ class SessionRepository(BaseRepository):
             else:
                 stmt = stmt.where(column == value)
         result = await self.session.execute(stmt)
-        sessions = list(result.scalars().all())
-        return sessions
+        rows = list(result.scalars().all())
+        return rows
 
     @repository_handler
-    async def create(self, session_create_data: dict) -> Session:
+    async def get_questions(self, session: BaseIdType, user: BaseIdType) -> list[BaseIdType]:
+        stmt = select(Session.questions).where(Session.id == session, Session.user_id == user)
+        result = await self.session.execute(stmt)
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise EntityNotFoundError(Session, session)
+        return row or []
+
+    @repository_handler
+    async def create(self, data: dict) -> Session:
         async with transaction_manager(self.session):
-            stmt = insert(Session).values(**session_create_data).returning(Session)
+            stmt = insert(Session).values(**data).returning(Session)
             result = await self.session.execute(stmt)
-            session = result.scalar_one()
-            return session
+            row = result.scalar_one()
+            return row
 
     @repository_handler
-    async def update(self, object_id: BaseIdType, update_data: dict, user_id: BaseIdType) -> Session:
+    async def update(self, session: BaseIdType, data: dict, user: BaseIdType) -> Session:
         async with transaction_manager(self.session):
             stmt = (
-                update(Session)
-                .where(Session.id == object_id, Session.user_id == user_id)
-                .values(**update_data)
-                .returning(Session)
+                update(Session).where(Session.id == session, Session.user_id == user).values(**data).returning(Session)
             )
             result = await self.session.execute(stmt)
-            roadmap = result.scalar_one_or_none()
-            if roadmap is None:
-                raise EntityNotFoundError(Session, object_id)
-            return roadmap
+            row = result.scalar_one_or_none()
+            if row is None:
+                raise EntityNotFoundError(Session, session)
+            return row
 
     @repository_handler
-    async def finish_session(self, session_id: BaseIdType, user_id: BaseIdType) -> Session:
+    async def finish_session(self, session: BaseIdType, user: BaseIdType) -> Session:
         async with transaction_manager(self.session):
             stmt = (
                 update(Session)
                 .where(
-                    Session.id == session_id,
+                    Session.id == session,
                     Session.status == SessionStatus.ACTIVE,
-                    Session.user_id == user_id,
+                    Session.user_id == user,
                 )
                 .values(status=SessionStatus.COMPLETED, completed_at=func.now())
                 .returning(Session)
             )
             result = await self.session.execute(stmt)
-            session = result.scalar_one_or_none()
-            if session is None:
-                raise EntityNotFoundError(Session, session_id)
-            return session
+            row = result.scalar_one_or_none()
+            if row is None:
+                raise EntityNotFoundError(Session, session)
+            return row
 
     @repository_handler
-    async def abandon_session(self, session_id: BaseIdType, user_id: BaseIdType):
+    async def abandon_session(self, session: BaseIdType, user: BaseIdType):
         async with transaction_manager(self.session):
             stmt = (
                 update(Session)
                 .where(
-                    Session.id == session_id,
+                    Session.id == session,
                     Session.status == SessionStatus.ACTIVE,
-                    Session.user_id == user_id,
+                    Session.user_id == user,
                 )
                 .values(status=SessionStatus.ABANDONED, completed_at=func.now())
             )
             result = await self.session.execute(stmt)
             if result.rowcount == 0:
-                raise EntityNotFoundError(Session, session_id)
+                raise EntityNotFoundError(Session, session)
 
     @repository_handler
-    async def delete(self, session_id: BaseIdType):
+    async def delete(self, session: BaseIdType):
         async with transaction_manager(self.session):
-            stmt = delete(Session).where(Session.id == session_id)
+            stmt = delete(Session).where(Session.id == session)
             result = await self.session.execute(stmt)
             if result.rowcount == 0:
-                raise EntityNotFoundError(Session, session_id)
+                raise EntityNotFoundError(Session, session)

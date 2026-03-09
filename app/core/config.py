@@ -72,6 +72,8 @@ class ApiV1Prefix(BaseModel):
     roadmaps: str = "/roadmaps"
     blocks: str = "/blocks"
     blocks_resource: str = "/blocks-resource"
+    questions: str = "/questions"
+    questions_resource: str = "/questions-resource"
     cards: str = "/cards"
     cards_resource: str = "/cards"
     sessions: str = "/sessions"

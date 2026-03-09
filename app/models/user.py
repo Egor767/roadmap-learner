@@ -2,14 +2,17 @@ from typing import TYPE_CHECKING
 
 from fastapi_users_db_sqlalchemy import (
     SQLAlchemyBaseUserTable,
+)
+from fastapi_users_db_sqlalchemy import (
     SQLAlchemyUserDatabase as SQLAlchemyUserDatabaseGeneric,
 )
 from sqlalchemy import String, select
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.custom_types import BaseIdType
+
 from .base import Base
-from .mixins import TimestampMixin, IdMixin
+from .mixins import IdMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,10 +31,6 @@ class User(IdMixin, TimestampMixin, Base, SQLAlchemyBaseUserTable[BaseIdType]):
         nullable=True,
         unique=True,
     )
-
-    # roadmaps: Mapped[List["Roadmap"]] = relationship(back_populates="user")
-    # sessions: Mapped[List["Session"]] = relationship(back_populates="user")
-    # tokens: Mapped[List["AccessToken"]] = relationship(back_populates="user")
 
     @classmethod
     def get_db(cls, session: "AsyncSession"):
