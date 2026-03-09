@@ -39,21 +39,21 @@ class CardService:
 
     @service_handler
     async def get_by_filters(
-        self, current_user: "User", filters: CardFilters, block_id: list[BaseIdType]
+        self, current_user: "User", filters: CardFilters, roadmap: list[BaseIdType]
     ) -> list[CardRead]:
         filters_dump = {
             **filters.model_dump(exclude_none=True, exclude_unset=True),
-            "block_id": block_id,
+            "roadmap_id": roadmap,
         }
         filters_dict = {k: v for k, v in filters_dump.items() if v is not None}
 
-        if is_single_parent_filter(filters_dict, "block_id"):
+        if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(filters_dict["block_id"][0]),
+                "roadmap",
+                str(filters_dict["roadmap_id"][0]),
                 "list",
             )
             cache = await self.cache.get(key)
@@ -64,7 +64,7 @@ class CardService:
 
         cards_schema = orm_list_to_schemas(CardRead, cards_orm)
 
-        if is_single_parent_filter(filters_dict, "block_id"):
+        if is_single_parent_filter(filters_dict, "roadmap_id"):
             cache_data = json.dumps(
                 [u.model_dump(mode="json") for u in cards_schema],
                 default=str,
@@ -140,8 +140,8 @@ class CardService:
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(card_schema.block_id),
+                "roadmap",
+                str(card_schema.roadmap_id),
                 "list",
             ),
             get_cache_key(
@@ -169,8 +169,8 @@ class CardService:
                 "cards",
                 "user",
                 str(current_user.id),
-                "block",
-                str(card_orm.block_id),
+                "roadmap",
+                str(card_orm.roadmap_id),
                 "list",
             ),
             get_cache_key(
