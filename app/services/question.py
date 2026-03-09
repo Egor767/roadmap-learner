@@ -51,7 +51,8 @@ class QuestionService:
     @service_handler
     async def get_all(self) -> list[QuestionRead]:
         orm = await self.repo.get_all()
-        return orm_list_to_schemas(QuestionRead, orm)
+        schema = orm_list_to_schemas(QuestionRead, orm)
+        return schema
 
     @service_handler
     async def get_by_id(self, current_user: "User", question_id: BaseIdType) -> QuestionRead:
@@ -66,11 +67,11 @@ class QuestionService:
         if cache := await self.cache.get(key):
             return cache_to_schema(QuestionRead, cache)
 
-        orm, status = await asyncio.gather(
+        question, status = await asyncio.gather(
             self.repo.get_by_id(question_id, current_user.id),
             self.progress_repo.get_status(current_user.id, question_id),
         )
-        schema = self._inject_status(orm, status)
+        schema = self._inject_status(question, status)
 
         await self.cache.set(key, json.dumps([schema.model_dump(mode="json")]))
         return schema
