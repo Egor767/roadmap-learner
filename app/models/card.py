@@ -18,7 +18,7 @@ class Card(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
     comment: Mapped[str] = mapped_column(String(500), nullable=True)
 
     def __str__(self):
-        return f"{self.__class__.__name__}(id={self.id}, term={self.term!r}), status={self.status}"
+        return f"{self.__class__.__name__}(id={self.id}, term={self.term!r})"
 
     def __repr__(self):
         return str(self)

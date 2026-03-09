@@ -20,7 +20,7 @@ class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
     order_index: Mapped[float] = mapped_column(Float, nullable=False, default=0)
 
     def __str__(self):
-        return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}), status={self.status}"
+        return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}, order_index={self.order_index})"
 
     def __repr__(self):
         return str(self)

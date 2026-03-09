@@ -1,20 +1,12 @@
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
-
-from app.core.custom_types import BaseIdType
-
 from .base import Base
+from .mixins import CardRelationMixin, QuestionRelationMixin
 
 
-class QuestionCard(Base):
-    question_id: Mapped[BaseIdType] = mapped_column(
-        ForeignKey("questions.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    card_id: Mapped[BaseIdType] = mapped_column(
-        ForeignKey("cards.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
+class QuestionCard(Base, QuestionRelationMixin, CardRelationMixin):
+    __tablename__ = "question_card"
+
+    _question_id_primary_key = True
+    _card_id_primary_key = True
 
     def __str__(self):
         return f"{self.__class__.__name__}(question={self.question_id}, card={self.card_id})"

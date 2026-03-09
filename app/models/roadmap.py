@@ -12,7 +12,7 @@ class Roadmap(IdMixin, TimestampMixin, UserRelationMixin, Base):
     description: Mapped[str] = mapped_column(String(500), nullable=True)
 
     def __str__(self):
-        return f"{self.__class__.__name__}(id={self.id}, title={self.title!r}), status={self.status}"
+        return f"{self.__class__.__name__}(id={self.id}, title={self.title})"
 
     def __repr__(self):
         return str(self)
