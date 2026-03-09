@@ -5,6 +5,7 @@ from fastapi import Depends
 from app.services import (
     BlockService,
     CardService,
+    QuestionService,
     RoadmapService,
     SessionService,
     UserService,
@@ -14,6 +15,8 @@ from .cache import get_cache
 from .repositories import (
     get_block_repository,
     get_card_repository,
+    get_question_progress_repository,
+    get_question_repository,
     get_roadmap_repository,
     get_session_repository,
     get_user_repository,
@@ -25,8 +28,10 @@ if TYPE_CHECKING:
     from repositories import (
         BlockRepository,
         CardRepository,
+        QuestionRepository,
         RoadmapRepository,
         SessionRepository,
+        UserQuestionProgressRepository,
         UserRepository,
     )
 
@@ -84,6 +89,27 @@ def get_card_service(
 ) -> CardService:
     return CardService(
         repo,
+        cache,
+    )
+
+
+def get_question_service(
+    repo: Annotated[
+        "QuestionRepository",
+        Depends(get_question_repository),
+    ],
+    progress_repo: Annotated[
+        "UserQuestionProgressRepository",
+        Depends(get_question_progress_repository),
+    ],
+    cache: Annotated[
+        "CacheHelper",
+        Depends(get_cache),
+    ],
+) -> QuestionService:
+    return QuestionService(
+        repo,
+        progress_repo,
         cache,
     )
 

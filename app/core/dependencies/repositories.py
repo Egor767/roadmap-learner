@@ -5,8 +5,10 @@ from fastapi import Depends
 from app.repositories import (
     BlockRepository,
     CardRepository,
+    QuestionRepository,
     RoadmapRepository,
     SessionRepository,
+    UserQuestionProgressRepository,
     UserRepository,
 )
 
@@ -50,6 +52,24 @@ def get_card_repository(
     ],
 ) -> CardRepository:
     return CardRepository(session)
+
+
+def get_question_repository(
+    session: Annotated[
+        "AsyncSession",
+        Depends(get_db_session),
+    ],
+) -> QuestionRepository:
+    return QuestionRepository(session)
+
+
+def get_question_progress_repository(
+    session: Annotated[
+        "AsyncSession",
+        Depends(get_db_session),
+    ],
+) -> UserQuestionProgressRepository:
+    return UserQuestionProgressRepository(session)
 
 
 def get_session_repository(
