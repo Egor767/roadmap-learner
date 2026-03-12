@@ -11,6 +11,7 @@ from app.core.handlers import router_handler
 from app.schemas.question import (
     QuestionCreate,
     QuestionFilters,
+    QuestionMove,
     QuestionRead,
     QuestionUpdate,
 )
@@ -164,4 +165,29 @@ async def update_question(
         current_user,
         question_id,
         question_update_data,
+    )
+
+
+@router.patch(
+    "/{question_id}/move",
+    name="questions:move_question",
+    response_model=QuestionRead,
+)
+@router_handler
+async def move_question(
+    question_id: BaseIdType,
+    move_data: QuestionMove,
+    current_user: Annotated[
+        "User",
+        Depends(current_active_user),
+    ],
+    question_service: Annotated[
+        "QuestionService",
+        Depends(get_question_service),
+    ],
+) -> QuestionRead:
+    return await question_service.move(
+        current_user,
+        question_id,
+        move_data,
     )

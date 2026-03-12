@@ -7,6 +7,7 @@ from app.core.handlers import service_handler
 from app.schemas.question import (
     QuestionCreate,
     QuestionFilters,
+    QuestionMove,
     QuestionRead,
     QuestionStatus,
     QuestionUpdate,
@@ -118,8 +119,16 @@ class QuestionService:
         )
         question_dict["id"] = generate_base_id()
 
-        orm = await self.repo.create(question_dict, current_user.id)
-        await self.progress_repo.create(current_user.id, orm.id)
+        question_dict.pop("position", None)
+        question_dict.pop("previous", None)
+
+        orm = await self.repo.create(
+            question_create.block_id,
+            question_dict,
+            current_user.id,
+            question_create.position,
+            question_create.previous,
+        )
 
         schema = orm_to_schema_status(QuestionRead, orm, QuestionStatus.UNKNOWN)
 
@@ -161,6 +170,43 @@ class QuestionService:
             self.progress_repo.get_status(current_user.id, question_id),
         )
         schema = orm_to_schema_status(QuestionRead, orm, final_status)
+
+        await self.cache.delete(
+            get_cache_key(
+                "questions",
+                "user",
+                str(current_user.id),
+                "block",
+                str(schema.block_id),
+                "list",
+            ),
+            get_cache_key(
+                "questions",
+                "user",
+                str(current_user.id),
+                "question",
+                str(question_id),
+                "detail",
+            ),
+        )
+
+        return schema
+
+    @service_handler
+    async def move(
+        self,
+        current_user: "User",
+        question_id: BaseIdType,
+        move_data: QuestionMove,
+    ) -> QuestionRead:
+        orm = await self.repo.move(
+            block_id=move_data.block_id,
+            question_id=question_id,
+            previous=move_data.previous,
+            user=current_user.id,
+        )
+
+        schema = orm_to_schema_status(QuestionRead, orm, QuestionStatus.UNKNOWN)
 
         await self.cache.delete(
             get_cache_key(
