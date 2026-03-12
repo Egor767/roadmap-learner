@@ -1,5 +1,8 @@
+from typing import Literal
+
 from sqlalchemy import (
     delete,
+    func,
     insert,
     select,
     update,
@@ -48,17 +51,48 @@ class BlockRepository(BaseRepository):
         return rows
 
     @repository_handler
-    async def create(self, data: dict, user: BaseIdType) -> Block:
+    async def create(
+        self,
+        roadmap: BaseIdType,
+        data: dict,
+        user: BaseIdType,
+        position: Literal["start", "end"] = "end",
+        previous: BaseIdType | None = None,
+    ) -> Block:
         async with transaction_manager(self.session):
-            roadmap_check_stmt = select(Roadmap.id).where(Roadmap.id == data.get("roadmap_id"), Roadmap.user_id == user)
-            result = await self.session.execute(roadmap_check_stmt)
-            if result.scalar_one_or_none() is None:
-                raise EntityNotFoundError(Roadmap, data.get("roadmap_id"))
+            sub_query = select(Roadmap.id).where(Roadmap.id == roadmap, Roadmap.user_id == user)
+            if (await self.session.execute(sub_query)).scalar_one_or_none() is None:
+                raise EntityNotFoundError(Roadmap, roadmap)
+
+            if previous:
+                after_stmt = select(Block.order_index).where(
+                    Block.id == previous,
+                    Block.roadmap_id == roadmap,
+                )
+                after_index = (await self.session.execute(after_stmt)).scalar_one_or_none()
+                if after_index is None:
+                    raise EntityNotFoundError(Block, previous)
+
+                await self.session.execute(
+                    update(Block)
+                    .where(Block.roadmap_id == roadmap, Block.order_index > after_index)
+                    .values(order_index=Block.order_index + 1)
+                )
+                data["order_index"] = after_index + 1
+
+            elif position == "start":
+                await self.session.execute(
+                    update(Block).where(Block.roadmap_id == roadmap).values(order_index=Block.order_index + 1)
+                )
+                data["order_index"] = 0
+
+            else:
+                max_stmt = select(func.max(Block.order_index)).where(Block.roadmap_id == roadmap)
+                max_index = (await self.session.execute(max_stmt)).scalar()
+                data["order_index"] = (max_index + 1) if max_index is not None else 0
 
             stmt = insert(Block).values(**data).returning(Block)
-            result = await self.session.execute(stmt)
-            row = result.scalar_one()
-            return row
+            return (await self.session.execute(stmt)).scalar_one()
 
     @repository_handler
     async def update(self, block: BaseIdType, data: dict, user: BaseIdType) -> Block:
@@ -79,6 +113,73 @@ class BlockRepository(BaseRepository):
             return row
 
     @repository_handler
+    async def move(
+        self,
+        roadmap: BaseIdType,
+        block: BaseIdType,
+        previous: BaseIdType | None,
+        user: BaseIdType,
+    ) -> Block:
+        async with transaction_manager(self.session):
+            stmt = select(Block).where(
+                Block.id == block,
+                Block.roadmap_id == roadmap,
+                Block.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user)),
+            )
+            row = (await self.session.execute(stmt)).scalar_one_or_none()
+            if row is None:
+                raise EntityNotFoundError(Block, block)
+
+            old_index = row.order_index
+
+            if previous is None:
+                new_index = 0
+            else:
+                stmt = select(Block.order_index).where(
+                    Block.id == previous,
+                    Block.roadmap_id == roadmap,
+                )
+                after_index = (await self.session.execute(stmt)).scalar_one_or_none()
+                if after_index is None:
+                    raise EntityNotFoundError(Block, previous)
+
+                if after_index < old_index:
+                    new_index = after_index + 1
+                else:
+                    new_index = after_index
+
+            if new_index == old_index:
+                return row
+
+            if new_index < old_index:
+                await self.session.execute(
+                    update(Block)
+                    .where(
+                        Block.roadmap_id == roadmap,
+                        Block.order_index >= new_index,
+                        Block.order_index < old_index,
+                        Block.id != block,
+                    )
+                    .values(order_index=Block.order_index + 1)
+                )
+            else:
+                await self.session.execute(
+                    update(Block)
+                    .where(
+                        Block.roadmap_id == roadmap,
+                        Block.order_index > old_index,
+                        Block.order_index <= new_index,
+                        Block.id != block,
+                    )
+                    .values(order_index=Block.order_index - 1)
+                )
+
+            result = await self.session.execute(
+                update(Block).where(Block.id == block).values(order_index=new_index).returning(Block)
+            )
+            return result.scalar_one()
+
+    @repository_handler
     async def delete(self, block: BaseIdType, user: BaseIdType) -> Block:
         async with transaction_manager(self.session):
             stmt = (
@@ -94,3 +195,22 @@ class BlockRepository(BaseRepository):
             if row is None:
                 raise EntityNotFoundError(Block, block)
             return row
+
+    @repository_handler
+    async def create_multiple(self, data: list[dict], user: BaseIdType) -> list[Block]:
+        async with transaction_manager(self.session):
+            roadmap_ids = {item.get("roadmap_id") for item in data}
+
+            stmt = select(Roadmap.id).where(Roadmap.id.in_(roadmap_ids), Roadmap.user_id == user)
+
+            result = await self.session.execute(stmt)
+            valid_ids = {row[0] for row in result.fetchall()}
+
+            missing = roadmap_ids - valid_ids
+            if missing:
+                raise EntityNotFoundError(Roadmap, missing.pop())
+
+            insert_stmt = insert(Block).values(data).returning(Block)
+            result = await self.session.execute(insert_stmt)
+            rows = list(result.scalars().all())
+            return rows

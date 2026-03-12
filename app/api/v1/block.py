@@ -1,23 +1,24 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
+from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_block_service
 from app.core.handlers import router_handler
-from app.core.custom_types import BaseIdType
 from app.schemas.block import (
-    BlockRead,
     BlockCreate,
-    BlockUpdate,
     BlockFilters,
+    BlockMove,
+    BlockRead,
+    BlockUpdate,
 )
 
 if TYPE_CHECKING:
-    from app.services import BlockService
     from app.models import User
+    from app.services import BlockService
 
 
 router = APIRouter(
@@ -162,4 +163,29 @@ async def update_block(
         current_user,
         block_id,
         block_update_data,
+    )
+
+
+@router.patch(
+    "/{block_id}/move",
+    name="blocks:move_block",
+    response_model=BlockRead,
+)
+@router_handler
+async def move_block(
+    block_id: BaseIdType,
+    move_data: BlockMove,
+    current_user: Annotated[
+        "User",
+        Depends(current_active_user),
+    ],
+    block_service: Annotated[
+        "BlockService",
+        Depends(get_block_service),
+    ],
+) -> BlockRead:
+    return await block_service.move(
+        current_user,
+        block_id,
+        move_data,
     )

@@ -6,6 +6,7 @@ from app.core.handlers import service_handler
 from app.schemas.block import (
     BlockCreate,
     BlockFilters,
+    BlockMove,
     BlockRead,
     BlockUpdate,
 )
@@ -103,7 +104,16 @@ class BlockService:
         )
         block_dict["id"] = generate_base_id()
 
-        orm = await self.repo.create(block_dict, current_user.id)
+        block_dict.pop("position", None)
+        block_dict.pop("previous", None)
+
+        orm = await self.repo.create(
+            block_create_data.roadmap_id,
+            block_dict,
+            current_user.id,
+            block_create_data.position,
+            block_create_data.previous,
+        )
 
         schema = orm_to_schema(BlockRead, orm)
 
@@ -153,6 +163,43 @@ class BlockService:
         return schema
 
     @service_handler
+    async def move(
+        self,
+        current_user: "User",
+        block_id: BaseIdType,
+        move_data: BlockMove,
+    ) -> BlockRead:
+        orm = await self.repo.move(
+            move_data.roadmap_id,
+            block_id,
+            move_data.previous,
+            current_user.id,
+        )
+
+        schema = orm_to_schema(BlockRead, orm)
+
+        await self.cache.delete(
+            get_cache_key(
+                "blocks",
+                "user",
+                str(current_user.id),
+                "roadmap",
+                str(schema.roadmap_id),
+                "list",
+            ),
+            get_cache_key(
+                "blocks",
+                "user",
+                str(current_user.id),
+                "block",
+                str(block_id),
+                "detail",
+            ),
+        )
+
+        return schema
+
+    @service_handler
     async def delete(self, current_user: "User", block_id: BaseIdType):
         orm = await self.repo.delete(block_id, current_user.id)
 
@@ -174,3 +221,33 @@ class BlockService:
                 "detail",
             ),
         )
+
+    @service_handler
+    async def create_multiple(self, current_user: "User", block_create_data: list[BlockCreate]) -> list[BlockRead]:
+        blocks_dict = [
+            block.model_dump(
+                exclude_none=True,
+                exclude_unset=True,
+            )
+            for block in block_create_data
+        ]
+
+        for block in blocks_dict:
+            block["id"] = generate_base_id()
+
+        orm = await self.repo.create_multiple(blocks_dict, current_user.id)
+
+        schema = orm_list_to_schemas(BlockRead, orm)
+
+        await self.cache.delete(
+            get_cache_key(
+                "blocks",
+                "user",
+                str(current_user.id),
+                "roadmap",
+                str(schema[0].roadmap_id),
+                "list",
+            )
+        )
+
+        return schema

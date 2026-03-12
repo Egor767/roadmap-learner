@@ -9,6 +9,7 @@ from app.core.config import settings
 from .auth import router as auth_router
 from .block import router as block_router
 from .card import router as card_router
+from .load import router as load_router
 from .question import router as question_router
 from .roadmap import router as roadmap_router
 from .session import router as session_router
@@ -28,3 +29,4 @@ router.include_router(block_router)
 router.include_router(question_router)
 router.include_router(card_router)
 router.include_router(session_router)
+router.include_router(load_router)

@@ -11,9 +11,13 @@ from app.services import (
     UserService,
 )
 
+from ...clients import AIClient
+from ...services.load import LoadService
 from .cache import get_cache
+from .clients import get_ai_client
 from .repositories import (
     get_block_repository,
+    get_card_progress_repository,
     get_card_repository,
     get_question_progress_repository,
     get_question_repository,
@@ -31,6 +35,7 @@ if TYPE_CHECKING:
         QuestionRepository,
         RoadmapRepository,
         SessionRepository,
+        UserCardProgressRepository,
         UserQuestionProgressRepository,
         UserRepository,
     )
@@ -83,8 +88,8 @@ def get_card_service(
         Depends(get_card_repository),
     ],
     progress_repo: Annotated[
-        "UserQuestionProgressRepository",
-        Depends(get_question_progress_repository),
+        "UserCardProgressRepository",
+        Depends(get_card_progress_repository),
     ],
     cache: Annotated[
         "CacheHelper",
@@ -133,3 +138,28 @@ def get_session_service(
         repo,
         cache,
     )
+
+
+def get_load_service(
+    ai_client: Annotated[
+        "AIClient",
+        Depends(get_ai_client),
+    ],
+    roadmap_service: Annotated[
+        RoadmapService,
+        Depends(get_roadmap_service),
+    ],
+    block_service: Annotated[
+        BlockService,
+        Depends(get_block_service),
+    ],
+    question_service: Annotated[
+        QuestionService,
+        Depends(get_question_service),
+    ],
+    card_service: Annotated[
+        CardService,
+        Depends(get_card_service),
+    ],
+) -> LoadService:
+    return LoadService(ai_client, roadmap_service, block_service, question_service, card_service)
