@@ -3,7 +3,6 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from app.clients.ai import AIClient
-from app.core.custom_types import BaseIdType
 from app.schemas.block import BlockFilters, BlockRead
 from app.schemas.load import (
     BlockConfirmRequest,
@@ -11,9 +10,11 @@ from app.schemas.load import (
     BlockDistributeResponse,
     BlockInfo,
     LoadBlock,
+    QuestionConfirmRequest,
+    QuestionDistributeRequest,
     QuestionDistributeResponse,
+    QuestionDistributionItem,
 )
-from app.schemas.question import QuestionRead
 
 if TYPE_CHECKING:
     from app.models import User
@@ -122,35 +123,33 @@ class LoadService:
     async def distribute_questions(
         self,
         current_user: "User",
-        roadmap_id: BaseIdType,
-        text: str,
+        request: QuestionDistributeRequest,
     ) -> QuestionDistributeResponse:
-        filters = BlockFilters(roadmap_id=roadmap_id)
-        blocks: list[BlockRead] = await self.block_service.get_by_filters(
-            current_user,
-            filters,
-        )
+        filters = BlockFilters(roadmap_id=request.roadmap_id)
+        blocks: list[BlockRead] = await self.block_service.get_by_filters(current_user, filters)
 
-        if len(blocks) == 0:
-            raise ValueError
+        if not blocks:
+            raise ValueError("Роадмап не содержит блоков")
 
         context = _build_question_distribution_context(blocks)
-        response = await self.ai_client.distribute("questions", context, text)
-        distribution = _parse_distribution(response, blocks)
+        response = await self.ai_client.distribute("questions", context, request.text)
+        raw_distribution = _parse_distribution(response, blocks)
 
         return QuestionDistributeResponse(
-            blocks=[BlockInfo.model_validate(b) for b in blocks],
-            distribution=distribution,
+            distribution=[
+                QuestionDistributionItem(
+                    block=BlockInfo.model_validate(block),
+                    questions=raw_distribution.get(str(block.id), []),
+                )
+                for block in blocks
+                if str(block.id) in raw_distribution
+            ],
+            undefined=raw_distribution.get("undefined", []),
         )
 
     async def confirm_questions(
         self,
         current_user: "User",
-        roadmap_id: BaseIdType,
-        distribution: dict[BaseIdType, list[QuestionRead]],
+        request: QuestionConfirmRequest,
     ):
-        return await self.question_service.create_multiple(
-            current_user,
-            roadmap_id,
-            distribution,
-        )
+        return await self.question_service.create_multiple(current_user, request)

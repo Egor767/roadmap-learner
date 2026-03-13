@@ -23,7 +23,7 @@ class Question(IdMixin, TimestampMixin, BlockRelationMixin, Base):
     )
 
     question: Mapped[str] = mapped_column(String(500), nullable=False)
-    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=True)
     order_index: Mapped[int] = mapped_column(Integer, nullable=False)
 
     def __str__(self):

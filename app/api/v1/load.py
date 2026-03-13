@@ -5,7 +5,6 @@ from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
-from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import (
     get_load_service,
 )
@@ -66,36 +65,33 @@ async def confirm_blocks(
 
 
 @router.post(
-    "/{roadmap_id}/questions/distribute",
+    "/questions/distribute",
     name="load:distribute_questions",
     response_model=QuestionDistributeResponse,
     status_code=status.HTTP_200_OK,
 )
 @router_handler
 async def distribute_questions(
-    roadmap_id: BaseIdType,
-    body: QuestionDistributeRequest,
+    request: QuestionDistributeRequest,
     current_user: Annotated["User", Depends(current_active_user)],
     load_service: Annotated["LoadService", Depends(get_load_service)],
 ) -> QuestionDistributeResponse:
     return await load_service.distribute_questions(
         current_user,
-        roadmap_id,
-        body.text,
+        request,
     )
 
 
 @router.post(
-    "/{roadmap_id}/questions/confirm",
+    "/questions/confirm",
     name="load:confirm_questions",
     response_model=list[QuestionRead],
     status_code=status.HTTP_201_CREATED,
 )
 @router_handler
 async def confirm_questions(
-    roadmap_id: BaseIdType,
     body: QuestionConfirmRequest,
     current_user: Annotated["User", Depends(current_active_user)],
     load_service: Annotated["LoadService", Depends(get_load_service)],
 ) -> list[QuestionRead]:
-    return await load_service.confirm_questions(current_user, roadmap_id, body.distribution)
+    return await load_service.confirm_questions(current_user, body)

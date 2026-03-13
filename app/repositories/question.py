@@ -46,6 +46,9 @@ class QuestionRepository(BaseRepository):
             .join(Roadmap, Block.roadmap_id == Roadmap.id)
             .where(Roadmap.user_id == user)
         )
+        if filters.get("roadmap_id", None) is not None:
+            stmt = stmt.where(Block.roadmap_id == filters.pop("roadmap_id"))
+
         for field_name, value in filters.items():
             column = getattr(Question, field_name)
             if isinstance(value, list):
@@ -207,3 +210,43 @@ class QuestionRepository(BaseRepository):
             if row is None:
                 raise EntityNotFoundError(Question, card)
             return row
+
+    @repository_handler
+    async def create_multiple(
+        self,
+        questions_by_block: dict[BaseIdType, list[dict]],
+        user: BaseIdType,
+    ) -> list[Question]:
+        async with transaction_manager(self.session):
+            block_ids = list(questions_by_block.keys())
+
+            block_check = (
+                select(Block.id)
+                .join(Roadmap, Block.roadmap_id == Roadmap.id)
+                .where(Block.id.in_(block_ids), Roadmap.user_id == user)
+            )
+            result = await self.session.execute(block_check)
+            valid_ids = {row[0] for row in result.fetchall()}
+
+            missing = set(block_ids) - valid_ids
+            if missing:
+                raise EntityNotFoundError(Block, missing.pop())
+
+            max_stmt = (
+                select(Question.block_id, func.max(Question.order_index))
+                .where(Question.block_id.in_(block_ids))
+                .group_by(Question.block_id)
+            )
+            max_result = await self.session.execute(max_stmt)
+            max_by_block: dict[BaseIdType, int] = {row[0]: row[1] for row in max_result.fetchall()}
+
+            all_questions: list[dict] = []
+            for block_id, questions in questions_by_block.items():
+                start_index = max_by_block.get(block_id, -1) + 1
+                for i, q in enumerate(questions):
+                    q["order_index"] = start_index + i
+                    all_questions.append(q)
+
+            insert_stmt = insert(Question).values(all_questions).returning(Question)
+            result = await self.session.execute(insert_stmt)
+            return list(result.scalars().all())

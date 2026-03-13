@@ -15,7 +15,7 @@ class QuestionStatus(str, Enum):
 
 class BaseQuestion(BaseModel):
     question: str = Field(..., max_length=500)
-    answer: str
+    answer: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

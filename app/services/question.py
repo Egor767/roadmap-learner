@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
+from app.schemas.load import QuestionConfirmRequest
 from app.schemas.question import (
     QuestionCreate,
     QuestionFilters,
@@ -251,3 +252,39 @@ class QuestionService:
                 "detail",
             ),
         )
+
+    @service_handler
+    async def create_multiple(
+        self,
+        current_user: "User",
+        request: "QuestionConfirmRequest",
+    ) -> list[QuestionRead]:
+        questions_by_block: dict[BaseIdType, list[dict]] = {}
+
+        for item in request.items:
+            questions_dict = []
+            for q in item.questions:
+                q_dict = q.model_dump(exclude_none=True, exclude_unset=True)
+                q_dict["id"] = generate_base_id()
+                q_dict["block_id"] = item.block_id
+                questions_dict.append(q_dict)
+            questions_by_block[item.block_id] = questions_dict
+
+        orm = await self.repo.create_multiple(questions_by_block, current_user.id)
+
+        schema = [orm_to_schema_status(QuestionRead, q, QuestionStatus.UNKNOWN) for q in orm]
+
+        # инвалидируем кэш для каждого затронутого блока
+        for block_id in questions_by_block:
+            await self.cache.delete(
+                get_cache_key(
+                    "questions",
+                    "user",
+                    str(current_user.id),
+                    "block",
+                    str(block_id),
+                    "list",
+                )
+            )
+
+        return schema

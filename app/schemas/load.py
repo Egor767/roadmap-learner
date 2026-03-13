@@ -33,13 +33,24 @@ class BlockInfo(BaseModel):
 
 
 class QuestionDistributeRequest(BaseModel):
+    roadmap_id: BaseIdType
     text: str = Field(..., min_length=1, max_length=10_000)
 
 
+class QuestionDistributionItem(BaseModel):
+    block: BlockInfo
+    questions: list[str]
+
+
 class QuestionDistributeResponse(BaseModel):
-    blocks: list[BlockInfo]
-    distribution: dict[BaseIdType, list[BaseQuestion]]
+    distribution: list[QuestionDistributionItem]
+    undefined: list[str] = []
+
+
+class QuestionConfirmItem(BaseModel):
+    block_id: BaseIdType
+    questions: list[BaseQuestion] = Field(..., min_length=1)
 
 
 class QuestionConfirmRequest(BaseModel):
-    distribution: dict[BaseIdType, list[BaseQuestion]]
+    items: list[QuestionConfirmItem] = Field(..., min_length=1, max_length=20)
