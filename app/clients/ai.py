@@ -6,7 +6,7 @@ class AIClient:
         self.base_url = "http://127.0.0.1:9090/api/openai"
         self.timeout = 30
 
-    async def distribute(self, context: str, content: str) -> str:
+    async def distribute(self, category: str, context: str, content: str) -> str:
         """
         Calls the AI microservice /distribute endpoint.
         - context: system-level instructions (what the LLM should do)
@@ -15,7 +15,7 @@ class AIClient:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
                 f"{self.base_url}/distribute",
-                json={"context": context, "content": content},
+                json={"category": category, "context": context, "content": content},
             )
             response.raise_for_status()
             return response.json()["content"]

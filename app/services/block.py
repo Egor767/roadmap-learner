@@ -10,6 +10,7 @@ from app.schemas.block import (
     BlockRead,
     BlockUpdate,
 )
+from app.schemas.load import BlockConfirmRequest
 from app.shared.generate_id import generate_base_id
 from app.utils.cache import get_cache_key, is_single_parent_filter
 from app.utils.mappers.cache_to_schema import (
@@ -223,19 +224,14 @@ class BlockService:
         )
 
     @service_handler
-    async def create_multiple(self, current_user: "User", block_create_data: list[BlockCreate]) -> list[BlockRead]:
-        blocks_dict = [
-            block.model_dump(
-                exclude_none=True,
-                exclude_unset=True,
-            )
-            for block in block_create_data
-        ]
+    async def create_multiple(self, current_user: "User", request: "BlockConfirmRequest") -> list[BlockRead]:
+        blocks_dict = [block.model_dump(exclude_none=True, exclude_unset=True) for block in request.blocks]
 
         for block in blocks_dict:
             block["id"] = generate_base_id()
+            block["roadmap_id"] = request.roadmap_id
 
-        orm = await self.repo.create_multiple(blocks_dict, current_user.id)
+        orm = await self.repo.create_multiple(request.roadmap_id, blocks_dict, current_user.id)
 
         schema = orm_list_to_schemas(BlockRead, orm)
 
@@ -245,7 +241,7 @@ class BlockService:
                 "user",
                 str(current_user.id),
                 "roadmap",
-                str(schema[0].roadmap_id),
+                str(request.roadmap_id),
                 "list",
             )
         )

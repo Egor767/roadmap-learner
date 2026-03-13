@@ -1,7 +1,8 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
-from app.schemas.block import BaseBlock, BlockRead
+from app.schemas.block import BaseBlock
+from app.schemas.question import BaseQuestion
 
 
 class BlockDistributeRequest(BaseModel):
@@ -10,50 +11,35 @@ class BlockDistributeRequest(BaseModel):
 
 
 class LoadBlock(BaseModel):
-    text: str
+    title: str
 
 
 class BlockDistributeResponse(BaseModel):
-    loading_blocks: list[LoadBlock]
-
-
-class BlockConfirmItem(BaseBlock):
-    pass
+    blocks: list[LoadBlock]
 
 
 class BlockConfirmRequest(BaseModel):
     roadmap_id: BaseIdType
-    blocks: list[BlockConfirmItem] = Field(..., min_length=1, max_length=20)
+    blocks: list[BaseBlock] = Field(..., min_length=1, max_length=20)
 
 
-class BlockConfirmResponse(BaseModel):
-    created: list[BlockRead]
+# ── Questions ─────────────────────────────────────────────────────────────────
 
 
 class BlockInfo(BaseModel):
     id: BaseIdType
     title: str
-
     model_config = ConfigDict(from_attributes=True)
 
 
 class QuestionDistributeRequest(BaseModel):
-    raw_text: str = Field(..., min_length=1, max_length=10_000)
+    text: str = Field(..., min_length=1, max_length=10_000)
 
 
 class QuestionDistributeResponse(BaseModel):
     blocks: list[BlockInfo]
-    distribution: dict[str, list[str]]
-
-
-class QuestionConfirmItem(BaseModel):
-    question: str = Field(..., min_length=1)
-    answer: str = ""
+    distribution: dict[BaseIdType, list[BaseQuestion]]
 
 
 class QuestionConfirmRequest(BaseModel):
-    distribution: dict[BaseIdType, list[QuestionConfirmItem]] = Field(..., min_length=1)
-
-
-class QuestionConfirmResponse(BaseModel):
-    created_questions: int
+    distribution: dict[BaseIdType, list[BaseQuestion]]

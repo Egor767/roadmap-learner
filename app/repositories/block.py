@@ -177,7 +177,8 @@ class BlockRepository(BaseRepository):
             result = await self.session.execute(
                 update(Block).where(Block.id == block).values(order_index=new_index).returning(Block)
             )
-            return result.scalar_one()
+            row = result.scalar_one()
+            return row
 
     @repository_handler
     async def delete(self, block: BaseIdType, user: BaseIdType) -> Block:
@@ -197,18 +198,23 @@ class BlockRepository(BaseRepository):
             return row
 
     @repository_handler
-    async def create_multiple(self, data: list[dict], user: BaseIdType) -> list[Block]:
+    async def create_multiple(self, roadmap_id: BaseIdType, data: list[dict], user: BaseIdType) -> list[Block]:
         async with transaction_manager(self.session):
-            roadmap_ids = {item.get("roadmap_id") for item in data}
+            sub_query = select(Roadmap.id).where(
+                Roadmap.id == roadmap_id,
+                Roadmap.user_id == user,
+            )
+            if (await self.session.execute(sub_query)).scalar_one_or_none() is None:
+                raise EntityNotFoundError(Roadmap, roadmap_id)
 
-            stmt = select(Roadmap.id).where(Roadmap.id.in_(roadmap_ids), Roadmap.user_id == user)
+            max_stmt = select(func.max(Block.order_index)).where(
+                Block.roadmap_id == roadmap_id,
+            )
+            max_index = (await self.session.execute(max_stmt)).scalar()
+            start_index = (max_index + 1) if max_index is not None else 0
 
-            result = await self.session.execute(stmt)
-            valid_ids = {row[0] for row in result.fetchall()}
-
-            missing = roadmap_ids - valid_ids
-            if missing:
-                raise EntityNotFoundError(Roadmap, missing.pop())
+            for i, block in enumerate(data):
+                block["order_index"] = start_index + i
 
             insert_stmt = insert(Block).values(data).returning(Block)
             result = await self.session.execute(insert_stmt)

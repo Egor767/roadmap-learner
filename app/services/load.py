@@ -11,52 +11,18 @@ from app.schemas.load import (
     BlockDistributeResponse,
     BlockInfo,
     LoadBlock,
-    QuestionConfirmItem,
     QuestionDistributeResponse,
 )
+from app.schemas.question import QuestionRead
 
 if TYPE_CHECKING:
     from app.models import User
     from app.services import BlockService, CardService, QuestionService, RoadmapService
 
 
-# ── PROMPTS ───────────────────────────────────────────────────────────────────
-# Each builder returns (context, content):
-#   context → system instructions, sent as "role: system"
-#   content → user data, sent as "role: user"
-
-
-def _build_block_order_prompt(request: str, roadmap: str) -> tuple[str, str]:
-    context = (
-        "You are helping organize learning topics into a logical study progression. "
-        "The user will send a raw list of topics in any format (numbered, bulleted, comma-separated, etc.). "
-        "Extract the topics, clean them, then return ONLY a JSON array of strings in the exact same order as the input. "
-        "Cleaning rules: remove numbering and bullet prefixes, remove duplicate punctuation (e.g. '??' → '?'), "
-        "strip leading and trailing whitespace, capitalize the first letter of each topic. "
-        "Do not reorder. No explanation. No markdown. Just the JSON array."
-    )
-    content = f'Roadmap: "{roadmap}"\nRaw input:\n{request}'
-    return context, content
-
-
-def _build_question_distribution_prompt(
-    request: str,
-    blocks: list["BlockRead"],
-) -> tuple[str, str]:
-    context = (
-        "You assign learning questions to the most relevant block. "
-        "The user will send a raw list of questions in any format (numbered, bulleted, inline, etc.). "
-        'Extract the questions, clean them, then assign each to the most relevant block ID or to "undefined". '
-        'Return ONLY a JSON object where keys are block IDs (as strings) or "undefined", '
-        "values are arrays of cleaned question strings. "
-        "Every extracted question must appear exactly once. "
-        "No explanation. No markdown. Just the JSON object."
-    )
-    blocks_context = "\n".join(
-        f"- {block.id}: {block.title} — {block.description or 'no description'}" for block in blocks
-    )
-    content = f"Blocks:\n{blocks_context}\n\nRaw input:\n{request}"
-    return context, content
+def _build_question_distribution_context(blocks: list["BlockRead"]) -> str:
+    context = "\n".join(f"- {block.id}: {block.title} — {block.description or 'no description'}" for block in blocks)
+    return context
 
 
 # ── PARSERS ───────────────────────────────────────────────────────────────────
@@ -75,7 +41,7 @@ def _parse_ordered_topics(raw: str) -> list[LoadBlock]:
     except (json.JSONDecodeError, ValueError):
         topics = [line.strip() for line in raw.splitlines() if line.strip()]
 
-    return [LoadBlock(text=topic) for i, topic in enumerate(topics)]
+    return [LoadBlock(title=topic) for i, topic in enumerate(topics)]
 
 
 def _parse_distribution(raw: str, blocks: list["BlockRead"]) -> dict[str, list[str]]:
@@ -139,27 +105,25 @@ class LoadService:
             request.roadmap_id,
         )
 
-        context, content = _build_block_order_prompt(
-            request.text,
-            roadmap.title + roadmap.description,
-        )
-        response = await self.ai_client.distribute(context, content)
+        context = f"Roadmap title: {roadmap.title}. Roadmap Description: {roadmap.description}"
+
+        response = await self.ai_client.distribute("blocks", context, request.text)
         blocks = _parse_ordered_topics(response)
 
-        return BlockDistributeResponse(loading_blocks=blocks)
+        return BlockDistributeResponse(blocks=blocks)
 
     async def confirm_blocks(
         self,
         current_user: "User",
         request: BlockConfirmRequest,
     ):
-        return await self.block_service.create_multiple(current_user, request.roadmap_id, request.blocks)
+        return await self.block_service.create_multiple(current_user, request)
 
     async def distribute_questions(
         self,
         current_user: "User",
         roadmap_id: BaseIdType,
-        raw_text: str,
+        text: str,
     ) -> QuestionDistributeResponse:
         filters = BlockFilters(roadmap_id=roadmap_id)
         blocks: list[BlockRead] = await self.block_service.get_by_filters(
@@ -170,8 +134,8 @@ class LoadService:
         if len(blocks) == 0:
             raise ValueError
 
-        context, content = _build_question_distribution_prompt(raw_text, blocks)
-        response = await self.ai_client.distribute(context, content)
+        context = _build_question_distribution_context(blocks)
+        response = await self.ai_client.distribute("questions", context, text)
         distribution = _parse_distribution(response, blocks)
 
         return QuestionDistributeResponse(
@@ -183,7 +147,7 @@ class LoadService:
         self,
         current_user: "User",
         roadmap_id: BaseIdType,
-        distribution: dict[BaseIdType, list[QuestionConfirmItem]],
+        distribution: dict[BaseIdType, list[QuestionRead]],
     ):
         return await self.question_service.create_multiple(
             current_user,

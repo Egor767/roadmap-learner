@@ -10,16 +10,16 @@ from app.core.dependencies.services import (
     get_load_service,
 )
 from app.core.handlers import router_handler
+from app.schemas.block import BlockRead
 from app.schemas.load import (
     BlockConfirmRequest,
-    BlockConfirmResponse,
     BlockDistributeRequest,
     BlockDistributeResponse,
     QuestionConfirmRequest,
-    QuestionConfirmResponse,
     QuestionDistributeRequest,
     QuestionDistributeResponse,
 )
+from app.schemas.question import QuestionRead
 
 if TYPE_CHECKING:
     from app.models import User
@@ -41,14 +41,8 @@ router = APIRouter(
 @router_handler
 async def distribute_blocks(
     request: BlockDistributeRequest,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    load_service: Annotated[
-        "LoadService",
-        Depends(get_load_service),
-    ],
+    current_user: Annotated["User", Depends(current_active_user)],
+    load_service: Annotated["LoadService", Depends(get_load_service)],
 ) -> BlockDistributeResponse:
     return await load_service.distribute_blocks(
         current_user,
@@ -59,22 +53,16 @@ async def distribute_blocks(
 @router.post(
     "/blocks/confirm",
     name="load:confirm_blocks",
-    response_model=BlockConfirmResponse,
+    response_model=list[BlockRead],
     status_code=status.HTTP_201_CREATED,
 )
 @router_handler
 async def confirm_blocks(
-    request: BlockConfirmRequest,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    load_service: Annotated[
-        "LoadService",
-        Depends(get_load_service),
-    ],
-) -> BlockConfirmResponse:
-    return await load_service.confirm_blocks(current_user, request)
+    body: BlockConfirmRequest,
+    current_user: Annotated["User", Depends(current_active_user)],
+    load_service: Annotated["LoadService", Depends(get_load_service)],
+) -> list[BlockRead]:
+    return await load_service.confirm_blocks(current_user, body)
 
 
 @router.post(
@@ -87,43 +75,27 @@ async def confirm_blocks(
 async def distribute_questions(
     roadmap_id: BaseIdType,
     body: QuestionDistributeRequest,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    load_service: Annotated[
-        "LoadService",
-        Depends(get_load_service),
-    ],
+    current_user: Annotated["User", Depends(current_active_user)],
+    load_service: Annotated["LoadService", Depends(get_load_service)],
 ) -> QuestionDistributeResponse:
     return await load_service.distribute_questions(
         current_user,
         roadmap_id,
-        body.raw_text,
+        body.text,
     )
 
 
 @router.post(
     "/{roadmap_id}/questions/confirm",
     name="load:confirm_questions",
-    response_model=QuestionConfirmResponse,
+    response_model=list[QuestionRead],
     status_code=status.HTTP_201_CREATED,
 )
 @router_handler
 async def confirm_questions(
     roadmap_id: BaseIdType,
     body: QuestionConfirmRequest,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    load_service: Annotated[
-        "LoadService",
-        Depends(get_load_service),
-    ],
-) -> QuestionConfirmResponse:
-    return await load_service.confirm_questions(
-        current_user,
-        roadmap_id,
-        body.distribution,
-    )
+    current_user: Annotated["User", Depends(current_active_user)],
+    load_service: Annotated["LoadService", Depends(get_load_service)],
+) -> list[QuestionRead]:
+    return await load_service.confirm_questions(current_user, roadmap_id, body.distribution)
