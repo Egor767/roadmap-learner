@@ -12,6 +12,8 @@ from app.schemas.ai import (
     BlockDistributeResponse,
     ChatRequest,
     ChatResponse,
+    GenerateRequest,
+    GenerateResponse,
     QuestionDistributeRequest,
     QuestionDistributeResponse,
 )
@@ -70,3 +72,18 @@ async def distribute_questions(
     ai_service: Annotated["AIService", Depends(get_ai_service)],
 ) -> QuestionDistributeResponse:
     return await ai_service.distribute_questions(current_user, request)
+
+
+@router.post(
+    "/generate",
+    name="ai:generate_entities",
+    response_model=GenerateResponse,
+    status_code=status.HTTP_200_OK,
+)
+@router_handler
+async def generate_entities(
+    request: GenerateRequest,
+    current_user: Annotated["User", Depends(current_active_user)],
+    ai_service: Annotated["AIService", Depends(get_ai_service)],
+) -> GenerateResponse:
+    return await ai_service.generate_entities(current_user, request)

@@ -23,3 +23,12 @@ class AIClient:
             )
             response.raise_for_status()
             return response.json()["response"]
+
+    async def generate(self, target: str, context: str) -> str:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url}/generate",
+                json={"target": target, "context": context},
+            )
+            response.raise_for_status()
+            return response.json()["content"]

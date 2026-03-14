@@ -9,6 +9,9 @@ from app.schemas.ai import (
     BlockInfo,
     ChatRequest,
     ChatResponse,
+    GenerateRequest,
+    GenerateResponse,
+    GenerateTarget,
     LoadBlock,
     QuestionDistributeRequest,
     QuestionDistributeResponse,
@@ -61,6 +64,16 @@ def _parse_distribution(raw: str, blocks: list["BlockRead"]) -> dict[str, list[s
     return dict(result)
 
 
+def _parse_generated_items(raw: str) -> list[str]:
+    try:
+        data = json.loads(raw.strip())
+        if isinstance(data, list):
+            return [str(item).strip() for item in data if str(item).strip()]
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return [line.strip() for line in raw.splitlines() if line.strip()]
+
+
 class AIService:
     def __init__(
         self,
@@ -76,19 +89,11 @@ class AIService:
         self.question_service = question_service
         self.card_service = card_service
 
-    async def chat(
-        self,
-        current_user: "User",
-        request: ChatRequest,
-    ) -> ChatResponse:
+    async def chat(self, current_user: "User", request: ChatRequest) -> ChatResponse:
         response = await self.ai_client.chat(request.context, request.content)
         return ChatResponse(response=response)
 
-    async def distribute_blocks(
-        self,
-        current_user: "User",
-        request: BlockDistributeRequest,
-    ) -> BlockDistributeResponse:
+    async def distribute_blocks(self, current_user: "User", request: BlockDistributeRequest) -> BlockDistributeResponse:
         roadmap = await self.roadmap_service.get_by_id(current_user, request.roadmap_id)
         context = f"Roadmap title: {roadmap.title}. Roadmap Description: {roadmap.description}"
 
@@ -98,9 +103,7 @@ class AIService:
         return BlockDistributeResponse(blocks=blocks)
 
     async def distribute_questions(
-        self,
-        current_user: "User",
-        request: QuestionDistributeRequest,
+        self, current_user: "User", request: QuestionDistributeRequest
     ) -> QuestionDistributeResponse:
         filters = BlockFilters(roadmap_id=request.roadmap_id)
         blocks: list[BlockRead] = await self.block_service.get_by_filters(current_user, filters)
@@ -123,3 +126,35 @@ class AIService:
             ],
             undefined=raw_distribution.get("undefined", []),
         )
+
+    async def generate_entities(self, current_user: "User", request: GenerateRequest) -> GenerateResponse:
+        if request.target == GenerateTarget.blocks:
+            if not request.roadmap_id:
+                raise ValueError("roadmap_id обязателен для генерации блоков")
+            roadmap = await self.roadmap_service.get_by_id(current_user, request.roadmap_id)
+            context = f"Title: {roadmap.title}. Description: {roadmap.description or ''}."
+
+        elif request.target == GenerateTarget.questions:
+            if not request.block_id:
+                raise ValueError("block_id обязателен для генерации вопросов")
+            block = await self.block_service.get_by_id(current_user, request.block_id)
+            roadmap = await self.roadmap_service.get_by_id(current_user, block.roadmap_id)
+            context = (
+                f"Roadmap: {roadmap.title}. Description: {roadmap.description or ''}."
+                f"Block: {block.title}. Description: {block.description or ''}."
+            )
+
+        else:
+            if not request.question_id:
+                raise ValueError("question_id обязателен для генерации вопросов")
+            question = await self.question_service.get_by_id(current_user, request.question_id)
+            block = await self.block_service.get_by_id(current_user, question.block_id)
+            roadmap = await self.roadmap_service.get_by_id(current_user, block.roadmap_id)
+            context = (
+                f"Roadmap: {roadmap.title}. Description: {roadmap.description or ''}."
+                f"Block: {block.title}. Description: {block.description or ''}."
+                f"Question: {question.question}. Description: {question.answer or ''}."
+            )
+
+        raw = await self.ai_client.generate(request.target.value, context)
+        return GenerateResponse(items=_parse_generated_items(raw))

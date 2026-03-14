@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
@@ -44,3 +46,20 @@ class QuestionDistributionItem(BaseModel):
 class QuestionDistributeResponse(BaseModel):
     distribution: list[QuestionDistributionItem]
     undefined: list[str] = []
+
+
+class GenerateTarget(str, Enum):
+    blocks = "blocks"
+    cards = "cards"
+    questions = "questions"
+
+
+class GenerateRequest(BaseModel):
+    target: GenerateTarget = GenerateTarget.blocks
+    roadmap_id: BaseIdType | None = None
+    block_id: BaseIdType | None = None
+    question_id: BaseIdType | None = None
+
+
+class GenerateResponse(BaseModel):
+    items: list[str]
