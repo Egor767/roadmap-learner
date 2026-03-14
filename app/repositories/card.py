@@ -9,7 +9,7 @@ from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.models import Card, Roadmap
+from app.models import Card, QuestionCard, Roadmap
 from app.repositories import BaseRepository
 
 
@@ -43,6 +43,17 @@ class CardRepository(BaseRepository):
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
+
+    @repository_handler
+    async def get_by_question(self, question: BaseIdType) -> list[Card]:
+        stmt = (
+            select(Card)
+            .join(QuestionCard, Card.id == QuestionCard.card_id)
+            .where(QuestionCard.question_id == question)
+            .order_by(Card.id)
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     @repository_handler
     async def create(self, data: dict, user: BaseIdType) -> Card:
