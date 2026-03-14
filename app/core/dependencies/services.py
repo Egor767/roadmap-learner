@@ -22,6 +22,7 @@ from .repositories import (
     get_question_progress_repository,
     get_question_repository,
     get_roadmap_repository,
+    get_session_item_repository,
     get_session_repository,
     get_user_repository,
 )
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
         CardRepository,
         QuestionRepository,
         RoadmapRepository,
+        SessionItemRepository,
         SessionRepository,
         UserCardProgressRepository,
         UserQuestionProgressRepository,
@@ -124,22 +126,6 @@ def get_question_service(
     )
 
 
-def get_session_service(
-    repo: Annotated[
-        "SessionRepository",
-        Depends(get_session_repository),
-    ],
-    cache: Annotated[
-        "CacheHelper",
-        Depends(get_cache),
-    ],
-) -> SessionService:
-    return SessionService(
-        repo,
-        cache,
-    )
-
-
 def get_ai_service(
     ai_client: Annotated[
         "AIClient",
@@ -163,3 +149,44 @@ def get_ai_service(
     ],
 ) -> AIService:
     return AIService(ai_client, roadmap_service, block_service, question_service, card_service)
+
+
+def get_session_service(
+    repo: Annotated[
+        "SessionRepository",
+        Depends(get_session_repository),
+    ],
+    session_item_repo: Annotated[
+        "SessionItemRepository",
+        Depends(get_session_item_repository),
+    ],
+    question_repo: Annotated[
+        "QuestionRepository",
+        Depends(get_question_repository),
+    ],
+    card_repo: Annotated[
+        "CardRepository",
+        Depends(get_card_repository),
+    ],
+    question_progress_repo: Annotated[
+        "UserQuestionProgressRepository",
+        Depends(get_question_progress_repository),
+    ],
+    ai_client: Annotated[
+        "AIClient",
+        Depends(get_ai_client),
+    ],
+    cache: Annotated[
+        "CacheHelper",
+        Depends(get_cache),
+    ],
+) -> SessionService:
+    return SessionService(
+        repo,
+        session_item_repo,
+        question_repo,
+        card_repo,
+        question_progress_repo,
+        ai_client,
+        cache,
+    )

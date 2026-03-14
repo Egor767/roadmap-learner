@@ -7,6 +7,7 @@ from app.repositories import (
     CardRepository,
     QuestionRepository,
     RoadmapRepository,
+    SessionItemRepository,
     SessionRepository,
     UserCardProgressRepository,
     UserQuestionProgressRepository,
@@ -89,3 +90,12 @@ def get_session_repository(
     ],
 ) -> SessionRepository:
     return SessionRepository(session)
+
+
+def get_session_item_repository(
+    session: Annotated[
+        "AsyncSession",
+        Depends(get_db_session),
+    ],
+) -> SessionItemRepository:
+    return SessionItemRepository(session)
