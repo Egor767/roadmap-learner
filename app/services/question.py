@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
-from app.schemas.load import QuestionConfirmRequest
 from app.schemas.question import (
+    QuestionConfirmRequest,
     QuestionCreate,
     QuestionFilters,
     QuestionMove,

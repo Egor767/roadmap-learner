@@ -1,4 +1,5 @@
 __all__ = (
+    "AIService",
     "BaseService",
     "BlockService",
     "CardService",
@@ -9,6 +10,7 @@ __all__ = (
     "UserService",
 )
 
+from .ai import AIService
 from .base import BaseService
 from .block import BlockService
 from .card import CardService

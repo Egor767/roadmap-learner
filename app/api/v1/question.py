@@ -9,6 +9,7 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_question_service
 from app.core.handlers import router_handler
 from app.schemas.question import (
+    QuestionConfirmRequest,
     QuestionCreate,
     QuestionFilters,
     QuestionMove,
@@ -116,6 +117,21 @@ async def create_question(
         current_user,
         question_create_data,
     )
+
+
+@router.post(
+    "/batch",
+    name="questions:create_batch_questions",
+    response_model=list[QuestionRead],
+    status_code=status.HTTP_201_CREATED,
+)
+@router_handler
+async def confirm_questions(
+    body: QuestionConfirmRequest,
+    current_user: Annotated["User", Depends(current_active_user)],
+    question_service: Annotated["QuestionService", Depends(get_question_service)],
+) -> list[QuestionRead]:
+    return await question_service.create_multiple(current_user, body)
 
 
 # -------------------------------------- DELETE --------------------------------------

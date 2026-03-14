@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING
 from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
 from app.schemas.block import (
+    BlockConfirmRequest,
     BlockCreate,
     BlockFilters,
     BlockMove,
     BlockRead,
     BlockUpdate,
 )
-from app.schemas.load import BlockConfirmRequest
 from app.shared.generate_id import generate_base_id
 from app.utils.cache import get_cache_key, is_single_parent_filter
 from app.utils.mappers.cache_to_schema import (

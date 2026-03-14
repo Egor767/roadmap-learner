@@ -2,7 +2,9 @@ from typing import TYPE_CHECKING, Annotated
 
 from fastapi import Depends
 
+from app.clients import AIClient
 from app.services import (
+    AIService,
     BlockService,
     CardService,
     QuestionService,
@@ -11,8 +13,6 @@ from app.services import (
     UserService,
 )
 
-from ...clients import AIClient
-from ...services.load import LoadService
 from .cache import get_cache
 from .clients import get_ai_client
 from .repositories import (
@@ -140,7 +140,7 @@ def get_session_service(
     )
 
 
-def get_load_service(
+def get_ai_service(
     ai_client: Annotated[
         "AIClient",
         Depends(get_ai_client),
@@ -161,5 +161,5 @@ def get_load_service(
         CardService,
         Depends(get_card_service),
     ],
-) -> LoadService:
-    return LoadService(ai_client, roadmap_service, block_service, question_service, card_service)
+) -> AIService:
+    return AIService(ai_client, roadmap_service, block_service, question_service, card_service)

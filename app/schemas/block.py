@@ -54,3 +54,8 @@ class BlockFilters(BaseModel):
     title: str | None = None
     description: str | None = None
     order_index: int | None = None
+
+
+class BlockConfirmRequest(BaseModel):
+    roadmap_id: BaseIdType
+    blocks: list[BaseBlock] = Field(..., min_length=1, max_length=20)

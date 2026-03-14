@@ -74,7 +74,7 @@ class ApiV1Prefix(BaseModel):
     questions: str = "/questions"
     cards: str = "/cards"
     sessions: str = "/sessions"
-    load: str = "/load"
+    ai: str = "/ai"
 
 
 class ApiPrefix(BaseModel):

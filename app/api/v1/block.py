@@ -9,6 +9,7 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_block_service
 from app.core.handlers import router_handler
 from app.schemas.block import (
+    BlockConfirmRequest,
     BlockCreate,
     BlockFilters,
     BlockMove,
@@ -114,6 +115,21 @@ async def create_block(
         current_user,
         block_create_data,
     )
+
+
+@router.post(
+    "/batch",
+    name="blocks:create_batch_blocks",
+    response_model=list[BlockRead],
+    status_code=status.HTTP_201_CREATED,
+)
+@router_handler
+async def confirm_blocks(
+    body: BlockConfirmRequest,
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
+) -> list[BlockRead]:
+    return await block_service.create_multiple(current_user, body)
 
 
 # -------------------------------------- DELETE --------------------------------------

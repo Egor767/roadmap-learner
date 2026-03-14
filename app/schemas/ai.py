@@ -1,8 +1,15 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
-from app.schemas.block import BaseBlock
-from app.schemas.question import BaseQuestion
+
+
+class ChatRequest(BaseModel):
+    context: str = Field(default="", max_length=5_000)
+    content: str = Field(..., min_length=1, max_length=10_000)
+
+
+class ChatResponse(BaseModel):
+    response: str
 
 
 class BlockDistributeRequest(BaseModel):
@@ -16,14 +23,6 @@ class LoadBlock(BaseModel):
 
 class BlockDistributeResponse(BaseModel):
     blocks: list[LoadBlock]
-
-
-class BlockConfirmRequest(BaseModel):
-    roadmap_id: BaseIdType
-    blocks: list[BaseBlock] = Field(..., min_length=1, max_length=20)
-
-
-# ── Questions ─────────────────────────────────────────────────────────────────
 
 
 class BlockInfo(BaseModel):
@@ -45,12 +44,3 @@ class QuestionDistributionItem(BaseModel):
 class QuestionDistributeResponse(BaseModel):
     distribution: list[QuestionDistributionItem]
     undefined: list[str] = []
-
-
-class QuestionConfirmItem(BaseModel):
-    block_id: BaseIdType
-    questions: list[BaseQuestion] = Field(..., min_length=1)
-
-
-class QuestionConfirmRequest(BaseModel):
-    items: list[QuestionConfirmItem] = Field(..., min_length=1, max_length=20)

@@ -7,11 +7,6 @@ class AIClient:
         self.timeout = 30
 
     async def distribute(self, category: str, context: str, content: str) -> str:
-        """
-        Calls the AI microservice /distribute endpoint.
-        - context: system-level instructions (what the LLM should do)
-        - content: user data (raw text + any structured context like block list)
-        """
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
                 f"{self.base_url}/distribute",
@@ -19,3 +14,12 @@ class AIClient:
             )
             response.raise_for_status()
             return response.json()["content"]
+
+    async def chat(self, context: str, content: str) -> str:
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url}/chat",
+                json={"context": context, "content": content},
+            )
+            response.raise_for_status()
+            return response.json()["response"]

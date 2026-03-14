@@ -3,18 +3,18 @@ from collections import defaultdict
 from typing import TYPE_CHECKING
 
 from app.clients.ai import AIClient
-from app.schemas.block import BlockFilters, BlockRead
-from app.schemas.load import (
-    BlockConfirmRequest,
+from app.schemas.ai import (
     BlockDistributeRequest,
     BlockDistributeResponse,
     BlockInfo,
+    ChatRequest,
+    ChatResponse,
     LoadBlock,
-    QuestionConfirmRequest,
     QuestionDistributeRequest,
     QuestionDistributeResponse,
     QuestionDistributionItem,
 )
+from app.schemas.block import BlockFilters, BlockRead
 
 if TYPE_CHECKING:
     from app.models import User
@@ -22,18 +22,10 @@ if TYPE_CHECKING:
 
 
 def _build_question_distribution_context(blocks: list["BlockRead"]) -> str:
-    context = "\n".join(f"- {block.id}: {block.title} — {block.description or 'no description'}" for block in blocks)
-    return context
-
-
-# ── PARSERS ───────────────────────────────────────────────────────────────────
+    return "\n".join(f"- {block.id}: {block.title} — {block.description or 'no description'}" for block in blocks)
 
 
 def _parse_ordered_topics(raw: str) -> list[LoadBlock]:
-    """
-    Expects a JSON array of strings from the LLM.
-    Falls back to newline-splitting if JSON is malformed.
-    """
     try:
         data = json.loads(raw.strip())
         if not isinstance(data, list):
@@ -42,19 +34,10 @@ def _parse_ordered_topics(raw: str) -> list[LoadBlock]:
     except (json.JSONDecodeError, ValueError):
         topics = [line.strip() for line in raw.splitlines() if line.strip()]
 
-    return [LoadBlock(title=topic) for i, topic in enumerate(topics)]
+    return [LoadBlock(title=topic) for topic in topics]
 
 
 def _parse_distribution(raw: str, blocks: list["BlockRead"]) -> dict[str, list[str]]:
-    """
-    Expects a JSON object from the LLM:
-        { block_id | "undefined": [question_str, ...] }
-
-    Guarantees:
-    - Only valid block IDs or "undefined" as keys (hallucinated IDs → "undefined")
-    - No duplicate questions across buckets
-    - Falls back to empty dict on total parse failure (user distributes manually)
-    """
     valid_ids = {str(b.id) for b in blocks}
 
     try:
@@ -78,10 +61,7 @@ def _parse_distribution(raw: str, blocks: list["BlockRead"]) -> dict[str, list[s
     return dict(result)
 
 
-# ── SERVICE ───────────────────────────────────────────────────────────────────
-
-
-class LoadService:
+class AIService:
     def __init__(
         self,
         ai_client: AIClient,
@@ -96,29 +76,26 @@ class LoadService:
         self.question_service = question_service
         self.card_service = card_service
 
+    async def chat(
+        self,
+        current_user: "User",
+        request: ChatRequest,
+    ) -> ChatResponse:
+        response = await self.ai_client.chat(request.context, request.content)
+        return ChatResponse(response=response)
+
     async def distribute_blocks(
         self,
         current_user: "User",
         request: BlockDistributeRequest,
     ) -> BlockDistributeResponse:
-        roadmap = await self.roadmap_service.get_by_id(
-            current_user,
-            request.roadmap_id,
-        )
-
+        roadmap = await self.roadmap_service.get_by_id(current_user, request.roadmap_id)
         context = f"Roadmap title: {roadmap.title}. Roadmap Description: {roadmap.description}"
 
         response = await self.ai_client.distribute("blocks", context, request.text)
         blocks = _parse_ordered_topics(response)
 
         return BlockDistributeResponse(blocks=blocks)
-
-    async def confirm_blocks(
-        self,
-        current_user: "User",
-        request: BlockConfirmRequest,
-    ):
-        return await self.block_service.create_multiple(current_user, request)
 
     async def distribute_questions(
         self,
@@ -146,10 +123,3 @@ class LoadService:
             ],
             undefined=raw_distribution.get("undefined", []),
         )
-
-    async def confirm_questions(
-        self,
-        current_user: "User",
-        request: QuestionConfirmRequest,
-    ):
-        return await self.question_service.create_multiple(current_user, request)

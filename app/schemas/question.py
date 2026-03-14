@@ -62,3 +62,12 @@ class QuestionFilters(BaseModel):
     status: QuestionStatus | None = None
     order_index: int | None = None
     question: str | None = None
+
+
+class QuestionConfirmItem(BaseModel):
+    block_id: BaseIdType
+    questions: list[BaseQuestion] = Field(..., min_length=1)
+
+
+class QuestionConfirmRequest(BaseModel):
+    items: list[QuestionConfirmItem] = Field(..., min_length=1, max_length=20)
