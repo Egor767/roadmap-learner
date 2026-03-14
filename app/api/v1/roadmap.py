@@ -1,23 +1,23 @@
-from typing import Annotated, TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
+from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_roadmap_service
 from app.core.handlers import router_handler
-from app.core.custom_types import BaseIdType
 from app.schemas.roadmap import (
-    RoadmapRead,
     RoadmapCreate,
-    RoadmapUpdate,
     RoadmapFilters,
+    RoadmapRead,
+    RoadmapUpdate,
 )
 
 if TYPE_CHECKING:
-    from app.services import RoadmapService
     from app.models import User
+    from app.services import RoadmapService
 
 
 router = APIRouter(

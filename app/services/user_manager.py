@@ -1,19 +1,18 @@
-from datetime import datetime, timezone
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from fastapi_users import BaseUserManager
-from sqlalchemy import delete, and_, select, asc
 
 from app.core.config import settings
-from app.core.loggers import user_manager_logger as logger
 from app.core.custom_types import BaseIdType
-from app.models import User, db_helper, AccessToken
+from app.core.loggers import user_manager_logger as logger
+from app.models import User
 from app.models.mixins import IdMixin
 
 if TYPE_CHECKING:
     from fastapi import Request, Response
-    from app.models.user import SQLAlchemyUserDatabase
+
     from app.models.access_token import SQLAlchemyAccessTokenDatabase
+    from app.models.user import SQLAlchemyUserDatabase
 
 
 class UserManager(IdMixin, BaseUserManager[User, BaseIdType]):
@@ -73,7 +72,7 @@ class UserManager(IdMixin, BaseUserManager[User, BaseIdType]):
         request: Optional["Request"] = None,
     ):
         logger.info(
-            f"Verification requested for user %r. Verification token: %r",
+            "Verification requested for user %r. Verification token: %r",
             user.id,
             token,
         )

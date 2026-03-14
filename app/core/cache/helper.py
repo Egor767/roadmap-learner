@@ -1,8 +1,9 @@
-from redis.asyncio import Redis
-from redis.exceptions import RedisError
 import time
 
+from redis.asyncio import Redis
+from redis.exceptions import RedisError
 from redis.typing import KeyT
+
 from app.core.config import settings
 
 

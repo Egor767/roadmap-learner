@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from app.models import Base
 from app.core.custom_types import BaseIdType
+from app.models import Base
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
