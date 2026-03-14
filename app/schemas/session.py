@@ -4,14 +4,11 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict
 
 from app.core.custom_types import BaseIdType
-
-
-class BaseSession(BaseModel):
-    pass
+from app.schemas.question import QuestionStatus
 
 
 class SessionMode(str, Enum):
-    REVIEW = "review"
+    REPEAT = "review"
     EXAM = "exam"
 
 
@@ -21,11 +18,12 @@ class SessionStatus(str, Enum):
     ABANDONED = "abandoned"
 
 
-class SessionCreate(BaseSession):
+class SessionCreate(BaseModel):
     mode: SessionMode
     roadmap_id: BaseIdType
     block_id: BaseIdType | None = None
-    mix: bool | None = False
+    mix: bool = False
+    auto_check: bool = False
 
 
 class SessionUpdate(BaseModel):
@@ -36,22 +34,19 @@ class SessionUpdate(BaseModel):
     review_answers: int | None = None
 
 
-class SessionRead(BaseSession):
+class SessionRead(BaseModel):
     id: BaseIdType
     user_id: BaseIdType
     roadmap_id: BaseIdType
     block_id: BaseIdType | None = None
-
     mode: SessionMode
-
+    auto_check: bool
     status: SessionStatus
     questions: list[BaseIdType] = []
     index: int
-
     correct_answers: int
     incorrect_answers: int
     review_answers: int
-
     created_at: datetime
     updated_at: datetime
     completed_at: datetime | None = None
@@ -83,3 +78,33 @@ class SessionResult(BaseModel):
     review_answers: int
     accuracy_percentage: float
     completed_at: datetime
+
+
+class SessionItemCreate(BaseModel):
+    question_id: BaseIdType
+    answer: str
+    hint: bool = False
+
+
+class SessionItemRead(BaseModel):
+    id: BaseIdType
+    session_id: BaseIdType
+    question_id: BaseIdType
+    answer: str
+    hint: bool
+    result: QuestionStatus | None = None
+    note: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SessionAutoCheckResult(BaseModel):
+    id: BaseIdType
+    roadmap_id: BaseIdType
+    block_id: BaseIdType | None = None
+    total: int
+    known_count: int
+    unknown_count: int
+    repeat_count: int
+    accuracy_percentage: float
+    items: list[SessionItemRead]
