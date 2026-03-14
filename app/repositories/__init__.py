@@ -4,6 +4,7 @@ __all__ = (
     "CardRepository",
     "QuestionRepository",
     "RoadmapRepository",
+    "SessionItemRepository",
     "SessionRepository",
     "UserCardProgressRepository",
     "UserQuestionProgressRepository",
@@ -18,4 +19,5 @@ from .question import QuestionRepository
 from .question_progress import UserQuestionProgressRepository
 from .roadmap import RoadmapRepository
 from .session import SessionRepository
+from .session_item import SessionItemRepository
 from .user import UserRepository
