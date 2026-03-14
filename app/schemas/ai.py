@@ -3,6 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.custom_types import BaseIdType
+from app.schemas.question import QuestionStatus
 
 
 class ChatRequest(BaseModel):
@@ -63,3 +64,21 @@ class GenerateRequest(BaseModel):
 
 class GenerateResponse(BaseModel):
     items: list[str]
+
+
+class CardContext(BaseModel):
+    term: str
+    definition: str
+
+
+class EvaluateAnswerRequest(BaseModel):
+    question: str
+    correct_answer: str
+    answer: str
+    hint: bool
+    cards: list[CardContext]
+
+
+class EvaluateAnswerResponse(BaseModel):
+    result: QuestionStatus
+    note: str
