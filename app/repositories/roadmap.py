@@ -16,7 +16,7 @@ from app.repositories import BaseRepository
 class RoadmapRepository(BaseRepository):
     @repository_handler
     async def get_all(self) -> list[Roadmap]:
-        stmt = select(Roadmap)
+        stmt = select(Roadmap).order_by(Roadmap.title)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
@@ -42,6 +42,7 @@ class RoadmapRepository(BaseRepository):
                 stmt = stmt.where(column.in_(value))
             else:
                 stmt = stmt.where(column == value)
+        stmt = stmt.order_by(Roadmap.title)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows

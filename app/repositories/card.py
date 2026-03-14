@@ -16,7 +16,7 @@ from app.repositories import BaseRepository
 class CardRepository(BaseRepository):
     @repository_handler
     async def get_all(self) -> list[Card]:
-        stmt = select(Card)
+        stmt = select(Card).order_by(Card.term)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
@@ -39,6 +39,7 @@ class CardRepository(BaseRepository):
                 stmt = stmt.where(column.in_(value))
             else:
                 stmt = stmt.where(column == value)
+        stmt = stmt.order_by(Card.term)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows

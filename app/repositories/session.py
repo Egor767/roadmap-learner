@@ -18,7 +18,7 @@ from app.schemas.session import SessionStatus
 class SessionRepository(BaseRepository):
     @repository_handler
     async def get_all(self) -> list[Session]:
-        stmt = select(Session)
+        stmt = select(Session).order_by(Session.updated_at)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
@@ -41,6 +41,7 @@ class SessionRepository(BaseRepository):
                 stmt = stmt.where(column.in_(value))
             else:
                 stmt = stmt.where(column == value)
+        stmt = stmt.order_by(Session.updated_at)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows

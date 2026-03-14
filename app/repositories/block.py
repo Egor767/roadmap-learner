@@ -19,7 +19,7 @@ from app.repositories import BaseRepository
 class BlockRepository(BaseRepository):
     @repository_handler
     async def get_all(self) -> list[Block]:
-        stmt = select(Block)
+        stmt = select(Block).order_by(Block.order_index)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
@@ -46,6 +46,7 @@ class BlockRepository(BaseRepository):
                 stmt = stmt.where(column.in_(value))
             else:
                 stmt = stmt.where(column == value)
+        stmt = stmt.order_by(Block.order_index)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
