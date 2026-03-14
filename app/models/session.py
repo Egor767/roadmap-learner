@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import ARRAY, UUID, DateTime
+from sqlalchemy import ARRAY, UUID, Boolean, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,11 +24,17 @@ class Session(
 ):
     mode: Mapped[str] = mapped_column(
         SQLEnum(
-            "review",
             "exam",
+            "repeat",
             name="session_mode",
         ),
         nullable=False,
+    )
+
+    auto_check: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default="false",
     )
 
     block_id: Mapped[BaseIdType] = mapped_column(
@@ -75,7 +81,8 @@ class Session(
 
     def __str__(self):
         return (
-            f"{self.__class__.__name__}(id={self.id}, user_id={self.user_id!r}), mode={self.mode}, status={self.status}"
+            f"{self.__class__.__name__}(id={self.id}, user_id={self.user_id!r}, "
+            f"mode={self.mode}, status={self.status}, auto_check={self.auto_check}"
         )
 
     def __repr__(self):

@@ -20,7 +20,7 @@ class UserQuestionProgress(Base, TimestampMixin, UserRelationMixin, QuestionRela
     _question_id_primary_key = True
 
     status: Mapped[QuestionStatus] = mapped_column(
-        Enum(QuestionStatus, name="question_status"),
+        Enum(QuestionStatus, name="question_status", create_type=False),
         nullable=False,
     )
 

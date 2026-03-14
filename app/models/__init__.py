@@ -7,6 +7,7 @@ __all__ = (
     "QuestionCard",
     "Roadmap",
     "Session",
+    "SessionItem",
     "User",
     "UserCardProgress",
     "UserQuestionProgress",
@@ -24,4 +25,5 @@ from .question_card import QuestionCard
 from .question_progress import UserQuestionProgress
 from .roadmap import Roadmap
 from .session import Session
+from .session_item import SessionItem
 from .user import User
