@@ -20,27 +20,27 @@ class UserCardProgressRepository:
         self.session = session
 
     @repository_handler
-    async def get_status(self, user: BaseIdType, question: BaseIdType) -> CardStatus:
+    async def get_status(self, user: BaseIdType, card: BaseIdType) -> CardStatus:
         stmt = select(UserCardProgress.status).where(
             UserCardProgress.user_id == user,
-            UserCardProgress.card_id == question,
+            UserCardProgress.card_id == card,
         )
         result = await self.session.execute(stmt)
         row = result.scalar_one_or_none() or CardStatus.UNKNOWN
         return row
 
     @repository_handler
-    async def get_statuses(self, user: BaseIdType, questions: list[BaseIdType]) -> dict[BaseIdType, CardStatus]:
+    async def get_statuses(self, user: BaseIdType, cards: list[BaseIdType]) -> dict[BaseIdType, CardStatus]:
         stmt = select(
             UserCardProgress.card_id,
             UserCardProgress.status,
         ).where(
             UserCardProgress.user_id == user,
-            UserCardProgress.card_id.in_(questions),
+            UserCardProgress.card_id.in_(cards),
         )
         result = await self.session.execute(stmt)
-        found = {row.question_id: row.status for row in result.all()}
-        data = {q: found.get(q, CardStatus.UNKNOWN) for q in questions}
+        found = {row.card_id: row.status for row in result.all()}
+        data = {q: found.get(q, CardStatus.UNKNOWN) for q in cards}
         return data
 
     @repository_handler
@@ -54,23 +54,23 @@ class UserCardProgressRepository:
         return rows
 
     @repository_handler
-    async def create(self, user: BaseIdType, question: BaseIdType):
+    async def create(self, user: BaseIdType, card: BaseIdType):
         async with transaction_manager(self.session):
             stmt = insert(UserCardProgress).values(
                 user_id=user,
-                question_id=question,
+                card_id=card,
                 status=CardStatus.UNKNOWN,
             )
             await self.session.execute(stmt)
 
     @repository_handler
-    async def update(self, user: BaseIdType, question: BaseIdType, status: CardStatus):
+    async def update(self, user: BaseIdType, card: BaseIdType, status: CardStatus):
         async with transaction_manager(self.session):
             stmt = (
                 insert(UserCardProgress)
-                .values(user_id=user, question_id=question, status=status)
+                .values(user_id=user, card_id=card, status=status)
                 .on_conflict_do_update(
-                    index_elements=["user_id", "question_id"],
+                    index_elements=["user_id", "card_id"],
                     set_={"status": status},
                 )
             )

@@ -207,3 +207,28 @@ async def move_question(
         question_id,
         move_data,
     )
+
+
+@router.post(
+    "/{question_id}/link-card",
+    name="questions:link_card",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+@router_handler
+async def link_card(
+    question_id: BaseIdType,
+    card_id: BaseIdType,
+    current_user: Annotated[
+        "User",
+        Depends(current_active_user),
+    ],
+    question_service: Annotated[
+        "QuestionService",
+        Depends(get_question_service),
+    ],
+):
+    await question_service.link_card(
+        current_user,
+        question_id,
+        card_id,
+    )

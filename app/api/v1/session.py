@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING, Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
@@ -85,7 +85,7 @@ async def get_questions(
     current_user: Annotated["User", Depends(current_active_user)],
     session_service: Annotated["SessionService", Depends(get_session_service)],
 ):
-    return await session_service.get_questions(current_user, session_id, filters)
+    return await session_service.get_session_questions(current_user, session_id, filters)
 
 
 @router.get(
@@ -125,11 +125,8 @@ async def create_session(
     session_create_data: SessionCreate,
     current_user: Annotated["User", Depends(current_active_user)],
     session_service: Annotated["SessionService", Depends(get_session_service)],
-    request: Request,
 ) -> SessionRead:
-    auth = request.headers.get("authorization")
-    token = auth[7:]
-    return await session_service.create(current_user, session_create_data, token)
+    return await session_service.create(current_user, session_create_data)
 
 
 @router.post(

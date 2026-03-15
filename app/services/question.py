@@ -28,14 +28,21 @@ from app.utils.mappers.orm_to_schema import (
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
     from app.models import User
-    from app.repositories import QuestionRepository
+    from app.repositories import QuestionCardRepository, QuestionRepository
     from app.repositories import UserQuestionProgressRepository as ProgressRepository
 
 
 class QuestionService:
-    def __init__(self, repo: "QuestionRepository", progress_repo: "ProgressRepository", cache: "CacheHelper"):
+    def __init__(
+        self,
+        repo: "QuestionRepository",
+        progress_repo: "ProgressRepository",
+        question_card_repo: "QuestionCardRepository",
+        cache: "CacheHelper",
+    ):
         self.repo = repo
         self.progress_repo = progress_repo
+        self.question_card_repo = question_card_repo
         self.cache = cache
 
     @service_handler
@@ -288,3 +295,8 @@ class QuestionService:
             )
 
         return schema
+
+    @service_handler
+    async def link_card(self, current_user: "User", question_id: BaseIdType, card_id: BaseIdType):
+        await self.repo.get_by_id(question_id, current_user.id)
+        await self.question_card_repo.create(question_id, card_id)

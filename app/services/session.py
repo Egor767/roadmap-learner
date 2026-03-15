@@ -6,7 +6,6 @@ from fastapi import BackgroundTasks
 
 from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
-from app.external.requests import get_blocks_by_filters
 from app.models import User
 from app.schemas.ai import CardContext, EvaluateAnswerResponse
 from app.schemas.question import QuestionStatus
@@ -30,6 +29,7 @@ if TYPE_CHECKING:
     from app.clients.ai import AIClient
     from app.core.cache import CacheHelper
     from app.repositories import (
+        BlockRepository,
         CardRepository,
         QuestionRepository,
         SessionItemRepository,
@@ -42,17 +42,19 @@ class SessionService:
     def __init__(
         self,
         repo: "SessionRepository",
-        session_item_repo: "SessionItemRepository",
+        block_repo: "BlockRepository",
         question_repo: "QuestionRepository",
         card_repo: "CardRepository",
+        session_item_repo: "SessionItemRepository",
         question_progress_repo: "UserQuestionProgressRepository",
         ai_client: "AIClient",
         cache: "CacheHelper",
     ):
         self.repo = repo
-        self.session_item_repo = session_item_repo
+        self.block_repo = block_repo
         self.question_repo = question_repo
         self.card_repo = card_repo
+        self.session_item_repo = session_item_repo
         self.question_progress_repo = question_progress_repo
         self.ai_client = ai_client
         self.cache = cache
@@ -84,7 +86,7 @@ class SessionService:
         return schema
 
     @service_handler
-    async def get_questions(
+    async def get_session_questions(
         self,
         current_user: "User",
         session_id: BaseIdType,
@@ -108,12 +110,7 @@ class SessionService:
         )
 
     @service_handler
-    async def create(
-        self,
-        current_user: "User",
-        session_create_data: SessionCreate,
-        token: str,
-    ) -> SessionRead:
+    async def create(self, current_user: "User", session_create_data: SessionCreate) -> SessionRead:
         if session_create_data.auto_check:
             available = await self.ai_client.health_check()
             if not available:
@@ -129,7 +126,7 @@ class SessionService:
 
         if filters.get("block_id") is None:
             blocks_filters = {k: v for k, v in filters.items() if k != "status"}
-            blocks_ids = [b.get("id") for b in await get_blocks_by_filters(token, blocks_filters)]
+            blocks_ids = [b.id for b in await self.block_repo.get_by_filters(blocks_filters, current_user.id)]
         else:
             blocks_ids = [filters.get("block_id")]
 
