@@ -5,6 +5,7 @@ from fastapi import Depends
 from app.repositories import (
     BlockRepository,
     CardRepository,
+    QuestionCardRepository,
     QuestionRepository,
     RoadmapRepository,
     SessionItemRepository,
@@ -21,81 +22,60 @@ if TYPE_CHECKING:
 
 
 def get_user_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> UserRepository:
     return UserRepository(session)
 
 
 def get_roadmap_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> RoadmapRepository:
     return RoadmapRepository(session)
 
 
 def get_block_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> BlockRepository:
     return BlockRepository(session)
 
 
 def get_card_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> CardRepository:
     return CardRepository(session)
 
 
 def get_question_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> QuestionRepository:
     return QuestionRepository(session)
 
 
 def get_question_progress_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> UserQuestionProgressRepository:
     return UserQuestionProgressRepository(session)
 
 
 def get_card_progress_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> UserCardProgressRepository:
     return UserCardProgressRepository(session)
 
 
 def get_session_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> SessionRepository:
     return SessionRepository(session)
 
 
 def get_session_item_repository(
-    session: Annotated[
-        "AsyncSession",
-        Depends(get_db_session),
-    ],
+    session: Annotated["AsyncSession", Depends(get_db_session)],
 ) -> SessionItemRepository:
     return SessionItemRepository(session)
+
+
+def get_question_card_repository(
+    session: Annotated["AsyncSession", Depends(get_db_session)],
+) -> QuestionCardRepository:
+    return QuestionCardRepository(session)
