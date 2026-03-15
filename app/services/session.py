@@ -10,15 +10,14 @@ from app.models import User
 from app.schemas.ai import CardContext, EvaluateAnswerResponse
 from app.schemas.question import QuestionStatus
 from app.schemas.session import (
-    SessionAutoCheckResult,
     SessionCardsFilter,
     SessionCreate,
     SessionFilters,
+    SessionFinishResult,
     SessionItemCreate,
     SessionItemRead,
     SessionMode,
     SessionRead,
-    SessionResult,
     SessionStatus,
     SessionUpdate,
 )
@@ -154,6 +153,10 @@ class SessionService:
         data: SessionItemCreate,
         background_tasks: BackgroundTasks,
     ) -> BaseIdType | None:
+        """Фиксирует ответ пользователя. В режиме auto_check запускает AI-оценку в фоне,
+        в ручном режиме сразу сохраняет result и обновляет прогресс."""
+        session = await self.repo.get_by_id(session_id, current_user.id)
+
         item = await self.session_item_repo.create(
             {
                 "id": generate_base_id(),
@@ -161,13 +164,23 @@ class SessionService:
                 "question_id": data.question_id,
                 "answer": data.answer,
                 "hint": data.hint,
+                "result": None if session.auto_check else data.result,
             }
         )
-        background_tasks.add_task(
-            self._evaluate_answer,
-            item.id,
-            current_user.id,
-        )
+
+        if session.auto_check:
+            background_tasks.add_task(
+                self._evaluate_answer,
+                item.id,
+                current_user.id,
+            )
+        else:
+            await self.question_progress_repo.update(
+                user_id=current_user.id,
+                question_id=data.question_id,
+                status=data.result,
+            )
+
         return await self.get_next_question(current_user, session_id)
 
     async def _evaluate_answer(
@@ -201,45 +214,6 @@ class SessionService:
         )
 
     @service_handler
-    async def get_auto_check_result(
-        self,
-        current_user: "User",
-        session_id: BaseIdType,
-    ) -> SessionAutoCheckResult:
-        session = await self.repo.get_by_id(session_id, current_user.id)
-        items = await self.session_item_repo.get_by_session(session_id)
-
-        last_item = next(
-            (i for i in items if i.question_id == session.questions[-1]),
-            None,
-        )
-        if last_item is None or last_item.result is None:
-            raise Exception("Session evaluation is not complete yet")
-
-        known_count = sum(1 for i in items if i.result == QuestionStatus.KNOWN)
-        unknown_count = sum(1 for i in items if i.result == QuestionStatus.UNKNOWN)
-        repeat_count = sum(1 for i in items if i.result == QuestionStatus.REPEAT)
-        total = len(items)
-
-        await self.repo.update(
-            session_id,
-            {"status": SessionStatus.COMPLETED, "completed_at": datetime.now()},
-            current_user.id,
-        )
-
-        return SessionAutoCheckResult(
-            id=session.id,
-            roadmap_id=session.roadmap_id,
-            block_id=session.block_id,
-            total=total,
-            known_count=known_count,
-            unknown_count=unknown_count,
-            repeat_count=repeat_count,
-            accuracy_percentage=round(known_count / total * 100, 2) if total else 0,
-            items=orm_list_to_schemas(SessionItemRead, items),
-        )
-
-    @service_handler
     async def update(
         self,
         current_user: "User",
@@ -259,21 +233,41 @@ class SessionService:
         self,
         current_user: "User",
         session_id: BaseIdType,
-    ) -> SessionResult:
-        update_data = {
-            "status": SessionStatus.COMPLETED,
-            "completed_at": datetime.now(),
-        }
-        orm = await self.repo.update(session_id, update_data, current_user.id)
-        schema = orm_to_schema(SessionRead, orm)
+    ) -> SessionFinishResult:
+        session = await self.repo.get_by_id(session_id, current_user.id)
+        items = await self.session_item_repo.get_by_session(session_id)
 
-        reviewed_answers = schema.correct_answers + schema.incorrect_answers
-        accuracy = int((schema.correct_answers / reviewed_answers) * 100) if reviewed_answers != 0 else 0
+        if session.auto_check:
+            last_item = next(
+                (i for i in items if i.question_id == session.questions[-1]),
+                None,
+            )
+            if last_item is None or last_item.result is None:
+                raise Exception("Session evaluation is not complete yet")
 
-        return SessionResult(
-            **schema.model_dump(exclude={"status", "created_at", "updated_at"}),
-            total_answers=len(schema.questions),
-            accuracy_percentage=accuracy,
+        known_count = sum(1 for i in items if i.result == QuestionStatus.KNOWN)
+        unknown_count = sum(1 for i in items if i.result == QuestionStatus.UNKNOWN)
+        repeat_count = sum(1 for i in items if i.result == QuestionStatus.REPEAT)
+        total = len(items)
+
+        await self.repo.update(
+            session_id,
+            {"status": SessionStatus.COMPLETED, "completed_at": datetime.now()},
+            current_user.id,
+        )
+
+        return SessionFinishResult(
+            id=session.id,
+            roadmap_id=session.roadmap_id,
+            block_id=session.block_id,
+            mode=SessionMode(session.mode),
+            auto_check=session.auto_check,
+            total=total,
+            known_count=known_count,
+            unknown_count=unknown_count,
+            repeat_count=repeat_count,
+            accuracy_percentage=round(known_count / total * 100, 2) if total else 0,
+            items=orm_list_to_schemas(SessionItemRead, items),
         )
 
     @service_handler

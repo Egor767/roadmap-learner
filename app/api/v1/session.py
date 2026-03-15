@@ -10,13 +10,12 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_session_service
 from app.core.handlers import router_handler
 from app.schemas.session import (
-    SessionAutoCheckResult,
     SessionCardsFilter,
     SessionCreate,
     SessionFilters,
+    SessionFinishResult,
     SessionItemCreate,
     SessionRead,
-    SessionResult,
     SessionUpdate,
 )
 
@@ -101,20 +100,6 @@ async def get_next_question(
     return await session_service.get_next_question(current_user, session_id)
 
 
-@router.get(
-    "/{session_id}/auto-check-result",
-    name="sessions:auto_check_result",
-    response_model=SessionAutoCheckResult,
-)
-@router_handler
-async def get_auto_check_result(
-    session_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    session_service: Annotated["SessionService", Depends(get_session_service)],
-) -> SessionAutoCheckResult:
-    return await session_service.get_auto_check_result(current_user, session_id)
-
-
 @router.post(
     "",
     name="sessions:create_session",
@@ -127,21 +112,6 @@ async def create_session(
     session_service: Annotated["SessionService", Depends(get_session_service)],
 ) -> SessionRead:
     return await session_service.create(current_user, session_create_data)
-
-
-@router.post(
-    "/{session_id}/items",
-    name="sessions:submit_answer",
-)
-@router_handler
-async def submit_answer(
-    session_id: BaseIdType,
-    data: SessionItemCreate,
-    background_tasks: BackgroundTasks,
-    current_user: Annotated["User", Depends(current_active_user)],
-    session_service: Annotated["SessionService", Depends(get_session_service)],
-) -> BaseIdType | None:
-    return await session_service.submit_answer(current_user, session_id, data, background_tasks)
 
 
 @router.delete(
@@ -173,15 +143,30 @@ async def update_session(
     return await session_service.update(current_user, session_id, session_update_data)
 
 
+@router.post(
+    "/{session_id}/answer",
+    name="sessions:submit_answer",
+)
+@router_handler
+async def submit_answer(
+    session_id: BaseIdType,
+    data: SessionItemCreate,
+    background_tasks: BackgroundTasks,
+    current_user: Annotated["User", Depends(current_active_user)],
+    session_service: Annotated["SessionService", Depends(get_session_service)],
+) -> BaseIdType | None:
+    return await session_service.submit_answer(current_user, session_id, data, background_tasks)
+
+
 @router.patch(
     "/{session_id}/finish",
     name="sessions:finish_session",
-    response_model=SessionResult,
+    response_model=SessionFinishResult,
 )
 @router_handler
 async def finish_session(
     session_id: BaseIdType,
     current_user: Annotated["User", Depends(current_active_user)],
     session_service: Annotated["SessionService", Depends(get_session_service)],
-) -> SessionResult:
+) -> SessionFinishResult:
     return await session_service.finish(current_user, session_id)

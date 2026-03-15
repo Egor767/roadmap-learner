@@ -66,23 +66,10 @@ class SessionCardsFilter(BaseModel):
     offset: int = 0
 
 
-class SessionResult(BaseModel):
-    id: BaseIdType
-    user_id: BaseIdType
-    roadmap_id: BaseIdType
-    block_id: BaseIdType | None = None
-    mode: SessionMode
-    total_answers: int
-    correct_answers: int
-    incorrect_answers: int
-    review_answers: int
-    accuracy_percentage: float
-    completed_at: datetime
-
-
 class SessionItemCreate(BaseModel):
     question_id: BaseIdType
-    answer: str
+    result: QuestionStatus | None = None
+    answer: str | None = None
     hint: bool = False
 
 
@@ -90,7 +77,7 @@ class SessionItemRead(BaseModel):
     id: BaseIdType
     session_id: BaseIdType
     question_id: BaseIdType
-    answer: str
+    answer: str | None = None
     hint: bool
     result: QuestionStatus | None = None
     note: str | None = None
@@ -98,10 +85,12 @@ class SessionItemRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class SessionAutoCheckResult(BaseModel):
+class SessionFinishResult(BaseModel):
     id: BaseIdType
     roadmap_id: BaseIdType
     block_id: BaseIdType | None = None
+    mode: SessionMode
+    auto_check: bool
     total: int
     known_count: int
     unknown_count: int
