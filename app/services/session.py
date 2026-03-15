@@ -2,19 +2,15 @@ import random
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from fastapi import BackgroundTasks
-
 from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
 from app.models import User
-from app.schemas.ai import CardContext, EvaluateAnswerResponse
 from app.schemas.question import QuestionStatus
 from app.schemas.session import (
     SessionCardsFilter,
     SessionCreate,
     SessionFilters,
     SessionFinishResult,
-    SessionItemCreate,
     SessionItemRead,
     SessionMode,
     SessionRead,
@@ -25,41 +21,35 @@ from app.shared.generate_id import generate_base_id
 from app.utils.mappers.orm_to_schema import orm_list_to_schemas, orm_to_schema
 
 if TYPE_CHECKING:
-    from app.clients.ai import AIClient
     from app.core.cache import CacheHelper
     from app.repositories import (
         BlockRepository,
-        CardRepository,
         QuestionRepository,
         SessionItemRepository,
         SessionRepository,
-        UserQuestionProgressRepository,
     )
 
 
 class SessionService:
+    """Service for managing learning sessions: creation, navigation, and lifecycle."""
+
     def __init__(
         self,
         repo: "SessionRepository",
         block_repo: "BlockRepository",
         question_repo: "QuestionRepository",
-        card_repo: "CardRepository",
         session_item_repo: "SessionItemRepository",
-        question_progress_repo: "UserQuestionProgressRepository",
-        ai_client: "AIClient",
         cache: "CacheHelper",
     ):
         self.repo = repo
         self.block_repo = block_repo
         self.question_repo = question_repo
-        self.card_repo = card_repo
         self.session_item_repo = session_item_repo
-        self.question_progress_repo = question_progress_repo
-        self.ai_client = ai_client
         self.cache = cache
 
     @service_handler
     async def get_all(self) -> list[SessionRead]:
+        """Return all sessions across all users."""
         orm = await self.repo.get_all()
         return orm_list_to_schemas(SessionRead, orm)
 
@@ -69,6 +59,7 @@ class SessionService:
         current_user: "User",
         filters: SessionFilters,
     ) -> list[SessionRead]:
+        """Return sessions belonging to the current user that match the given filters."""
         filters_dict = filters.model_dump(exclude_none=True, exclude_unset=True)
         orm = await self.repo.get_by_filters(filters_dict, current_user.id)
         schema = orm_list_to_schemas(SessionRead, orm)
@@ -80,6 +71,7 @@ class SessionService:
         current_user: "User",
         session_id: BaseIdType,
     ) -> SessionRead:
+        """Return a single session by ID, scoped to the current user."""
         orm = await self.repo.get_by_id(session_id, current_user.id)
         schema = orm_to_schema(SessionRead, orm)
         return schema
@@ -91,6 +83,7 @@ class SessionService:
         session_id: BaseIdType,
         filters: SessionCardsFilter,
     ) -> list[BaseIdType]:
+        """Return a paginated slice of question IDs for the given session."""
         orm = await self.repo.get_questions(session_id, current_user.id)
         result = orm[filters.offset : filters.offset + filters.limit]
         return result
@@ -101,20 +94,22 @@ class SessionService:
         current_user: "User",
         session_id: BaseIdType,
     ) -> BaseIdType | None:
+        """Return the ID of the next unanswered question in the session, or None if all are answered."""
         session = await self.repo.get_by_id(session_id, current_user.id)
         answered_ids = await self.session_item_repo.get_answered_ids(session_id)
-        return next(
+        result = next(
             (q for q in session.questions if q not in answered_ids),
             None,
         )
+        return result
 
     @service_handler
     async def create(self, current_user: "User", session_create_data: SessionCreate) -> SessionRead:
-        if session_create_data.auto_check:
-            available = await self.ai_client.health_check()
-            if not available:
-                raise Exception("AI service unavailable")
+        """Create a new session with a fixed ordered list of questions resolved from filters.
 
+        In REPEAT mode, only questions with status 'review' are included.
+        If mix is enabled, the question order is randomized before saving.
+        """
         filters = session_create_data.model_dump(
             exclude={"mode", "mix", "auto_check"},
             exclude_none=True,
@@ -146,80 +141,13 @@ class SessionService:
         return schema
 
     @service_handler
-    async def submit_answer(
-        self,
-        current_user: "User",
-        session_id: BaseIdType,
-        data: SessionItemCreate,
-        background_tasks: BackgroundTasks,
-    ) -> BaseIdType | None:
-        """Фиксирует ответ пользователя. В режиме auto_check запускает AI-оценку в фоне,
-        в ручном режиме сразу сохраняет result и обновляет прогресс."""
-        session = await self.repo.get_by_id(session_id, current_user.id)
-
-        item = await self.session_item_repo.create(
-            {
-                "id": generate_base_id(),
-                "session_id": session_id,
-                "question_id": data.question_id,
-                "answer": data.answer,
-                "hint": data.hint,
-                "result": None if session.auto_check else data.result,
-            }
-        )
-
-        if session.auto_check:
-            background_tasks.add_task(
-                self._evaluate_answer,
-                item.id,
-                current_user.id,
-            )
-        else:
-            await self.question_progress_repo.update(
-                user_id=current_user.id,
-                question_id=data.question_id,
-                status=data.result,
-            )
-
-        return await self.get_next_question(current_user, session_id)
-
-    async def _evaluate_answer(
-        self,
-        item_id: BaseIdType,
-        user_id: BaseIdType,
-    ) -> None:
-        item = await self.session_item_repo.get_by_id(item_id)
-        question = await self.question_repo.get_by_id(item.question_id, user_id)
-        cards = await self.card_repo.get_by_question(item.question_id)
-
-        evaluation: EvaluateAnswerResponse = await self.ai_client.evaluate_answer(
-            question=question.question,
-            correct_answer=question.answer,
-            answer=item.answer,
-            hint=item.hint,
-            cards=[CardContext(term=c.term, definition=c.definition) for c in cards],
-        )
-
-        await self.session_item_repo.update(
-            item_id,
-            {
-                "result": evaluation.result,
-                "note": evaluation.note,
-            },
-        )
-        await self.question_progress_repo.update(
-            user_id=user_id,
-            question_id=item.question_id,
-            status=evaluation.result,
-        )
-
-    @service_handler
     async def update(
         self,
         current_user: "User",
         session_id: BaseIdType,
         session_update_data: SessionUpdate,
     ) -> SessionRead:
+        """Apply a partial update to the session and return the updated state."""
         session_dict = session_update_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -234,6 +162,11 @@ class SessionService:
         current_user: "User",
         session_id: BaseIdType,
     ) -> SessionFinishResult:
+        """Mark the session as completed and return a summary of results.
+
+        In auto_check mode, raises if the last question has not yet been evaluated by AI.
+        Calculates known/unknown/repeat counts and accuracy percentage across all answered items.
+        """
         session = await self.repo.get_by_id(session_id, current_user.id)
         items = await self.session_item_repo.get_by_session(session_id)
 
@@ -276,4 +209,5 @@ class SessionService:
         current_user: "User",
         session_id: BaseIdType,
     ):
+        """Delete the session owned by the current user."""
         await self.repo.delete(session_id, current_user.id)

@@ -6,7 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
 from app.core.custom_types import BaseIdType
-from app.core.dependencies.services import get_session_service
+from app.core.dependencies.services import get_answer_service, get_session_service
 from app.core.handlers import router_handler
 from app.schemas.session import (
     SessionCardsFilter,
@@ -20,7 +20,7 @@ from app.schemas.session import (
 
 if TYPE_CHECKING:
     from app.models import User
-    from app.services import SessionService
+    from app.services import AnswerService, SessionService
 
 logger = logging.getLogger()
 
@@ -98,9 +98,9 @@ async def submit_answer(
     data: SessionItemCreate,
     background_tasks: BackgroundTasks,
     current_user: Annotated["User", Depends(current_active_user)],
-    session_service: Annotated["SessionService", Depends(get_session_service)],
+    answer_service: Annotated["AnswerService", Depends(get_answer_service)],
 ) -> BaseIdType | None:
-    return await session_service.submit_answer(current_user, session_id, data, background_tasks)
+    return await answer_service.submit_answer(current_user, session_id, data, background_tasks)
 
 
 # -------------------------------------- UPDATE --------------------------------------
