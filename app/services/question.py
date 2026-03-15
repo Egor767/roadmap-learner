@@ -53,14 +53,7 @@ class QuestionService:
 
     @service_handler
     async def get_by_id(self, current_user: "User", question_id: BaseIdType) -> QuestionRead:
-        key = get_cache_key(
-            "questions",
-            "user",
-            str(current_user.id),
-            "question",
-            str(question_id),
-            "detail",
-        )
+        key = get_cache_key("questions", "user", str(current_user.id), "question", str(question_id), "detail")
         if cache := await self.cache.get(key):
             return cache_to_schema(QuestionRead, cache)
 
@@ -141,24 +134,14 @@ class QuestionService:
         schema = orm_to_schema_status(QuestionRead, orm, QuestionStatus.UNKNOWN)
 
         await self.cache.delete(
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "block",
-                str(schema.block_id),
-                "list",
-            )
+            get_cache_key("questions", "user", str(current_user.id), "block", str(schema.block_id), "list")
         )
 
         return schema
 
     @service_handler
     async def update(
-        self,
-        current_user: "User",
-        question_id: BaseIdType,
-        question_update_data: QuestionUpdate,
+        self, current_user: "User", question_id: BaseIdType, question_update_data: QuestionUpdate
     ) -> QuestionRead:
         update_dict = question_update_data.model_dump(
             exclude_none=True,
@@ -180,33 +163,14 @@ class QuestionService:
         schema = orm_to_schema_status(QuestionRead, orm, final_status)
 
         await self.cache.delete(
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "block",
-                str(schema.block_id),
-                "list",
-            ),
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "question",
-                str(question_id),
-                "detail",
-            ),
+            get_cache_key("questions", "user", str(current_user.id), "block", str(schema.block_id), "list"),
+            get_cache_key("questions", "user", str(current_user.id), "question", str(question_id), "detail"),
         )
 
         return schema
 
     @service_handler
-    async def move(
-        self,
-        current_user: "User",
-        question_id: BaseIdType,
-        move_data: QuestionMove,
-    ) -> QuestionRead:
+    async def move(self, current_user: "User", question_id: BaseIdType, move_data: QuestionMove) -> QuestionRead:
         orm = await self.repo.move(
             block_id=move_data.block_id,
             question_id=question_id,
@@ -217,22 +181,8 @@ class QuestionService:
         schema = orm_to_schema_status(QuestionRead, orm, QuestionStatus.UNKNOWN)
 
         await self.cache.delete(
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "block",
-                str(schema.block_id),
-                "list",
-            ),
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "question",
-                str(question_id),
-                "detail",
-            ),
+            get_cache_key("questions", "user", str(current_user.id), "block", str(schema.block_id), "list"),
+            get_cache_key("questions", "user", str(current_user.id), "question", str(question_id), "detail"),
         )
 
         return schema
@@ -242,22 +192,8 @@ class QuestionService:
         orm = await self.repo.delete(question_id, current_user.id)
 
         await self.cache.delete(
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "block",
-                str(orm.block_id),
-                "list",
-            ),
-            get_cache_key(
-                "questions",
-                "user",
-                str(current_user.id),
-                "question",
-                str(question_id),
-                "detail",
-            ),
+            get_cache_key("questions", "user", str(current_user.id), "block", str(orm.block_id), "list"),
+            get_cache_key("questions", "user", str(current_user.id), "question", str(question_id), "detail"),
         )
 
     @service_handler
@@ -281,17 +217,9 @@ class QuestionService:
 
         schema = [orm_to_schema_status(QuestionRead, q, QuestionStatus.UNKNOWN) for q in orm]
 
-        # инвалидируем кэш для каждого затронутого блока
         for block_id in questions_by_block:
             await self.cache.delete(
-                get_cache_key(
-                    "questions",
-                    "user",
-                    str(current_user.id),
-                    "block",
-                    str(block_id),
-                    "list",
-                )
+                get_cache_key("questions", "user", str(current_user.id), "block", str(block_id), "list")
             )
 
         return schema

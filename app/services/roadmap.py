@@ -42,12 +42,7 @@ class RoadmapService:
         )
 
         if not filters_dict:
-            key = get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "list",
-            )
+            key = get_cache_key("roadmaps", "user", str(current_user.id), "list")
             cache = await self.cache.get(key)
             if cache:
                 return cache_to_schemas(RoadmapRead, cache)
@@ -67,14 +62,7 @@ class RoadmapService:
 
     @service_handler
     async def get_by_id(self, current_user: "User", roadmap_id: BaseIdType) -> RoadmapRead:
-        key = get_cache_key(
-            "roadmaps",
-            "user",
-            str(current_user.id),
-            "roadmap",
-            str(roadmap_id),
-            "detail",
-        )
+        key = get_cache_key("roadmaps", "user", str(current_user.id), "roadmap", str(roadmap_id), "detail")
         cache = await self.cache.get(key)
         if cache:
             return cache_to_schema(RoadmapRead, cache)
@@ -101,12 +89,7 @@ class RoadmapService:
         schema = orm_to_schema(RoadmapRead, orm)
 
         await self.cache.delete(
-            get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "list",
-            ),
+            get_cache_key("roadmaps", "user", str(current_user.id), "list"),
         )
 
         return schema
@@ -129,14 +112,7 @@ class RoadmapService:
 
         await self.cache.delete(
             get_cache_key("roadmaps", "user", str(current_user.id), "list"),
-            get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(roadmap_id),
-                "detail",
-            ),
+            get_cache_key("roadmaps", "user", str(current_user.id), "roadmap", str(roadmap_id), "detail"),
         )
 
         return schema
@@ -147,12 +123,5 @@ class RoadmapService:
 
         await self.cache.delete(
             get_cache_key("roadmaps", "user", str(current_user.id), "list"),
-            get_cache_key(
-                "roadmaps",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(roadmap_id),
-                "detail",
-            ),
+            get_cache_key("roadmaps", "user", str(current_user.id), "roadmap", str(roadmap_id), "detail"),
         )

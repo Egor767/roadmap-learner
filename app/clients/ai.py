@@ -41,12 +41,7 @@ class AIClient:
             return response.json()["content"]
 
     async def evaluate_answer(
-        self,
-        question: str,
-        correct_answer: str,
-        answer: str,
-        hint: bool,
-        cards: list[CardContext],
+        self, question: str, correct_answer: str, answer: str, hint: bool, cards: list[CardContext]
     ) -> EvaluateAnswerResponse:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(

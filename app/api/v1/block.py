@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends
-from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
@@ -28,101 +27,47 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "",
-    name="blocks:all_blocks",
-    response_model=list[BlockRead],
-)
+# -------------------------------------- GET ----------------------------------------------
+@router.get("", name="blocks:all_blocks", response_model=list[BlockRead])
 @router_handler
 async def get_all_blocks(
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
 ) -> list[BlockRead]:
     return await block_service.get_all()
 
 
-# -------------------------------------- GET ----------------------------------------------
-@router.get(
-    "/filters",
-    name="blocks:filter_blocks",
-    response_model=list[BlockRead],
-)
+@router.get("/filters", name="blocks:filter_blocks", response_model=list[BlockRead])
 @router_handler
 async def get_blocks(
-    filters: Annotated[
-        BlockFilters,
-        Depends(),
-    ],
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
+    filters: Annotated[BlockFilters, Depends()],
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
 ) -> list[BlockRead]:
-    return await block_service.get_by_filters(
-        current_user,
-        filters,
-    )
+    return await block_service.get_by_filters(current_user, filters)
 
 
-@router.get(
-    "/{block_id}",
-    name="blocks:block",
-    response_model=BlockRead,
-)
+@router.get("/{block_id}", name="blocks:block", response_model=BlockRead)
 @router_handler
 async def get_block(
     block_id: BaseIdType,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
 ) -> BlockRead:
-    return await block_service.get_by_id(
-        current_user,
-        block_id,
-    )
+    return await block_service.get_by_id(current_user, block_id)
 
 
 # -------------------------------------- CREATE --------------------------------------
-@router.post(
-    "",
-    name="blocks:create_block",
-    response_model=BlockRead,
-)
+@router.post("", name="blocks:create_block", response_model=BlockRead)
 @router_handler
 async def create_block(
     block_create_data: BlockCreate,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
 ) -> BlockRead:
-    return await block_service.create(
-        current_user,
-        block_create_data,
-    )
+    return await block_service.create(current_user, block_create_data)
 
 
-@router.post(
-    "/batch",
-    name="blocks:create_batch_blocks",
-    response_model=list[BlockRead],
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/batch", name="blocks:create_batch_blocks", response_model=list[BlockRead])
 @router_handler
 async def confirm_blocks(
     body: BlockConfirmRequest,
@@ -132,76 +77,35 @@ async def confirm_blocks(
     return await block_service.create_multiple(current_user, body)
 
 
-# -------------------------------------- DELETE --------------------------------------
-@router.delete(
-    "/{block_id}",
-    name="blocks:delete_block",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
-@router_handler
-async def delete_block(
-    block_id: BaseIdType,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
-) -> None:
-    await block_service.delete(
-        current_user,
-        block_id,
-    )
-
-
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch(
-    "/{block_id}",
-    name="blocks:patch_block",
-    response_model=BlockRead,
-)
+@router.patch("/{block_id}", name="blocks:patch_block", response_model=BlockRead)
 @router_handler
 async def update_block(
     block_id: BaseIdType,
     block_update_data: BlockUpdate,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
 ) -> BlockRead:
-    return await block_service.update(
-        current_user,
-        block_id,
-        block_update_data,
-    )
+    return await block_service.update(current_user, block_id, block_update_data)
 
 
-@router.patch(
-    "/{block_id}/move",
-    name="blocks:move_block",
-    response_model=BlockRead,
-)
+@router.patch("/{block_id}/move", name="blocks:move_block", response_model=BlockRead)
 @router_handler
 async def move_block(
     block_id: BaseIdType,
     move_data: BlockMove,
-    current_user: Annotated[
-        "User",
-        Depends(current_active_user),
-    ],
-    block_service: Annotated[
-        "BlockService",
-        Depends(get_block_service),
-    ],
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
 ) -> BlockRead:
-    return await block_service.move(
-        current_user,
-        block_id,
-        move_data,
-    )
+    return await block_service.move(current_user, block_id, move_data)
+
+
+# -------------------------------------- DELETE --------------------------------------
+@router.delete("/{block_id}", name="blocks:delete_block")
+@router_handler
+async def delete_block(
+    block_id: BaseIdType,
+    current_user: Annotated["User", Depends(current_active_user)],
+    block_service: Annotated["BlockService", Depends(get_block_service)],
+):
+    await block_service.delete(current_user, block_id)

@@ -6,9 +6,9 @@ from app.shared.access import get_accessed_filters
 from app.utils.mappers.orm_to_schema import user_orm_to_model
 
 if TYPE_CHECKING:
-    from app.repositories import UserRepository
-    from app.schemas.user import UserRead, UserFilters
     from app.models import User
+    from app.repositories import UserRepository
+    from app.schemas.user import UserFilters, UserRead
 
 
 class UserService:
@@ -27,11 +27,7 @@ class UserService:
         return validated_users
 
     @service_handler
-    async def get_by_filters(
-        self,
-        current_user: "User",
-        filters: "UserFilters",
-    ) -> list["UserRead"]:
+    async def get_by_filters(self, current_user: "User", filters: "UserFilters") -> list["UserRead"]:
         filters_dict = filters.model_dump(
             exclude_none=True,
             exclude_unset=True,

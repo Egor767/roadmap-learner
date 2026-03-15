@@ -103,5 +103,12 @@ def get_session_service(
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> SessionService:
     return SessionService(
-        repo, block_repo, question_repo, card_repo, session_item_repo, question_progress_repo, ai_client, cache
+        repo,
+        block_repo,
+        question_repo,
+        card_repo,
+        session_item_repo,
+        question_progress_repo,
+        ai_client,
+        cache,
     )

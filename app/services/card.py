@@ -55,12 +55,7 @@ class CardService:
 
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
-                "cards",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(filters_dict["roadmap_id"]),
-                "list",
+                "cards", "user", str(current_user.id), "roadmap", str(filters_dict["roadmap_id"]), "list"
             )
             cache = await self.cache.get(key)
             if cache:
@@ -86,14 +81,7 @@ class CardService:
 
     @service_handler
     async def get_by_id(self, current_user: "User", card_id: BaseIdType) -> CardRead:
-        key = get_cache_key(
-            "cards",
-            "user",
-            str(current_user.id),
-            "card",
-            str(card_id),
-            "detail",
-        )
+        key = get_cache_key("cards", "user", str(current_user.id), "card", str(card_id), "detail")
         if cache := await self.cache.get(key):
             return cache_to_schema(CardRead, cache)
 
@@ -124,25 +112,13 @@ class CardService:
         schema = orm_to_schema_status(CardRead, orm, CardStatus.UNKNOWN)
 
         await self.cache.delete(
-            get_cache_key(
-                "cards",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(schema.roadmap_id),
-                "list",
-            ),
+            get_cache_key("cards", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
         )
 
         return schema
 
     @service_handler
-    async def update(
-        self,
-        current_user: "User",
-        card_id: BaseIdType,
-        update_data: CardUpdate,
-    ) -> CardRead:
+    async def update(self, current_user: "User", card_id: BaseIdType, update_data: CardUpdate) -> CardRead:
         data = update_data.model_dump(
             exclude_none=True,
             exclude_unset=True,
@@ -163,22 +139,8 @@ class CardService:
         schema = orm_to_schema_status(CardRead, orm, final_status)
 
         await self.cache.delete(
-            get_cache_key(
-                "cards",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(schema.roadmap_id),
-                "list",
-            ),
-            get_cache_key(
-                "cards",
-                "user",
-                str(current_user.id),
-                "card",
-                str(card_id),
-                "detail",
-            ),
+            get_cache_key("cards", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
+            get_cache_key("cards", "user", str(current_user.id), "card", str(card_id), "detail"),
         )
 
         return schema
@@ -188,20 +150,6 @@ class CardService:
         orm = await self.repo.delete(card_id, current_user.id)
 
         await self.cache.delete(
-            get_cache_key(
-                "cards",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(orm.roadmap_id),
-                "list",
-            ),
-            get_cache_key(
-                "cards",
-                "user",
-                str(current_user.id),
-                "card",
-                str(card_id),
-                "detail",
-            ),
+            get_cache_key("cards", "user", str(current_user.id), "roadmap", str(orm.roadmap_id), "list"),
+            get_cache_key("cards", "user", str(current_user.id), "card", str(card_id), "detail"),
         )

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends
-from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
 from app.core.config import settings
@@ -29,12 +28,7 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/chat",
-    name="ai:chat",
-    response_model=ChatResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.post("/chat", name="ai:chat", response_model=ChatResponse)
 @router_handler
 async def chat(
     request: ChatRequest,
@@ -44,12 +38,7 @@ async def chat(
     return await ai_service.chat(current_user, request)
 
 
-@router.post(
-    "/blocks/distribute",
-    name="ai:distribute_blocks",
-    response_model=BlockDistributeResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.post("/blocks/distribute", name="ai:distribute_blocks", response_model=BlockDistributeResponse)
 @router_handler
 async def distribute_blocks(
     request: BlockDistributeRequest,
@@ -63,7 +52,6 @@ async def distribute_blocks(
     "/questions/distribute",
     name="ai:distribute_questions",
     response_model=QuestionDistributeResponse,
-    status_code=status.HTTP_200_OK,
 )
 @router_handler
 async def distribute_questions(
@@ -74,12 +62,7 @@ async def distribute_questions(
     return await ai_service.distribute_questions(current_user, request)
 
 
-@router.post(
-    "/generate",
-    name="ai:generate_entities",
-    response_model=GenerateResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.post("/generate", name="ai:generate_entities", response_model=GenerateResponse)
 @router_handler
 async def generate_entities(
     request: GenerateRequest,

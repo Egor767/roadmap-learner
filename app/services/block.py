@@ -48,12 +48,7 @@ class BlockService:
 
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(filters_dict["roadmap_id"]),
-                "list",
+                "blocks", "user", str(current_user.id), "roadmap", str(filters_dict["roadmap_id"]), "list"
             )
             cache = await self.cache.get(key)
             if cache:
@@ -74,14 +69,7 @@ class BlockService:
 
     @service_handler
     async def get_by_id(self, current_user: "User", block_id: BaseIdType) -> BlockRead:
-        key = get_cache_key(
-            "blocks",
-            "user",
-            str(current_user.id),
-            "block",
-            str(block_id),
-            "detail",
-        )
+        key = get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail")
         cache = await self.cache.get(key)
         if cache:
             return cache_to_schema(BlockRead, cache)
@@ -119,14 +107,7 @@ class BlockService:
         schema = orm_to_schema(BlockRead, orm)
 
         await self.cache.delete(
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(schema.roadmap_id),
-                "list",
-            )
+            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list")
         )
 
         return schema
@@ -143,22 +124,8 @@ class BlockService:
         schema = orm_to_schema(BlockRead, orm)
 
         await self.cache.delete(
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(schema.roadmap_id),
-                "list",
-            ),
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "block",
-                str(block_id),
-                "detail",
-            ),
+            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
+            get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
         )
 
         return schema
@@ -180,22 +147,8 @@ class BlockService:
         schema = orm_to_schema(BlockRead, orm)
 
         await self.cache.delete(
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(schema.roadmap_id),
-                "list",
-            ),
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "block",
-                str(block_id),
-                "detail",
-            ),
+            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
+            get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
         )
 
         return schema
@@ -205,22 +158,8 @@ class BlockService:
         orm = await self.repo.delete(block_id, current_user.id)
 
         await self.cache.delete(
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(orm.roadmap_id),
-                "list",
-            ),
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "block",
-                str(block_id),
-                "detail",
-            ),
+            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(orm.roadmap_id), "list"),
+            get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
         )
 
     @service_handler
@@ -236,14 +175,7 @@ class BlockService:
         schema = orm_list_to_schemas(BlockRead, orm)
 
         await self.cache.delete(
-            get_cache_key(
-                "blocks",
-                "user",
-                str(current_user.id),
-                "roadmap",
-                str(request.roadmap_id),
-                "list",
-            )
+            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(request.roadmap_id), "list")
         )
 
         return schema

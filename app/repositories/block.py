@@ -115,11 +115,7 @@ class BlockRepository(BaseRepository):
 
     @repository_handler
     async def move(
-        self,
-        roadmap: BaseIdType,
-        block: BaseIdType,
-        previous: BaseIdType | None,
-        user: BaseIdType,
+        self, roadmap: BaseIdType, block: BaseIdType, previous: BaseIdType | None, user: BaseIdType
     ) -> Block:
         async with transaction_manager(self.session):
             stmt = select(Block).where(

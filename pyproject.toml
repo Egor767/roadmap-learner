@@ -27,7 +27,7 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 120
+line-length = 100
 indent-width = 4
 src = ["app"]
 
@@ -50,6 +50,8 @@ select = [
     "DTZ",  # flake8-datetimez
     "ERA",  # eradicate
     "FURB", # refurb
+    "ANN",  # flake8-annotations — контроль type hints
+    "TCH",  # flake8-type-checking — оптимизация TYPE_CHECKING импортов
 ]
 ignore = [
     "C408",
@@ -62,7 +64,6 @@ exclude = [
     "tests/**",
 ]
 fixable = [
-    "I",  # сортировка импортов
     "ALL", # все остальное, что можно
 ]
 

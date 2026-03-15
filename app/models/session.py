@@ -15,13 +15,7 @@ from .mixins import (
 )
 
 
-class Session(
-    IdMixin,
-    TimestampMixin,
-    UserRelationMixin,
-    RoadmapRelationMixin,
-    Base,
-):
+class Session(IdMixin, TimestampMixin, UserRelationMixin, RoadmapRelationMixin, Base):
     mode: Mapped[str] = mapped_column(
         SQLEnum(
             "exam",
