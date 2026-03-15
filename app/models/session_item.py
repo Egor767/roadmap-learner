@@ -24,7 +24,7 @@ class SessionItem(IdMixin, TimestampMixin, Base):
 
     answer: Mapped[str] = mapped_column(
         Text,
-        nullable=False,
+        nullable=True,
     )
 
     hint: Mapped[bool] = mapped_column(
