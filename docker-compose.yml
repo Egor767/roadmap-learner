@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: roadmap-api
+    container_name: app
     ports:
       - "8080:8080"
     env_file:
@@ -14,7 +14,7 @@ services:
 
   postgres:
     image: postgres:15
-    container_name: roadmap-postgres
+    container_name: postgres
     ports:
       - "5432:5432"
     environment:
@@ -33,7 +33,7 @@ services:
 
   redis:
     image: redis:8-alpine
-    container_name: roadmap-redis
+    container_name: redis
     ports:
       - "6379:6379"
     networks:
