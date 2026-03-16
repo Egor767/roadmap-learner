@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from app.repositories import (
         BlockRepository,
         QuestionRepository,
-        SessionItemRepository,
         SessionRepository,
         VerifyRepository,
     )
@@ -42,14 +41,12 @@ class SessionService:
         verify: "VerifyRepository",
         block_repo: "BlockRepository",
         question_repo: "QuestionRepository",
-        session_item_repo: "SessionItemRepository",
         cache: "CacheHelper",
     ):
         self.repo = repo
         self.verify = verify
         self.block_repo = block_repo
         self.question_repo = question_repo
-        self.session_item_repo = session_item_repo
         self.cache = cache
 
     @service_handler
@@ -90,7 +87,7 @@ class SessionService:
     async def get_next_question(self, current_user: "User", session_id: BaseIdType) -> BaseIdType | None:
         """Return the id of the next unanswered question in the session."""
         session = await self.verify.verify_session(session_id, current_user.id)
-        answered_ids = await self.session_item_repo.get_answered_ids(session_id)
+        answered_ids = await self.repo.get_answered_ids(session_id)
         result = next((q for q in session.questions if q not in answered_ids), None)
         return result
 
@@ -143,7 +140,7 @@ class SessionService:
         """Mark the session as completed and return a summary of results."""
         session, items = await asyncio.gather(
             self.verify.verify_session(session_id, current_user.id),
-            self.session_item_repo.get_by_session(session_id),
+            self.repo.get_items_by_session(session_id),
         )
         if session.auto_check:
             last_item = next((i for i in items if i.question_id == session.questions[-1]), None)

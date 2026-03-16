@@ -12,7 +12,6 @@ from app.schemas.block import (
     BlockUpdate,
 )
 from app.shared.generate_id import generate_base_id
-from app.utils.cache import is_single_parent_filter
 from app.utils.mappers.cache_to_schema import (
     cache_to_schema,
     cache_to_schemas,
@@ -21,6 +20,7 @@ from app.utils.mappers.orm_to_schema import (
     orm_list_to_schemas,
     orm_to_schema,
 )
+from app.utils.parent_filter import is_single_parent_filter
 
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper, CacheScope

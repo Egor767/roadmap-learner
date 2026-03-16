@@ -13,8 +13,8 @@ class QuestionStatus(str, enum.Enum):
     REPEAT = "repeat"
 
 
-class UserQuestionProgress(Base, TimestampMixin, UserRelationMixin, QuestionRelationMixin):
-    __tablename__ = "user_question_progress"
+class QuestionProgress(Base, TimestampMixin, UserRelationMixin, QuestionRelationMixin):
+    __tablename__ = "question_progress"
 
     _user_id_primary_key = True
     _question_id_primary_key = True

@@ -12,7 +12,8 @@ from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.models import Block, Question, Roadmap
+from app.models import Block, Question, QuestionCard, QuestionProgress, Roadmap
+from app.models.question_progress import QuestionStatus
 from app.repositories import BaseEntityRepository
 
 
@@ -60,6 +61,37 @@ class QuestionRepository(BaseEntityRepository):
         return rows
 
     @repository_handler
+    async def get_status(self, user: BaseIdType, question: BaseIdType) -> QuestionStatus:
+        """Return progress status for question and user."""
+        stmt = select(QuestionProgress.status).where(
+            QuestionProgress.user_id == user,
+            QuestionProgress.question_id == question,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none() or QuestionStatus.UNKNOWN
+
+    @repository_handler
+    async def get_statuses(self, user: BaseIdType, questions: list[BaseIdType]) -> dict[BaseIdType, QuestionStatus]:
+        """Return progress statuses for multiple questions."""
+        stmt = select(QuestionProgress.question_id, QuestionProgress.status).where(
+            QuestionProgress.user_id == user,
+            QuestionProgress.question_id.in_(questions),
+        )
+        result = await self.session.execute(stmt)
+        found = {row.question_id: row.status for row in result.all()}
+        return {qid: found.get(qid, QuestionStatus.UNKNOWN) for qid in questions}
+
+    @repository_handler
+    async def get_ids_by_status(self, user: BaseIdType, status: QuestionStatus) -> list[BaseIdType]:
+        """Return question ids with given progress status for user."""
+        stmt = select(QuestionProgress.question_id).where(
+            QuestionProgress.user_id == user,
+            QuestionProgress.status == status,
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    @repository_handler
     async def create(
         self,
         block_id: BaseIdType,
@@ -96,13 +128,24 @@ class QuestionRepository(BaseEntityRepository):
             return (await self.session.execute(stmt)).scalar_one()
 
     @repository_handler
+    async def create_progress(self, user: BaseIdType, question: BaseIdType) -> None:
+        """Create initial progress record for question and user."""
+        async with transaction_manager(self.session):
+            stmt = insert(QuestionProgress).values(
+                user_id=user,
+                question_id=question,
+                status=QuestionStatus.UNKNOWN,
+            )
+            await self.session.execute(stmt)
+
+    @repository_handler
     async def move(
         self,
         block_id: BaseIdType,
         question_id: BaseIdType,
         previous: BaseIdType | None,
     ) -> tuple[Question, list[BaseIdType]]:
-        """Move question to new position within block"""
+        """Move question to new position within block."""
         async with transaction_manager(self.session):
             stmt = select(Question).where(
                 Question.id == question_id,
@@ -177,6 +220,20 @@ class QuestionRepository(BaseEntityRepository):
             return row
 
     @repository_handler
+    async def update_progress(self, user: BaseIdType, question: BaseIdType, status: QuestionStatus) -> None:
+        """Upsert progress status for question and user."""
+        async with transaction_manager(self.session):
+            stmt = (
+                insert(QuestionProgress)
+                .values(user_id=user, question_id=question, status=status)
+                .on_conflict_do_update(
+                    index_elements=["user_id", "question_id"],
+                    set_={"status": status},
+                )
+            )
+            await self.session.execute(stmt)
+
+    @repository_handler
     async def delete(self, question: BaseIdType) -> Question:
         """Delete question by id and return deleted entity."""
         async with transaction_manager(self.session):
@@ -208,3 +265,23 @@ class QuestionRepository(BaseEntityRepository):
             insert_stmt = insert(Question).values(all_questions).returning(Question)
             result = await self.session.execute(insert_stmt)
             return list(result.scalars().all())
+
+    @repository_handler
+    async def link_card(self, question: BaseIdType, card: BaseIdType) -> None:
+        """Link card to question."""
+        async with transaction_manager(self.session):
+            stmt = insert(QuestionCard).values(
+                question_id=question,
+                card_id=card,
+            )
+            await self.session.execute(stmt)
+
+    @repository_handler
+    async def unlink_card(self, question: BaseIdType, card: BaseIdType) -> None:
+        """Unlink card from question."""
+        async with transaction_manager(self.session):
+            stmt = delete(QuestionCard).where(
+                QuestionCard.question_id == question,
+                QuestionCard.card_id == card,
+            )
+            await self.session.execute(stmt)

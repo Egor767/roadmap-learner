@@ -13,8 +13,8 @@ class CardStatus(str, enum.Enum):
     REPEAT = "repeat"
 
 
-class UserCardProgress(Base, TimestampMixin, UserRelationMixin, CardRelationMixin):
-    __tablename__ = "user_card_progress"
+class CardProgress(Base, TimestampMixin, UserRelationMixin, CardRelationMixin):
+    __tablename__ = "card_progress"
 
     _user_id_primary_key = True
     _card_id_primary_key = True

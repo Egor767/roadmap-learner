@@ -9,7 +9,8 @@ from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.models import Card, QuestionCard, Roadmap
+from app.models import Card, CardProgress, QuestionCard, Roadmap
+from app.models.card_progress import CardStatus
 from app.repositories import BaseEntityRepository
 
 
@@ -62,6 +63,37 @@ class CardRepository(BaseEntityRepository):
         return list(result.scalars().all())
 
     @repository_handler
+    async def get_status(self, user: BaseIdType, card: BaseIdType) -> CardStatus:
+        """Return progress status for card and user."""
+        stmt = select(CardProgress.status).where(
+            CardProgress.user_id == user,
+            CardProgress.card_id == card,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none() or CardStatus.UNKNOWN
+
+    @repository_handler
+    async def get_statuses(self, user: BaseIdType, cards: list[BaseIdType]) -> dict[BaseIdType, CardStatus]:
+        """Return progress statuses for multiple cards."""
+        stmt = select(CardProgress.card_id, CardProgress.status).where(
+            CardProgress.user_id == user,
+            CardProgress.card_id.in_(cards),
+        )
+        result = await self.session.execute(stmt)
+        found = {row.card_id: row.status for row in result.all()}
+        return {cid: found.get(cid, CardStatus.UNKNOWN) for cid in cards}
+
+    @repository_handler
+    async def get_ids_by_status(self, user: BaseIdType, status: CardStatus) -> list[BaseIdType]:
+        """Return card ids with given progress status for user."""
+        stmt = select(CardProgress.card_id).where(
+            CardProgress.user_id == user,
+            CardProgress.status == status,
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    @repository_handler
     async def create(self, data: dict) -> Card:
         """Create and return new card."""
         async with transaction_manager(self.session):
@@ -69,6 +101,17 @@ class CardRepository(BaseEntityRepository):
             result = await self.session.execute(stmt)
             row = result.scalar_one()
             return row
+
+    @repository_handler
+    async def create_progress(self, user: BaseIdType, card: BaseIdType) -> None:
+        """Create initial progress record for card and user."""
+        async with transaction_manager(self.session):
+            stmt = insert(CardProgress).values(
+                user_id=user,
+                card_id=card,
+                status=CardStatus.UNKNOWN,
+            )
+            await self.session.execute(stmt)
 
     @repository_handler
     async def update(self, card: BaseIdType, data: dict) -> Card:
@@ -80,6 +123,20 @@ class CardRepository(BaseEntityRepository):
             if row is None:
                 raise EntityNotFoundError(Card, card)
             return row
+
+    @repository_handler
+    async def update_progress(self, user: BaseIdType, card: BaseIdType, status: CardStatus) -> None:
+        """Upsert progress status for card and user."""
+        async with transaction_manager(self.session):
+            stmt = (
+                insert(CardProgress)
+                .values(user_id=user, card_id=card, status=status)
+                .on_conflict_do_update(
+                    index_elements=["user_id", "card_id"],
+                    set_={"status": status},
+                )
+            )
+            await self.session.execute(stmt)
 
     @repository_handler
     async def delete(self, card: BaseIdType) -> Card:

@@ -18,13 +18,9 @@ from .cache import get_cache
 from .clients import get_ai_client
 from .repositories import (
     get_block_repository,
-    get_card_progress_repository,
     get_card_repository,
-    get_question_card_repository,
-    get_question_progress_repository,
     get_question_repository,
     get_roadmap_repository,
-    get_session_item_repository,
     get_session_repository,
     get_user_repository,
     get_verify_repository,
@@ -36,13 +32,9 @@ if TYPE_CHECKING:
     from app.repositories import (
         BlockRepository,
         CardRepository,
-        QuestionCardRepository,
         QuestionRepository,
         RoadmapRepository,
-        SessionItemRepository,
         SessionRepository,
-        UserCardProgressRepository,
-        UserQuestionProgressRepository,
         UserRepository,
         VerifyRepository,
     )
@@ -73,20 +65,17 @@ def get_block_service(
 def get_card_service(
     repo: Annotated["CardRepository", Depends(get_card_repository)],
     verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
-    progress_repo: Annotated["UserCardProgressRepository", Depends(get_card_progress_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> CardService:
-    return CardService(repo, verify, progress_repo, cache)
+    return CardService(repo, verify, cache)
 
 
 def get_question_service(
     repo: Annotated["QuestionRepository", Depends(get_question_repository)],
     verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
-    progress_repo: Annotated["UserQuestionProgressRepository", Depends(get_question_progress_repository)],
-    question_card_repo: Annotated["QuestionCardRepository", Depends(get_question_card_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> QuestionService:
-    return QuestionService(repo, verify, progress_repo, question_card_repo, cache)
+    return QuestionService(repo, verify, cache)
 
 
 def get_ai_service(
@@ -100,13 +89,11 @@ def get_ai_service(
 
 def get_answer_service(
     repo: Annotated["SessionRepository", Depends(get_session_repository)],
-    session_item_repo: Annotated["SessionItemRepository", Depends(get_session_item_repository)],
     question_repo: Annotated["QuestionRepository", Depends(get_question_repository)],
     card_repo: Annotated["CardRepository", Depends(get_card_repository)],
-    question_progress_repo: Annotated["UserQuestionProgressRepository", Depends(get_question_progress_repository)],
     ai_client: Annotated["AIClient", Depends(get_ai_client)],
 ) -> AnswerService:
-    return AnswerService(repo, session_item_repo, question_repo, card_repo, question_progress_repo, ai_client)
+    return AnswerService(repo, question_repo, card_repo, ai_client)
 
 
 def get_session_service(
@@ -114,7 +101,6 @@ def get_session_service(
     verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     block_repo: Annotated["BlockRepository", Depends(get_block_repository)],
     question_repo: Annotated["QuestionRepository", Depends(get_question_repository)],
-    session_item_repo: Annotated["SessionItemRepository", Depends(get_session_item_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> SessionService:
-    return SessionService(repo, verify, block_repo, question_repo, session_item_repo, cache)
+    return SessionService(repo, verify, block_repo, question_repo, cache)
