@@ -12,7 +12,7 @@ from app.schemas.block import (
     BlockUpdate,
 )
 from app.shared.generate_id import generate_base_id
-from app.utils.cache import get_cache_key, is_single_parent_filter
+from app.utils.cache import is_single_parent_filter
 from app.utils.mappers.cache_to_schema import (
     cache_to_schema,
     cache_to_schemas,
@@ -23,132 +23,126 @@ from app.utils.mappers.orm_to_schema import (
 )
 
 if TYPE_CHECKING:
-    from app.core.cache import CacheHelper
+    from app.core.cache import CacheHelper, CacheScope
     from app.models import User
-    from app.repositories.block import BlockRepository
+    from app.repositories import BlockRepository, VerifyRepository
 
 
 class BlockService:
-    def __init__(self, repo: "BlockRepository", cache: "CacheHelper"):
+    """Service for block business logic"""
+
+    def __init__(self, repo: "BlockRepository", verify: "VerifyRepository", cache: "CacheHelper"):
         self.repo = repo
+        self.verify = verify
         self.cache = cache
+
+    def _scope(self, current_user: "User") -> "CacheScope":
+        """Return cache scope for current user"""
+        return self.cache.scope("blocks", str(current_user.id))
 
     @service_handler
     async def get_all(self) -> list[BlockRead]:
+        """Return all blocks"""
         orm = await self.repo.get_all()
-        schemas = orm_list_to_schemas(BlockRead, orm)
-        return schemas
+        schema = orm_list_to_schemas(BlockRead, orm)
+        return schema
 
     @service_handler
     async def get_by_filters(self, current_user: "User", filters: BlockFilters) -> list[BlockRead]:
-        filters_dict = filters.model_dump(
-            exclude_none=True,
-            exclude_unset=True,
-        )
+        """Return blocks matching filters for current user"""
+        filters_dict = filters.model_dump(exclude_none=True, exclude_unset=True)
+        scope = self._scope(current_user)
         if is_single_parent_filter(filters_dict, "roadmap_id"):
-            key = get_cache_key(
-                "blocks", "user", str(current_user.id), "roadmap", str(filters_dict["roadmap_id"]), "list"
-            )
-            cache = await self.cache.get(key)
-            if cache:
-                return cache_to_schemas(BlockRead, cache)
+            cached = await scope.get("roadmap", str(filters_dict["roadmap_id"]), "list")
+            if cached:
+                return cache_to_schemas(BlockRead, cached)
         orm = await self.repo.get_by_filters(filters_dict, current_user.id)
         schema = orm_list_to_schemas(BlockRead, orm)
         if is_single_parent_filter(filters_dict, "roadmap_id"):
-            cache_data = json.dumps(
-                [u.model_dump(mode="json") for u in schema],
-                default=str,
+            await scope.put(
+                json.dumps([u.model_dump(mode="json") for u in schema], default=str),
+                "roadmap",
+                str(filters_dict["roadmap_id"]),
+                "list",
             )
-            await self.cache.set(key, cache_data)
         return schema
 
     @service_handler
-    async def get_by_id(self, current_user: "User", block_id: BaseIdType) -> BlockRead:
-        key = get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail")
-        cache = await self.cache.get(key)
-        if cache:
-            return cache_to_schema(BlockRead, cache)
-        orm = await self.repo.get_by_id(block_id, current_user.id)
+    async def get_by_id(self, current_user: "User", block: BaseIdType) -> BlockRead:
+        """Return block by id for current user"""
+        scope = self._scope(current_user)
+        cached = await scope.get("block", str(block), "detail")
+        if cached:
+            return cache_to_schema(BlockRead, cached)
+        orm = await self.verify.verify_block(block, current_user.id)
         schema = orm_to_schema(BlockRead, orm)
-        await self.cache.set(
-            key,
-            json.dumps([schema.model_dump(mode="json")]),
-        )
+        await scope.put(json.dumps([schema.model_dump(mode="json")]), "block", str(block), "detail")
         return schema
 
     @service_handler
-    async def create(self, current_user: "User", block_create_data: BlockCreate) -> BlockRead:
-        block_dict = block_create_data.model_dump(
-            exclude_none=True,
-            exclude_unset=True,
-        )
+    async def create(self, current_user: "User", data: BlockCreate) -> BlockRead:
+        """Create new block for current user"""
+        await self.verify.verify_roadmap(data.roadmap_id, current_user.id)
+        block_dict = data.model_dump(exclude_none=True, exclude_unset=True)
         block_dict["id"] = generate_base_id()
         block_dict.pop("position", None)
         block_dict.pop("previous", None)
         orm = await self.repo.create(
-            block_create_data.roadmap_id,
+            data.roadmap_id,
             block_dict,
-            current_user.id,
-            block_create_data.position,
-            block_create_data.previous,
+            data.position,
+            data.previous,
         )
         schema = orm_to_schema(BlockRead, orm)
-        await self.cache.delete(
-            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list")
+        await self._scope(current_user).drop(("roadmap", str(schema.roadmap_id), "list"))
+        return schema
+
+    @service_handler
+    async def update(self, current_user: "User", block: BaseIdType, data: BlockUpdate) -> BlockRead:
+        """Update block for current user"""
+        await self.verify.verify_block(block, current_user.id)
+        block_dict = data.model_dump(exclude_none=True, exclude_unset=True)
+        orm = await self.repo.update(block, block_dict)
+        schema = orm_to_schema(BlockRead, orm)
+        await self._scope(current_user).drop(
+            ("roadmap", str(schema.roadmap_id), "list"),
+            ("block", str(block), "detail"),
         )
         return schema
 
     @service_handler
-    async def update(self, current_user: "User", block_id: BaseIdType, block_update_data: BlockUpdate) -> BlockRead:
-        block_dict = block_update_data.model_dump(
-            exclude_none=True,
-            exclude_unset=True,
-        )
-        orm = await self.repo.update(block_id, block_dict, current_user.id)
+    async def move(self, current_user: "User", block: BaseIdType, data: BlockMove) -> BlockRead:
+        """Move block to new position for current user"""
+        await self.verify.verify_roadmap(data.roadmap_id, current_user.id)
+        orm, affected = await self.repo.move(data.roadmap_id, block, data.previous)
         schema = orm_to_schema(BlockRead, orm)
-        await self.cache.delete(
-            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
-            get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
+        scope = self._scope(current_user)
+        await scope.drop(
+            ("roadmap", str(schema.roadmap_id), "list"),
+            ("block", str(block), "detail"),
+            *[("block", str(affected_id), "detail") for affected_id in affected],
         )
         return schema
 
     @service_handler
-    async def move(
-        self,
-        current_user: "User",
-        block_id: BaseIdType,
-        move_data: BlockMove,
-    ) -> BlockRead:
-        orm = await self.repo.move(
-            move_data.roadmap_id,
-            block_id,
-            move_data.previous,
-            current_user.id,
-        )
-        schema = orm_to_schema(BlockRead, orm)
-        await self.cache.delete(
-            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
-            get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
-        )
-        return schema
-
-    @service_handler
-    async def delete(self, current_user: "User", block_id: BaseIdType):
-        orm = await self.repo.delete(block_id, current_user.id)
-        await self.cache.delete(
-            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(orm.roadmap_id), "list"),
-            get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
+    async def delete(self, current_user: "User", block: BaseIdType) -> None:
+        """Delete block for current user"""
+        orm = await self.verify.verify_block(block, current_user.id)
+        await self.repo.delete(block)
+        await self._scope(current_user).drop(
+            ("roadmap", str(orm.roadmap_id), "list"),
+            ("block", str(block), "detail"),
         )
 
     @service_handler
     async def create_multiple(self, current_user: "User", request: "BlockConfirmRequest") -> list[BlockRead]:
+        """Create multiple blocks for current user"""
+        await self.verify.verify_roadmap(request.roadmap_id, current_user.id)
         blocks_dict = [block.model_dump(exclude_none=True, exclude_unset=True) for block in request.blocks]
         for block in blocks_dict:
             block["id"] = generate_base_id()
             block["roadmap_id"] = request.roadmap_id
-        orm = await self.repo.create_multiple(request.roadmap_id, blocks_dict, current_user.id)
+        orm = await self.repo.create_multiple(request.roadmap_id, blocks_dict)
         schema = orm_list_to_schemas(BlockRead, orm)
-        await self.cache.delete(
-            get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(request.roadmap_id), "list")
-        )
+        await self._scope(current_user).drop(("roadmap", str(request.roadmap_id), "list"))
         return schema

@@ -47,9 +47,9 @@ class RoadmapService:
         filters_dict = filters.model_dump(exclude_none=True, exclude_unset=True)
         scope = self._scope(current_user)
         if not filters_dict:
-            cached = await scope.get("list")
-            if cached:
-                return cache_to_schemas(RoadmapRead, cached)
+            cache = await scope.get("list")
+            if cache:
+                return cache_to_schemas(RoadmapRead, cache)
         orm = await self.repo.get_by_filters(filters_dict, current_user.id)
         schema = orm_list_to_schemas(RoadmapRead, orm)
         if not filters_dict:
@@ -60,9 +60,9 @@ class RoadmapService:
     async def get_by_id(self, current_user: "User", roadmap: BaseIdType) -> RoadmapRead:
         """Return roadmap by id for current user"""
         scope = self._scope(current_user)
-        cached = await scope.get("roadmap", str(roadmap), "detail")
-        if cached:
-            return cache_to_schema(RoadmapRead, cached)
+        cache = await scope.get("roadmap", str(roadmap), "detail")
+        if cache:
+            return cache_to_schema(RoadmapRead, cache)
         orm = await self.verify.verify_roadmap(roadmap, current_user.id)
         schema = orm_to_schema(RoadmapRead, orm)
         await scope.put(json.dumps([schema.model_dump(mode="json")]), "roadmap", str(roadmap), "detail")

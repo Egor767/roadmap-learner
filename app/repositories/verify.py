@@ -5,7 +5,7 @@ from sqlalchemy import select
 from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.handlers import repository_handler
-from app.models import Block, Card, Question, Roadmap
+from app.models import Block, Card, Question, Roadmap, Session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,4 +74,13 @@ class VerifyRepository:
         row = (await self.session.execute(stmt)).scalar_one_or_none()
         if row is None:
             raise EntityNotFoundError(Card, card)
+        return row
+
+    @repository_handler
+    async def verify_session(self, session: BaseIdType, user: BaseIdType) -> Session:
+        """Verify that session belongs to user and return it."""
+        stmt = select(Session).where(Session.id == session, Session.user_id == user)
+        row = (await self.session.execute(stmt)).scalar_one_or_none()
+        if row is None:
+            raise EntityNotFoundError(Session, session)
         return row

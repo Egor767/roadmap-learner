@@ -14,16 +14,20 @@ from app.repositories import BaseEntityRepository
 
 
 class CardRepository(BaseEntityRepository):
+    """Repository for card data access."""
+
     @repository_handler
     async def get_all(self) -> list[Card]:
+        """Return all cards ordered by term."""
         stmt = select(Card).order_by(Card.term)
         result = await self.session.execute(stmt)
         rows = list(result.scalars().all())
         return rows
 
     @repository_handler
-    async def get_by_id(self, card: BaseIdType, user: BaseIdType) -> Card:
-        stmt = select(Card).join(Roadmap, Card.roadmap_id == Roadmap.id).where(Card.id == card, Roadmap.user_id == user)
+    async def get_by_id(self, card: BaseIdType) -> Card:
+        """Return card by id."""
+        stmt = select(Card).where(Card.id == card)
         result = await self.session.execute(stmt)
         row = result.scalar_one_or_none()
         if row is None:
@@ -32,6 +36,7 @@ class CardRepository(BaseEntityRepository):
 
     @repository_handler
     async def get_by_filters(self, filters: dict, user: BaseIdType) -> list[Card]:
+        """Return cards matching filters for user."""
         stmt = select(Card).join(Roadmap, Card.roadmap_id == Roadmap.id).where(Roadmap.user_id == user)
         for field_name, value in filters.items():
             column = getattr(Card, field_name)
@@ -46,6 +51,7 @@ class CardRepository(BaseEntityRepository):
 
     @repository_handler
     async def get_by_question(self, question: BaseIdType) -> list[Card]:
+        """Return cards linked to question."""
         stmt = (
             select(Card)
             .join(QuestionCard, Card.id == QuestionCard.card_id)
@@ -56,31 +62,19 @@ class CardRepository(BaseEntityRepository):
         return list(result.scalars().all())
 
     @repository_handler
-    async def create(self, data: dict, user: BaseIdType) -> Card:
+    async def create(self, data: dict) -> Card:
+        """Create and return new card."""
         async with transaction_manager(self.session):
-            roadmap_check_stmt = select(Roadmap.id).where(Roadmap.id == data.get("roadmap_id"), Roadmap.user_id == user)
-            result = await self.session.execute(roadmap_check_stmt)
-            if result.scalar_one_or_none() is None:
-                raise EntityNotFoundError(Card, data.get("roadmap_id"))
-
             stmt = insert(Card).values(**data).returning(Card)
             result = await self.session.execute(stmt)
             row = result.scalar_one()
             return row
 
     @repository_handler
-    async def update(self, card: BaseIdType, data: dict, user: BaseIdType) -> Card:
+    async def update(self, card: BaseIdType, data: dict) -> Card:
+        """Update card by id and return updated entity."""
         async with transaction_manager(self.session):
-            # TODO: instead of in_ -> join
-            stmt = (
-                update(Card)
-                .where(
-                    Card.id == card,
-                    Card.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user)),
-                )
-                .values(**data)
-                .returning(Card)
-            )
+            stmt = update(Card).where(Card.id == card).values(**data).returning(Card)
             result = await self.session.execute(stmt)
             row = result.scalar_one_or_none()
             if row is None:
@@ -88,16 +82,10 @@ class CardRepository(BaseEntityRepository):
             return row
 
     @repository_handler
-    async def delete(self, card: BaseIdType, user: BaseIdType) -> Card:
+    async def delete(self, card: BaseIdType) -> Card:
+        """Delete card by id and return deleted entity."""
         async with transaction_manager(self.session):
-            stmt = (
-                delete(Card)
-                .where(
-                    Card.id == card,
-                    Card.roadmap_id.in_(select(Roadmap.id).where(Roadmap.user_id == user)),
-                )
-                .returning(Card)
-            )
+            stmt = delete(Card).where(Card.id == card).returning(Card)
             result = await self.session.execute(stmt)
             row = result.scalar_one_or_none()
             if row is None:

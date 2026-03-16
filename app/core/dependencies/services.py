@@ -64,26 +64,29 @@ def get_roadmap_service(
 
 def get_block_service(
     repo: Annotated["BlockRepository", Depends(get_block_repository)],
+    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> BlockService:
-    return BlockService(repo, cache)
+    return BlockService(repo, verify, cache)
 
 
 def get_card_service(
     repo: Annotated["CardRepository", Depends(get_card_repository)],
+    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     progress_repo: Annotated["UserCardProgressRepository", Depends(get_card_progress_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> CardService:
-    return CardService(repo, progress_repo, cache)
+    return CardService(repo, verify, progress_repo, cache)
 
 
 def get_question_service(
     repo: Annotated["QuestionRepository", Depends(get_question_repository)],
+    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     progress_repo: Annotated["UserQuestionProgressRepository", Depends(get_question_progress_repository)],
     question_card_repo: Annotated["QuestionCardRepository", Depends(get_question_card_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> QuestionService:
-    return QuestionService(repo, progress_repo, question_card_repo, cache)
+    return QuestionService(repo, verify, progress_repo, question_card_repo, cache)
 
 
 def get_ai_service(
@@ -108,9 +111,10 @@ def get_answer_service(
 
 def get_session_service(
     repo: Annotated["SessionRepository", Depends(get_session_repository)],
+    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     block_repo: Annotated["BlockRepository", Depends(get_block_repository)],
     question_repo: Annotated["QuestionRepository", Depends(get_question_repository)],
     session_item_repo: Annotated["SessionItemRepository", Depends(get_session_item_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> SessionService:
-    return SessionService(repo, block_repo, question_repo, session_item_repo, cache)
+    return SessionService(repo, verify, block_repo, question_repo, session_item_repo, cache)
