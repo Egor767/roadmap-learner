@@ -13,10 +13,10 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
 from app.models import Block, Question, Roadmap
-from app.repositories import BaseRepository
+from app.repositories import BaseEntityRepository
 
 
-class QuestionRepository(BaseRepository):
+class QuestionRepository(BaseEntityRepository):
     @repository_handler
     async def get_all(self) -> list[Question]:
         stmt = select(Question).order_by(Question.order_index)
@@ -48,7 +48,6 @@ class QuestionRepository(BaseRepository):
         )
         if filters.get("roadmap_id", None) is not None:
             stmt = stmt.where(Block.roadmap_id == filters.pop("roadmap_id"))
-
         for field_name, value in filters.items():
             column = getattr(Question, field_name)
             if isinstance(value, list):
@@ -77,7 +76,6 @@ class QuestionRepository(BaseRepository):
             )
             if (await self.session.execute(block_check)).scalar_one_or_none() is None:
                 raise EntityNotFoundError(Block, block_id)
-
             if previous is not None:
                 prev_stmt = select(Question.order_index).where(
                     Question.id == previous,
@@ -86,25 +84,21 @@ class QuestionRepository(BaseRepository):
                 prev_index = (await self.session.execute(prev_stmt)).scalar_one_or_none()
                 if prev_index is None:
                     raise EntityNotFoundError(Question, previous)
-
                 await self.session.execute(
                     update(Question)
                     .where(Question.block_id == block_id, Question.order_index > prev_index)
                     .values(order_index=Question.order_index + 1)
                 )
                 data["order_index"] = prev_index + 1
-
             elif position == "start":
                 await self.session.execute(
                     update(Question).where(Question.block_id == block_id).values(order_index=Question.order_index + 1)
                 )
                 data["order_index"] = 0
-
             else:
                 max_stmt = select(func.max(Question.order_index)).where(Question.block_id == block_id)
                 max_index = (await self.session.execute(max_stmt)).scalar()
                 data["order_index"] = (max_index + 1) if max_index is not None else 0
-
             stmt = insert(Question).values(**data).returning(Question)
             return (await self.session.execute(stmt)).scalar_one()
 
@@ -129,9 +123,7 @@ class QuestionRepository(BaseRepository):
             row = (await self.session.execute(stmt)).scalar_one_or_none()
             if row is None:
                 raise EntityNotFoundError(Question, question_id)
-
             old_index = row.order_index
-
             if previous is None:
                 new_index = 0
             else:
@@ -142,15 +134,12 @@ class QuestionRepository(BaseRepository):
                 after_index = (await self.session.execute(prev_stmt)).scalar_one_or_none()
                 if after_index is None:
                     raise EntityNotFoundError(Question, previous)
-
                 if after_index < old_index:
                     new_index = after_index + 1
                 else:
                     new_index = after_index
-
             if new_index == old_index:
                 return row
-
             if new_index < old_index:
                 await self.session.execute(
                     update(Question)
@@ -173,7 +162,6 @@ class QuestionRepository(BaseRepository):
                     )
                     .values(order_index=Question.order_index - 1)
                 )
-
             result = await self.session.execute(
                 update(Question).where(Question.id == question_id).values(order_index=new_index).returning(Question)
             )
@@ -220,7 +208,6 @@ class QuestionRepository(BaseRepository):
     ) -> list[Question]:
         async with transaction_manager(self.session):
             block_ids = list(questions_by_block.keys())
-
             block_check = (
                 select(Block.id)
                 .join(Roadmap, Block.roadmap_id == Roadmap.id)

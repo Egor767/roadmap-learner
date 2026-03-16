@@ -5,6 +5,7 @@ from fastapi import Depends
 from app.clients import AIClient
 from app.services import (
     AIService,
+    AnswerService,
     BlockService,
     CardService,
     QuestionService,
@@ -13,7 +14,6 @@ from app.services import (
     UserService,
 )
 
-from ...services.answer import AnswerService
 from .cache import get_cache
 from .clients import get_ai_client
 from .repositories import (
@@ -27,6 +27,7 @@ from .repositories import (
     get_session_item_repository,
     get_session_repository,
     get_user_repository,
+    get_verify_repository,
 )
 
 if TYPE_CHECKING:
@@ -43,6 +44,7 @@ if TYPE_CHECKING:
         UserCardProgressRepository,
         UserQuestionProgressRepository,
         UserRepository,
+        VerifyRepository,
     )
 
 
@@ -54,9 +56,10 @@ def get_user_service(
 
 def get_roadmap_service(
     repo: Annotated["RoadmapRepository", Depends(get_roadmap_repository)],
+    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> RoadmapService:
-    return RoadmapService(repo, cache)
+    return RoadmapService(repo, verify, cache)
 
 
 def get_block_service(
@@ -85,9 +88,9 @@ def get_question_service(
 
 def get_ai_service(
     ai_client: Annotated["AIClient", Depends(get_ai_client)],
-    roadmap_repo: Annotated[RoadmapRepository, Depends(get_roadmap_repository)],
-    block_repo: Annotated[BlockRepository, Depends(get_block_repository)],
-    question_repo: Annotated[QuestionRepository, Depends(get_question_repository)],
+    roadmap_repo: Annotated["RoadmapRepository", Depends(get_roadmap_repository)],
+    block_repo: Annotated["BlockRepository", Depends(get_block_repository)],
+    question_repo: Annotated["QuestionRepository", Depends(get_question_repository)],
 ) -> AIService:
     return AIService(ai_client, roadmap_repo, block_repo, question_repo)
 

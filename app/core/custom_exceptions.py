@@ -10,7 +10,7 @@ class EntityNotFoundError(RepositoryError):
     def __init__(self, entity: type[Base], entity_id: BaseIdType):
         self.entity = entity
         self.entity_id = entity_id
-        super().__init__(f"{entity} with id={entity_id} not found")
+        super().__init__(f"{entity.__name__} with id={entity_id} not found")
 
 
 class EntityConflictError(RepositoryError):
@@ -20,4 +20,9 @@ class EntityConflictError(RepositoryError):
 
 class PersistenceError(RepositoryError):
     def __init__(self, message: str = "Persistence layer error"):
+        super().__init__(message)
+
+
+class ServiceError(Exception):
+    def __init__(self, message: str = "Service operation failed"):
         super().__init__(message)

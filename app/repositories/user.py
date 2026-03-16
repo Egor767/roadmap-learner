@@ -4,13 +4,13 @@ from sqlalchemy import select
 
 from app.core.handlers import repository_handler
 from app.models import User
-from app.repositories import BaseRepository
+from app.repositories import BaseEntityRepository
 
 if TYPE_CHECKING:
     from app.core.custom_types import BaseIdType
 
 
-class UserRepository(BaseRepository):
+class UserRepository(BaseEntityRepository):
     @repository_handler
     async def get_all(self) -> list[User]:
         stmt = select(User)

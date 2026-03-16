@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 from app.core.handlers import service_handler
 from app.core.loggers import user_service_logger as logger
-from app.shared.access import get_accessed_filters
 from app.utils.mappers.orm_to_schema import user_orm_to_model
 
 if TYPE_CHECKING:
@@ -32,12 +31,8 @@ class UserService:
             exclude_none=True,
             exclude_unset=True,
         )
-        accessed_filters = get_accessed_filters(
-            current_user,
-            filters_dict,
-        )
 
-        db_users = await self.repo.get_by_filters(accessed_filters)
+        db_users = await self.repo.get_by_filters(filters_dict)
         if len(db_users) == 0:
             logger.warning("Users with filters(%r) not found", filters)
             return []

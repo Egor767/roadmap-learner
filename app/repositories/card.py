@@ -10,10 +10,10 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
 from app.models import Card, QuestionCard, Roadmap
-from app.repositories import BaseRepository
+from app.repositories import BaseEntityRepository
 
 
-class CardRepository(BaseRepository):
+class CardRepository(BaseEntityRepository):
     @repository_handler
     async def get_all(self) -> list[Card]:
         stmt = select(Card).order_by(Card.term)
@@ -71,6 +71,7 @@ class CardRepository(BaseRepository):
     @repository_handler
     async def update(self, card: BaseIdType, data: dict, user: BaseIdType) -> Card:
         async with transaction_manager(self.session):
+            # TODO: instead of in_ -> join
             stmt = (
                 update(Card)
                 .where(

@@ -13,10 +13,10 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
 from app.models import Block, Roadmap
-from app.repositories import BaseRepository
+from app.repositories import BaseEntityRepository
 
 
-class BlockRepository(BaseRepository):
+class BlockRepository(BaseEntityRepository):
     @repository_handler
     async def get_all(self) -> list[Block]:
         stmt = select(Block).order_by(Block.order_index)
@@ -64,7 +64,6 @@ class BlockRepository(BaseRepository):
             sub_query = select(Roadmap.id).where(Roadmap.id == roadmap, Roadmap.user_id == user)
             if (await self.session.execute(sub_query)).scalar_one_or_none() is None:
                 raise EntityNotFoundError(Roadmap, roadmap)
-
             if previous:
                 after_stmt = select(Block.order_index).where(
                     Block.id == previous,
@@ -73,25 +72,21 @@ class BlockRepository(BaseRepository):
                 after_index = (await self.session.execute(after_stmt)).scalar_one_or_none()
                 if after_index is None:
                     raise EntityNotFoundError(Block, previous)
-
                 await self.session.execute(
                     update(Block)
                     .where(Block.roadmap_id == roadmap, Block.order_index > after_index)
                     .values(order_index=Block.order_index + 1)
                 )
                 data["order_index"] = after_index + 1
-
             elif position == "start":
                 await self.session.execute(
                     update(Block).where(Block.roadmap_id == roadmap).values(order_index=Block.order_index + 1)
                 )
                 data["order_index"] = 0
-
             else:
                 max_stmt = select(func.max(Block.order_index)).where(Block.roadmap_id == roadmap)
                 max_index = (await self.session.execute(max_stmt)).scalar()
                 data["order_index"] = (max_index + 1) if max_index is not None else 0
-
             stmt = insert(Block).values(**data).returning(Block)
             return (await self.session.execute(stmt)).scalar_one()
 
@@ -126,9 +121,7 @@ class BlockRepository(BaseRepository):
             row = (await self.session.execute(stmt)).scalar_one_or_none()
             if row is None:
                 raise EntityNotFoundError(Block, block)
-
             old_index = row.order_index
-
             if previous is None:
                 new_index = 0
             else:
@@ -144,10 +137,8 @@ class BlockRepository(BaseRepository):
                     new_index = after_index + 1
                 else:
                     new_index = after_index
-
             if new_index == old_index:
                 return row
-
             if new_index < old_index:
                 await self.session.execute(
                     update(Block)
@@ -170,7 +161,6 @@ class BlockRepository(BaseRepository):
                     )
                     .values(order_index=Block.order_index - 1)
                 )
-
             result = await self.session.execute(
                 update(Block).where(Block.id == block).values(order_index=new_index).returning(Block)
             )
@@ -203,16 +193,13 @@ class BlockRepository(BaseRepository):
             )
             if (await self.session.execute(sub_query)).scalar_one_or_none() is None:
                 raise EntityNotFoundError(Roadmap, roadmap_id)
-
             max_stmt = select(func.max(Block.order_index)).where(
                 Block.roadmap_id == roadmap_id,
             )
             max_index = (await self.session.execute(max_stmt)).scalar()
             start_index = (max_index + 1) if max_index is not None else 0
-
             for i, block in enumerate(data):
                 block["order_index"] = start_index + i
-
             insert_stmt = insert(Block).values(data).returning(Block)
             result = await self.session.execute(insert_stmt)
             rows = list(result.scalars().all())

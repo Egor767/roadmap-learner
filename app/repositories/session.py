@@ -11,11 +11,11 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
 from app.models import Session
-from app.repositories import BaseRepository
+from app.repositories import BaseEntityRepository
 from app.schemas.session import SessionStatus
 
 
-class SessionRepository(BaseRepository):
+class SessionRepository(BaseEntityRepository):
     @repository_handler
     async def get_all(self) -> list[Session]:
         stmt = select(Session).order_by(Session.updated_at)

@@ -45,7 +45,6 @@ class BlockService:
             exclude_none=True,
             exclude_unset=True,
         )
-
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             key = get_cache_key(
                 "blocks", "user", str(current_user.id), "roadmap", str(filters_dict["roadmap_id"]), "list"
@@ -53,18 +52,14 @@ class BlockService:
             cache = await self.cache.get(key)
             if cache:
                 return cache_to_schemas(BlockRead, cache)
-
         orm = await self.repo.get_by_filters(filters_dict, current_user.id)
-
         schema = orm_list_to_schemas(BlockRead, orm)
-
         if is_single_parent_filter(filters_dict, "roadmap_id"):
             cache_data = json.dumps(
                 [u.model_dump(mode="json") for u in schema],
                 default=str,
             )
             await self.cache.set(key, cache_data)
-
         return schema
 
     @service_handler
@@ -73,16 +68,12 @@ class BlockService:
         cache = await self.cache.get(key)
         if cache:
             return cache_to_schema(BlockRead, cache)
-
         orm = await self.repo.get_by_id(block_id, current_user.id)
-
         schema = orm_to_schema(BlockRead, orm)
-
         await self.cache.set(
             key,
             json.dumps([schema.model_dump(mode="json")]),
         )
-
         return schema
 
     @service_handler
@@ -92,10 +83,8 @@ class BlockService:
             exclude_unset=True,
         )
         block_dict["id"] = generate_base_id()
-
         block_dict.pop("position", None)
         block_dict.pop("previous", None)
-
         orm = await self.repo.create(
             block_create_data.roadmap_id,
             block_dict,
@@ -103,13 +92,10 @@ class BlockService:
             block_create_data.position,
             block_create_data.previous,
         )
-
         schema = orm_to_schema(BlockRead, orm)
-
         await self.cache.delete(
             get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list")
         )
-
         return schema
 
     @service_handler
@@ -118,16 +104,12 @@ class BlockService:
             exclude_none=True,
             exclude_unset=True,
         )
-
         orm = await self.repo.update(block_id, block_dict, current_user.id)
-
         schema = orm_to_schema(BlockRead, orm)
-
         await self.cache.delete(
             get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
             get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
         )
-
         return schema
 
     @service_handler
@@ -143,20 +125,16 @@ class BlockService:
             move_data.previous,
             current_user.id,
         )
-
         schema = orm_to_schema(BlockRead, orm)
-
         await self.cache.delete(
             get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(schema.roadmap_id), "list"),
             get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
         )
-
         return schema
 
     @service_handler
     async def delete(self, current_user: "User", block_id: BaseIdType):
         orm = await self.repo.delete(block_id, current_user.id)
-
         await self.cache.delete(
             get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(orm.roadmap_id), "list"),
             get_cache_key("blocks", "user", str(current_user.id), "block", str(block_id), "detail"),
@@ -165,17 +143,12 @@ class BlockService:
     @service_handler
     async def create_multiple(self, current_user: "User", request: "BlockConfirmRequest") -> list[BlockRead]:
         blocks_dict = [block.model_dump(exclude_none=True, exclude_unset=True) for block in request.blocks]
-
         for block in blocks_dict:
             block["id"] = generate_base_id()
             block["roadmap_id"] = request.roadmap_id
-
         orm = await self.repo.create_multiple(request.roadmap_id, blocks_dict, current_user.id)
-
         schema = orm_list_to_schemas(BlockRead, orm)
-
         await self.cache.delete(
             get_cache_key("blocks", "user", str(current_user.id), "roadmap", str(request.roadmap_id), "list")
         )
-
         return schema

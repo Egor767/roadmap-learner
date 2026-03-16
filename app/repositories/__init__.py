@@ -1,5 +1,5 @@
 __all__ = (
-    "BaseRepository",
+    "BaseEntityRepository",
     "BlockRepository",
     "CardRepository",
     "QuestionCardRepository",
@@ -10,9 +10,10 @@ __all__ = (
     "UserCardProgressRepository",
     "UserQuestionProgressRepository",
     "UserRepository",
+    "VerifyRepository",
 )
 
-from .base import BaseRepository
+from .base import BaseEntityRepository
 from .block import BlockRepository
 from .card import CardRepository
 from .card_progress import UserCardProgressRepository
@@ -23,3 +24,4 @@ from .roadmap import RoadmapRepository
 from .session import SessionRepository
 from .session_item import SessionItemRepository
 from .user import UserRepository
+from .verify import VerifyRepository

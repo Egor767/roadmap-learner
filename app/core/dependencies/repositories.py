@@ -13,12 +13,19 @@ from app.repositories import (
     UserCardProgressRepository,
     UserQuestionProgressRepository,
     UserRepository,
+    VerifyRepository,
 )
 
 from .db import get_db_session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+
+def get_verify_repository(
+    session: Annotated["AsyncSession", Depends(get_db_session)],
+) -> VerifyRepository:
+    return VerifyRepository(session)
 
 
 def get_user_repository(

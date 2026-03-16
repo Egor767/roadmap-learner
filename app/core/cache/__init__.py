@@ -1,3 +1,7 @@
-__all__ = "CacheHelper"
+__all__ = (
+    "CacheHelper",
+    "CacheScope",
+)
 
 from .helper import CacheHelper
+from .scope import CacheScope
