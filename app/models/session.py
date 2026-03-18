@@ -9,13 +9,16 @@ from app.core.custom_types import BaseIdType
 from .base import Base
 from .mixins import (
     IdMixin,
+    ModuleRelationMixin,
     RoadmapRelationMixin,
     TimestampMixin,
     UserRelationMixin,
 )
 
 
-class Session(IdMixin, TimestampMixin, UserRelationMixin, RoadmapRelationMixin, Base):
+class Session(IdMixin, TimestampMixin, UserRelationMixin, RoadmapRelationMixin, ModuleRelationMixin, Base):
+    _module_id_nullable = True
+
     mode: Mapped[str] = mapped_column(
         SQLEnum(
             "exam",
@@ -29,11 +32,6 @@ class Session(IdMixin, TimestampMixin, UserRelationMixin, RoadmapRelationMixin, 
         Boolean,
         default=False,
         server_default="false",
-    )
-
-    block_id: Mapped[BaseIdType] = mapped_column(
-        UUID,
-        nullable=True,
     )
 
     status: Mapped[str] = mapped_column(
@@ -64,7 +62,7 @@ class Session(IdMixin, TimestampMixin, UserRelationMixin, RoadmapRelationMixin, 
         default=0,
     )
 
-    review_answers: Mapped[int] = mapped_column(
+    repeat_answers: Mapped[int] = mapped_column(
         default=0,
     )
 
