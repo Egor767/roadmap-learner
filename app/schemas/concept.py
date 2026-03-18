@@ -30,6 +30,7 @@ class ConceptUpdate(BaseModel):
     definition: str | None = Field(default=None, max_length=1000)
     example: str | None = Field(default=None, max_length=1000)
     comment: str | None = Field(default=None, max_length=500)
+    status: ConceptStatus | None = None
 
 
 class ConceptRead(BaseConcept):
@@ -37,6 +38,7 @@ class ConceptRead(BaseConcept):
     roadmap_id: BaseIdType
     example: str | None = None
     comment: str | None = None
+    status: ConceptStatus = ConceptStatus.UNKNOWN
     created_at: datetime
     updated_at: datetime
 
@@ -47,3 +49,4 @@ class ConceptFilters(BaseModel):
     definition: str | None = None
     example: str | None = None
     comment: str | None = None
+    status: ConceptStatus | None = None

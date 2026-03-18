@@ -8,7 +8,7 @@ from app.schemas.question import QuestionStatus
 
 
 class SessionMode(str, Enum):
-    REPEAT = "review"
+    REPEAT = "repeat"
     EXAM = "exam"
 
 
@@ -31,7 +31,7 @@ class SessionUpdate(BaseModel):
     index: int | None = None
     correct_answers: int | None = None
     incorrect_answers: int | None = None
-    review_answers: int | None = None
+    repeat_answers: int | None = None
 
 
 class SessionRead(BaseModel):
@@ -46,7 +46,7 @@ class SessionRead(BaseModel):
     index: int
     correct_answers: int
     incorrect_answers: int
-    review_answers: int
+    repeat_answers: int
     created_at: datetime
     updated_at: datetime
     completed_at: datetime | None = None
@@ -61,7 +61,7 @@ class SessionFilters(BaseModel):
     status: SessionStatus | None = None
 
 
-class SessionCardsFilter(BaseModel):
+class SessionQuestionFilter(BaseModel):
     limit: int = 10
     offset: int = 0
 
