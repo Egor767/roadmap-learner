@@ -9,12 +9,12 @@ from app.core.handlers import service_handler
 from app.models import User
 from app.schemas.question import QuestionStatus
 from app.schemas.session import (
-    SessionCardsFilter,
     SessionCreate,
     SessionFilters,
     SessionFinishResult,
     SessionItemRead,
     SessionMode,
+    SessionQuestionFilter,
     SessionRead,
     SessionStatus,
     SessionUpdate,
@@ -42,12 +42,14 @@ class SessionService:
         module_repo: "ModuleRepository",
         question_repo: "QuestionRepository",
         cache: "CacheHelper",
+        ai_client: "AIClient",
     ):
         self.repo = repo
         self.verify = verify
         self.module_repo = module_repo
         self.question_repo = question_repo
         self.cache = cache
+        self.ai_client = ai_client
 
     @service_handler
     async def get_all(self) -> list[SessionRead]:
@@ -75,7 +77,7 @@ class SessionService:
         self,
         current_user: "User",
         session_id: BaseIdType,
-        filters: SessionCardsFilter,
+        filters: SessionQuestionFilter,
     ) -> list[BaseIdType]:
         """Return a paginated slice of question ids for the given session."""
         await self.verify.verify_session(session_id, current_user.id)
@@ -94,6 +96,9 @@ class SessionService:
     @service_handler
     async def create(self, current_user: "User", session_create_data: SessionCreate) -> SessionRead:
         """Create a new session with a fixed ordered list of questions resolved from filters."""
+        available = await self.ai_client.health_check()
+        if session_create_data.auto_check and not available:
+            raise ServiceError("AI service is unavailable, auto_check mode is not allowed")
         await self.verify.verify_roadmap(session_create_data.roadmap_id, current_user.id)
         filters = session_create_data.model_dump(
             exclude={"mode", "mix", "auto_check"},

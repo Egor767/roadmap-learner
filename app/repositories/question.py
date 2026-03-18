@@ -7,6 +7,7 @@ from sqlalchemy import (
     select,
     update,
 )
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
@@ -224,7 +225,7 @@ class QuestionRepository(BaseEntityRepository):
         """Upsert progress status for question and user."""
         async with transaction_manager(self.session):
             stmt = (
-                insert(QuestionProgress)
+                postgres_insert(QuestionProgress)
                 .values(user_id=user, question_id=question, status=status)
                 .on_conflict_do_update(
                     index_elements=["user_id", "question_id"],

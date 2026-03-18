@@ -102,5 +102,6 @@ def get_session_service(
     module_repo: Annotated["ModuleRepository", Depends(get_module_repository)],
     question_repo: Annotated["QuestionRepository", Depends(get_question_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
+    ai_client: Annotated["AIClient", Depends(get_ai_client)],
 ) -> SessionService:
-    return SessionService(repo, verify, module_repo, question_repo, cache)
+    return SessionService(repo, verify, module_repo, question_repo, cache, ai_client)

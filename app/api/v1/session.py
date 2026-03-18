@@ -9,11 +9,11 @@ from app.core.custom_types import BaseIdType
 from app.core.dependencies.services import get_answer_service, get_session_service
 from app.core.handlers import router_handler
 from app.schemas.session import (
-    SessionCardsFilter,
     SessionCreate,
     SessionFilters,
     SessionFinishResult,
     SessionItemCreate,
+    SessionQuestionFilter,
     SessionRead,
     SessionUpdate,
 )
@@ -63,14 +63,14 @@ async def get_session(
 @router_handler
 async def get_questions(
     session_id: BaseIdType,
-    filters: Annotated[SessionCardsFilter, Depends()],
+    filters: Annotated[SessionQuestionFilter, Depends()],
     current_user: Annotated["User", Depends(current_active_user)],
     session_service: Annotated["SessionService", Depends(get_session_service)],
 ):
     return await session_service.get_session_questions(current_user, session_id, filters)
 
 
-@router.get("/{session_id}/next-question", name="sessions:next_question", response_model=BaseIdType)
+@router.get("/{session_id}/next-question", name="sessions:next_question", response_model=BaseIdType | None)
 @router_handler
 async def get_next_question(
     session_id: BaseIdType,
@@ -99,8 +99,8 @@ async def submit_answer(
     background_tasks: BackgroundTasks,
     current_user: Annotated["User", Depends(current_active_user)],
     answer_service: Annotated["AnswerService", Depends(get_answer_service)],
-) -> BaseIdType | None:
-    return await answer_service.submit_answer(current_user, session_id, data, background_tasks)
+):
+    await answer_service.submit_answer(current_user, session_id, data, background_tasks)
 
 
 # -------------------------------------- UPDATE --------------------------------------

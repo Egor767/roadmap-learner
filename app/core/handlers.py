@@ -59,7 +59,7 @@ def service_handler(func):
     async def async_wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except (RepositoryError, ValueError):
+        except (RepositoryError, ValueError, ServiceError):
             raise
         except Exception as e:
             logger.error(f"Service error in {func.__name__}: {e!s}", exc_info=True)

@@ -43,9 +43,9 @@ async def get_questions(
     filters: Annotated[QuestionFilters, Depends()],
     current_user: Annotated["User", Depends(current_active_user)],
     question_service: Annotated["QuestionService", Depends(get_question_service)],
-    block_filter: Annotated[list[BaseIdType] | None, Query()] = None,
+    module_filter: Annotated[list[BaseIdType] | None, Query()] = None,
 ) -> list[QuestionRead]:
-    return await question_service.get_by_filters(current_user, filters, block_filter)
+    return await question_service.get_by_filters(current_user, filters, module_filter)
 
 
 @router.get("/{question_id}", name="questions:question", response_model=QuestionRead)

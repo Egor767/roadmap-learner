@@ -36,7 +36,7 @@ class AnswerService:
     @service_handler
     async def submit_answer(
         self, current_user: "User", session: BaseIdType, data: SessionItemCreate, background_tasks: BackgroundTasks
-    ) -> BaseIdType | None:
+    ) -> None:
         """Record the user's answer for a question within a session.
 
         In auto_check mode, schedules AI evaluation as a background task and does not
@@ -62,8 +62,6 @@ class AnswerService:
             )
         else:
             await self.question_repo.update_progress(current_user.id, data.question_id, data.result)
-        next_question_id = await self._next(session, orm.questions)
-        return next_question_id
 
     async def _next(self, session: BaseIdType, questions: list[BaseIdType]) -> BaseIdType | None:
         """Return the next unanswered question ID in the ordered questions list."""
