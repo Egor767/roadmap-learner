@@ -1,6 +1,6 @@
 import httpx
 
-from app.schemas.ai import CardContext, EvaluateAnswerResponse
+from app.schemas.ai import ConceptContext, EvaluateAnswerResponse
 
 
 class AIClient:
@@ -41,7 +41,7 @@ class AIClient:
             return response.json()["content"]
 
     async def evaluate_answer(
-        self, question: str, correct_answer: str, answer: str, hint: bool, cards: list[CardContext]
+        self, question: str, correct_answer: str, answer: str, hint: bool, concepts: list[ConceptContext]
     ) -> EvaluateAnswerResponse:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
@@ -51,7 +51,7 @@ class AIClient:
                     "correct_answer": correct_answer,
                     "answer": answer,
                     "hint": hint,
-                    "cards": [c.model_dump() for c in cards],
+                    "concepts": [c.model_dump() for c in concepts],
                 },
             )
             response.raise_for_status()

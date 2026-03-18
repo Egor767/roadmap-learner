@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Annotated
 from fastapi import Depends
 
 from app.repositories import (
-    BlockRepository,
-    CardRepository,
+    ConceptRepository,
+    ModuleRepository,
     QuestionRepository,
     RoadmapRepository,
     SessionRepository,
@@ -36,16 +36,16 @@ def get_roadmap_repository(
     return RoadmapRepository(session)
 
 
-def get_block_repository(
+def get_module_repository(
     session: Annotated["AsyncSession", Depends(get_db_session)],
-) -> BlockRepository:
-    return BlockRepository(session)
+) -> ModuleRepository:
+    return ModuleRepository(session)
 
 
-def get_card_repository(
+def get_concept_repository(
     session: Annotated["AsyncSession", Depends(get_db_session)],
-) -> CardRepository:
-    return CardRepository(session)
+) -> ConceptRepository:
+    return ConceptRepository(session)
 
 
 def get_question_repository(

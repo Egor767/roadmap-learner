@@ -25,7 +25,7 @@ from app.utils.mappers.orm_to_schema import orm_list_to_schemas, orm_to_schema
 if TYPE_CHECKING:
     from app.core.cache import CacheHelper
     from app.repositories import (
-        BlockRepository,
+        ModuleRepository,
         QuestionRepository,
         SessionRepository,
         VerifyRepository,
@@ -39,13 +39,13 @@ class SessionService:
         self,
         repo: "SessionRepository",
         verify: "VerifyRepository",
-        block_repo: "BlockRepository",
+        module_repo: "ModuleRepository",
         question_repo: "QuestionRepository",
         cache: "CacheHelper",
     ):
         self.repo = repo
         self.verify = verify
-        self.block_repo = block_repo
+        self.module_repo = module_repo
         self.question_repo = question_repo
         self.cache = cache
 
@@ -102,14 +102,14 @@ class SessionService:
         )
         if session_create_data.mode is SessionMode.REPEAT:
             filters["status"] = "review"
-        if filters.get("block_id") is None:
-            blocks_filters = {k: v for k, v in filters.items() if k != "status"}
-            blocks_ids = [b.id for b in await self.block_repo.get_by_filters(blocks_filters, current_user.id)]
+        if filters.get("module_id") is None:
+            modules_filters = {k: v for k, v in filters.items() if k != "status"}
+            modules_ids = [b.id for b in await self.module_repo.get_by_filters(modules_filters, current_user.id)]
         else:
-            blocks_ids = [filters.get("block_id")]
+            modules_ids = [filters.get("module_id")]
         questions = []
-        if blocks_ids:
-            filters["block_id"] = blocks_ids.copy()
+        if modules_ids:
+            filters["module_id"] = modules_ids.copy()
             questions = [q.id for q in await self.question_repo.get_by_filters(filters, current_user.id)]
         session_dict = session_create_data.model_dump(exclude={"mix"})
         session_dict["user_id"] = current_user.id
@@ -157,7 +157,7 @@ class SessionService:
         return SessionFinishResult(
             id=session.id,
             roadmap_id=session.roadmap_id,
-            block_id=session.block_id,
+            module_id=session.module_id,
             mode=SessionMode(session.mode),
             auto_check=session.auto_check,
             total=total,

@@ -9,17 +9,17 @@ from .mixins import (
 )
 
 
-class Block(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
+class Module(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
     __table_args__ = (
         UniqueConstraint(
             "roadmap_id",
             "order_index",
-            name="uq_block_roadmap_order",
+            name="uq_module_roadmap_order",
             deferrable=True,
             initially="DEFERRED",
         ),
-        UniqueConstraint("roadmap_id", "title", name="uq_block_roadmap_title"),
-        Index("ix_block_roadmap_order", "roadmap_id", "order_index"),
+        UniqueConstraint("roadmap_id", "title", name="uq_module_roadmap_title"),
+        Index("ix_module_roadmap_order", "roadmap_id", "order_index"),
     )
 
     title: Mapped[str] = mapped_column(String(75), nullable=False)

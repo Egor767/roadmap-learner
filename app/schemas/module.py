@@ -6,14 +6,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.core.custom_types import BaseIdType
 
 
-class BaseBlock(BaseModel):
+class BaseModule(BaseModel):
     title: str = Field(..., max_length=75)
     description: str | None = Field(default=None, max_length=300)
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class BlockCreate(BaseBlock):
+class ModuleCreate(BaseModule):
     roadmap_id: BaseIdType
     position: Literal["start", "end"] | None = None
     previous: BaseIdType | None = None
@@ -29,19 +29,19 @@ class BlockCreate(BaseBlock):
         return self
 
 
-class BlockUpdate(BaseModel):
+class ModuleUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=75)
     description: str | None = Field(default=None, max_length=300)
     order_index: int | None = None
     roadmap_id: BaseIdType | None = None
 
 
-class BlockMove(BaseModel):
+class ModuleMove(BaseModel):
     roadmap_id: BaseIdType
     previous: BaseIdType | None = None
 
 
-class BlockRead(BaseBlock):
+class ModuleRead(BaseModule):
     id: BaseIdType
     roadmap_id: BaseIdType
     order_index: int
@@ -49,13 +49,13 @@ class BlockRead(BaseBlock):
     updated_at: datetime
 
 
-class BlockFilters(BaseModel):
+class ModuleFilters(BaseModel):
     roadmap_id: BaseIdType | None = None
     title: str | None = None
     description: str | None = None
     order_index: int | None = None
 
 
-class BlockConfirmRequest(BaseModel):
+class ModuleConfirmRequest(BaseModel):
     roadmap_id: BaseIdType
-    blocks: list[BaseBlock] = Field(..., min_length=1, max_length=20)
+    modules: list[BaseModule] = Field(..., min_length=1, max_length=20)

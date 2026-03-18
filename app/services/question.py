@@ -67,17 +67,17 @@ class QuestionService:
 
     @service_handler
     async def get_by_filters(
-        self, current_user: "User", filters: QuestionFilters, block_filter: list[BaseIdType]
+        self, current_user: "User", filters: QuestionFilters, module_filter: list[BaseIdType]
     ) -> list[QuestionRead]:
         """Return questions matching filters for current user."""
         filters_dump = filters.model_dump(exclude_none=True, exclude_unset=True)
         status_filter = filters_dump.pop("status", None)
         filters_dict = {k: v for k, v in filters_dump.items() if v is not None}
-        if block_filter is not None:
-            filters_dict["block_id"] = block_filter
+        if module_filter is not None:
+            filters_dict["module_id"] = module_filter
         scope = self._scope(current_user)
-        if is_single_parent_filter(filters_dict, "block_id"):
-            cache = await scope.get("block", str(filters_dict["block_id"][0]), "list")
+        if is_single_parent_filter(filters_dict, "module_id"):
+            cache = await scope.get("module", str(filters_dict["module_id"][0]), "list")
             if cache:
                 return cache_to_schemas(QuestionRead, cache)
         if status_filter is not None:
@@ -88,11 +88,11 @@ class QuestionService:
         orm = await self.repo.get_by_filters(filters_dict, current_user.id)
         statuses = await self.repo.get_statuses(current_user.id, [q.id for q in orm])
         schemas = orm_list_to_schemas_statuses(QuestionRead, orm, statuses)
-        if is_single_parent_filter(filters_dict, "block_id") and status_filter is None:
+        if is_single_parent_filter(filters_dict, "module_id") and status_filter is None:
             await scope.put(
                 json.dumps([s.model_dump(mode="json") for s in schemas], default=str),
-                "block",
-                str(filters_dict["block_id"][0]),
+                "module",
+                str(filters_dict["module_id"][0]),
                 "list",
             )
         return schemas
@@ -100,19 +100,19 @@ class QuestionService:
     @service_handler
     async def create(self, current_user: "User", data: QuestionCreate) -> QuestionRead:
         """Create new question for current user."""
-        await self.verify.verify_block(data.block_id, current_user.id)
+        await self.verify.verify_module(data.module_id, current_user.id)
         question_dict = data.model_dump(exclude_none=True, exclude_unset=True)
         question_dict["id"] = generate_base_id()
         question_dict.pop("position", None)
         question_dict.pop("previous", None)
         orm = await self.repo.create(
-            data.block_id,
+            data.module_id,
             question_dict,
             data.position,
             data.previous,
         )
         schema = orm_to_schema_status(QuestionRead, orm, QuestionStatus.UNKNOWN)
-        await self._scope(current_user).drop(("block", str(schema.block_id), "list"))
+        await self._scope(current_user).drop(("module", str(schema.module_id), "list"))
         return schema
 
     @service_handler
@@ -133,7 +133,7 @@ class QuestionService:
         )
         schema = orm_to_schema_status(QuestionRead, orm, final_status)
         await self._scope(current_user).drop(
-            ("block", str(schema.block_id), "list"),
+            ("module", str(schema.module_id), "list"),
             ("question", str(question), "detail"),
         )
         return schema
@@ -141,16 +141,16 @@ class QuestionService:
     @service_handler
     async def move(self, current_user: "User", question: BaseIdType, data: QuestionMove) -> QuestionRead:
         """Move question to new position for current user."""
-        await self.verify.verify_block(data.block_id, current_user.id)
+        await self.verify.verify_module(data.module_id, current_user.id)
         orm, affected = await self.repo.move(
-            block_id=data.block_id,
+            module_id=data.module_id,
             question_id=question,
             previous=data.previous,
         )
         status = await self.repo.get_status(current_user.id, question)
         schema = orm_to_schema_status(QuestionRead, orm, status)
         await self._scope(current_user).drop(
-            ("block", str(schema.block_id), "list"),
+            ("module", str(schema.module_id), "list"),
             ("question", str(question), "detail"),
             *[("question", str(affected_id), "detail") for affected_id in affected],
         )
@@ -162,34 +162,34 @@ class QuestionService:
         orm = await self.verify.verify_question(question, current_user.id)
         await self.repo.delete(question)
         await self._scope(current_user).drop(
-            ("block", str(orm.block_id), "list"),
+            ("module", str(orm.module_id), "list"),
             ("question", str(question), "detail"),
         )
 
     @service_handler
     async def create_multiple(self, current_user: "User", request: "QuestionConfirmRequest") -> list[QuestionRead]:
         """Create multiple questions for current user."""
-        block_ids = [item.block_id for item in request.items]
-        await self.verify.verify_blocks(block_ids, current_user.id)
-        questions_by_block: dict[BaseIdType, list[dict]] = {}
+        module_ids = [item.module_id for item in request.items]
+        await self.verify.verify_modules(module_ids, current_user.id)
+        questions_by_module: dict[BaseIdType, list[dict]] = {}
         for item in request.items:
             questions_dict = []
             for q in item.questions:
                 q_dict = q.model_dump(exclude_none=True, exclude_unset=True)
                 q_dict["id"] = generate_base_id()
-                q_dict["block_id"] = item.block_id
+                q_dict["module_id"] = item.module_id
                 questions_dict.append(q_dict)
-            questions_by_block[item.block_id] = questions_dict
-        orm = await self.repo.create_multiple(questions_by_block)
+            questions_by_module[item.module_id] = questions_dict
+        orm = await self.repo.create_multiple(questions_by_module)
         schemas = [orm_to_schema_status(QuestionRead, q, QuestionStatus.UNKNOWN) for q in orm]
-        await self._scope(current_user).drop(*[("block", str(block_id), "list") for block_id in questions_by_block])
+        await self._scope(current_user).drop(*[("module", str(module_id), "list") for module_id in questions_by_module])
         return schemas
 
     @service_handler
-    async def link_card(self, current_user: "User", question: BaseIdType, card: BaseIdType) -> None:
-        """Link card to question for current user."""
+    async def link_concept(self, current_user: "User", question: BaseIdType, concept: BaseIdType) -> None:
+        """Link concept to question for current user."""
         await asyncio.gather(
             self.verify.verify_question(question, current_user.id),
-            self.verify.verify_card(card, current_user.id),
+            self.verify.verify_concept(concept, current_user.id),
         )
-        await self.repo.link_card(question, card)
+        await self.repo.link_concept(question, concept)

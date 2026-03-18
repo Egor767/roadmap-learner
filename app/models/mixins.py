@@ -9,7 +9,7 @@ from app.core.custom_types import BaseIdType
 from app.utils.generators import id_generator, server_id_generator
 
 if TYPE_CHECKING:
-    from .block import Block
+    from .module import Module
     from .roadmap import Roadmap
     from .user import User
 
@@ -90,47 +90,47 @@ class RoadmapRelationMixin:
         )
 
 
-class BlockRelationMixin:
-    _block_id_nullable: bool = False
-    _block_id_unique: bool = False
-    _block_back_populates: str | None = None
+class ModuleRelationMixin:
+    _module_id_nullable: bool = False
+    _module_id_unique: bool = False
+    _module_back_populates: str | None = None
 
     @declared_attr
-    def block_id(cls) -> Mapped[BaseIdType]:
+    def module_id(cls) -> Mapped[BaseIdType]:
         return mapped_column(
-            ForeignKey("blocks.id", ondelete="CASCADE"),
-            unique=cls._block_id_unique,
-            nullable=cls._block_id_nullable,
+            ForeignKey("modules.id", ondelete="CASCADE"),
+            unique=cls._module_id_unique,
+            nullable=cls._module_id_nullable,
         )
 
     @declared_attr
-    def block(cls) -> Mapped["Block"]:
+    def module(cls) -> Mapped["Module"]:
         return relationship(
-            "Block",
-            back_populates=cls._block_back_populates,
+            "Module",
+            back_populates=cls._module_back_populates,
         )
 
 
-class CardRelationMixin:
-    _card_id_nullable: bool = False
-    _card_id_unique: bool = False
-    _card_id_primary_key: bool = False
-    _card_back_populates: str | None = None
+class ConceptRelationMixin:
+    _concept_id_nullable: bool = False
+    _concept_id_unique: bool = False
+    _concept_id_primary_key: bool = False
+    _concept_back_populates: str | None = None
 
     @declared_attr
-    def card_id(cls) -> Mapped[BaseIdType]:
+    def concept_id(cls) -> Mapped[BaseIdType]:
         return mapped_column(
-            ForeignKey("cards.id", ondelete="CASCADE"),
-            unique=cls._card_id_unique,
-            nullable=cls._card_id_nullable,
-            primary_key=cls._card_id_primary_key,
+            ForeignKey("concepts.id", ondelete="CASCADE"),
+            unique=cls._concept_id_unique,
+            nullable=cls._concept_id_nullable,
+            primary_key=cls._concept_id_primary_key,
         )
 
     @declared_attr
-    def card(cls) -> Mapped["Block"]:
+    def concept(cls) -> Mapped["Module"]:
         return relationship(
-            "Card",
-            back_populates=cls._card_back_populates,
+            "Concept",
+            back_populates=cls._concept_back_populates,
         )
 
 

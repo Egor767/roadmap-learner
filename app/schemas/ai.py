@@ -15,20 +15,20 @@ class ChatResponse(BaseModel):
     response: str
 
 
-class BlockDistributeRequest(BaseModel):
+class ModuleDistributeRequest(BaseModel):
     roadmap_id: BaseIdType
     text: str = Field(..., min_length=1, max_length=10_000)
 
 
-class LoadBlock(BaseModel):
+class LoadModule(BaseModel):
     title: str
 
 
-class BlockDistributeResponse(BaseModel):
-    blocks: list[LoadBlock]
+class ModuleDistributeResponse(BaseModel):
+    modules: list[LoadModule]
 
 
-class BlockInfo(BaseModel):
+class ModuleInfo(BaseModel):
     id: BaseIdType
     title: str
     model_config = ConfigDict(from_attributes=True)
@@ -40,7 +40,7 @@ class QuestionDistributeRequest(BaseModel):
 
 
 class QuestionDistributionItem(BaseModel):
-    block: BlockInfo
+    module: ModuleInfo
     questions: list[str]
 
 
@@ -50,15 +50,15 @@ class QuestionDistributeResponse(BaseModel):
 
 
 class GenerateTarget(str, Enum):
-    blocks = "blocks"
-    cards = "cards"
+    modules = "modules"
+    concepts = "concepts"
     questions = "questions"
 
 
 class GenerateRequest(BaseModel):
-    target: GenerateTarget = GenerateTarget.blocks
+    target: GenerateTarget = GenerateTarget.modules
     roadmap_id: BaseIdType | None = None
-    block_id: BaseIdType | None = None
+    module_id: BaseIdType | None = None
     question_id: BaseIdType | None = None
 
 
@@ -66,7 +66,7 @@ class GenerateResponse(BaseModel):
     items: list[str]
 
 
-class CardContext(BaseModel):
+class ConceptContext(BaseModel):
     term: str
     definition: str
 
@@ -76,7 +76,7 @@ class EvaluateAnswerRequest(BaseModel):
     correct_answer: str
     answer: str
     hint: bool
-    cards: list[CardContext]
+    concepts: list[ConceptContext]
 
 
 class EvaluateAnswerResponse(BaseModel):

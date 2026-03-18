@@ -21,7 +21,7 @@ class BaseQuestion(BaseModel):
 
 
 class QuestionCreate(BaseQuestion):
-    block_id: BaseIdType
+    module_id: BaseIdType
     position: Literal["start", "end"] | None = None
     previous: BaseIdType | None = None
 
@@ -44,13 +44,13 @@ class QuestionUpdate(BaseModel):
 
 
 class QuestionMove(BaseModel):
-    block_id: BaseIdType
+    module_id: BaseIdType
     previous: BaseIdType | None = None
 
 
 class QuestionRead(BaseQuestion):
     id: BaseIdType
-    block_id: BaseIdType
+    module_id: BaseIdType
     order_index: int
     status: QuestionStatus = QuestionStatus.UNKNOWN
     created_at: datetime
@@ -65,7 +65,7 @@ class QuestionFilters(BaseModel):
 
 
 class QuestionConfirmItem(BaseModel):
-    block_id: BaseIdType
+    module_id: BaseIdType
     questions: list[BaseQuestion] = Field(..., min_length=1)
 
 

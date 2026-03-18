@@ -1,11 +1,11 @@
 __all__ = (
     "AccessToken",
     "Base",
-    "Block",
-    "Card",
-    "CardProgress",
+    "Concept",
+    "ConceptProgress",
+    "Module",
     "Question",
-    "QuestionCard",
+    "QuestionConcept",
     "QuestionProgress",
     "Roadmap",
     "Session",
@@ -16,12 +16,12 @@ __all__ = (
 
 from .access_token import AccessToken
 from .base import Base
-from .block import Block
-from .card import Card
-from .card_progress import CardProgress
+from .concept import Concept
+from .concept_progress import ConceptProgress
 from .db_helper import db_helper
+from .module import Module
 from .question import Question
-from .question_card import QuestionCard
+from .question_concept import QuestionConcept
 from .question_progress import QuestionProgress
 from .roadmap import Roadmap
 from .session import Session

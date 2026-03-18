@@ -21,7 +21,7 @@ class SessionStatus(str, Enum):
 class SessionCreate(BaseModel):
     mode: SessionMode
     roadmap_id: BaseIdType
-    block_id: BaseIdType | None = None
+    module_id: BaseIdType | None = None
     mix: bool = False
     auto_check: bool = False
 
@@ -38,7 +38,7 @@ class SessionRead(BaseModel):
     id: BaseIdType
     user_id: BaseIdType
     roadmap_id: BaseIdType
-    block_id: BaseIdType | None = None
+    module_id: BaseIdType | None = None
     mode: SessionMode
     auto_check: bool
     status: SessionStatus
@@ -57,7 +57,7 @@ class SessionRead(BaseModel):
 class SessionFilters(BaseModel):
     mode: SessionMode | None = None
     roadmap_id: BaseIdType | None = None
-    block_id: BaseIdType | None = None
+    module_id: BaseIdType | None = None
     status: SessionStatus | None = None
 
 
@@ -88,7 +88,7 @@ class SessionItemRead(BaseModel):
 class SessionFinishResult(BaseModel):
     id: BaseIdType
     roadmap_id: BaseIdType
-    block_id: BaseIdType | None = None
+    module_id: BaseIdType | None = None
     mode: SessionMode
     auto_check: bool
     total: int

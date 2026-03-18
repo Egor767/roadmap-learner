@@ -6,33 +6,33 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.core.custom_types import BaseIdType
 
 
-class CardStatus(str, Enum):
+class ConceptStatus(str, Enum):
     KNOWN = "known"
     UNKNOWN = "unknown"
     REPEAT = "repeat"
 
 
-class BaseCard(BaseModel):
+class BaseConcept(BaseModel):
     term: str = Field(..., max_length=100)
     definition: str = Field(..., max_length=1000)
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class CardCreate(BaseCard):
+class ConceptCreate(BaseConcept):
     example: str | None = Field(default=None, max_length=1000)
     comment: str | None = Field(default=None, max_length=500)
     roadmap_id: BaseIdType
 
 
-class CardUpdate(BaseModel):
+class ConceptUpdate(BaseModel):
     term: str | None = Field(default=None, max_length=100)
     definition: str | None = Field(default=None, max_length=1000)
     example: str | None = Field(default=None, max_length=1000)
     comment: str | None = Field(default=None, max_length=500)
 
 
-class CardRead(BaseCard):
+class ConceptRead(BaseConcept):
     id: BaseIdType
     roadmap_id: BaseIdType
     example: str | None = None
@@ -41,7 +41,7 @@ class CardRead(BaseCard):
     updated_at: datetime
 
 
-class CardFilters(BaseModel):
+class ConceptFilters(BaseModel):
     roadmap_id: BaseIdType | None = None
     term: str | None = None
     definition: str | None = None

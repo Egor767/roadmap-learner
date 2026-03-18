@@ -9,8 +9,8 @@ from .mixins import (
 )
 
 
-class Card(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
-    __table_args__ = (UniqueConstraint("roadmap_id", "term", name="uq_card_roadmap_term"),)
+class Concept(IdMixin, TimestampMixin, RoadmapRelationMixin, Base):
+    __table_args__ = (UniqueConstraint("roadmap_id", "term", name="uq_concept_roadmap_term"),)
 
     term: Mapped[str] = mapped_column(String(100), nullable=False)
     definition: Mapped[str] = mapped_column(String(1000), nullable=False)

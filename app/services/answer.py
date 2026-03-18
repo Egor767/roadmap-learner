@@ -5,14 +5,14 @@ from fastapi import BackgroundTasks
 from app.core.custom_types import BaseIdType
 from app.core.handlers import service_handler
 from app.models import User
-from app.schemas.ai import CardContext, EvaluateAnswerResponse
+from app.schemas.ai import ConceptContext, EvaluateAnswerResponse
 from app.schemas.session import SessionItemCreate
 from app.shared.generate_id import generate_base_id
 
 if TYPE_CHECKING:
     from app.clients.ai import AIClient
     from app.repositories import (
-        CardRepository,
+        ConceptRepository,
         QuestionRepository,
         SessionRepository,
     )
@@ -25,12 +25,12 @@ class AnswerService:
         self,
         repo: "SessionRepository",
         question_repo: "QuestionRepository",
-        card_repo: "CardRepository",
+        concept_repo: "ConceptRepository",
         ai_client: "AIClient",
     ):
         self.repo = repo
         self.question_repo = question_repo
-        self.card_repo = card_repo
+        self.concept_repo = concept_repo
         self.ai_client = ai_client
 
     @service_handler
@@ -74,18 +74,18 @@ class AnswerService:
     async def _evaluate_answer(self, item: BaseIdType, user: BaseIdType) -> None:
         """Evaluate a submitted answer using AI and persist the result.
 
-        Fetches the session item, question, and linked term cards, sends them to the AI
+        Fetches the session item, question, and linked term concepts, sends them to the AI
         for evaluation, then updates the item result and the user's question progress.
         """
         session_item = await self.repo.get_item_by_id(item)
         question = await self.question_repo.get_by_id(session_item.question_id)
-        cards = await self.card_repo.get_by_question(session_item.question_id)
+        concepts = await self.concept_repo.get_by_question(session_item.question_id)
         evaluation: EvaluateAnswerResponse = await self.ai_client.evaluate_answer(
             question=question.question,
             correct_answer=question.answer,
             answer=session_item.answer,
             hint=session_item.hint,
-            cards=[CardContext(term=c.term, definition=c.definition) for c in cards],
+            concepts=[ConceptContext(term=c.term, definition=c.definition) for c in concepts],
         )
         await self.repo.update_item(item, {"result": evaluation.result, "note": evaluation.note})
         await self.question_repo.update_progress(user, session_item.question_id, evaluation.result)

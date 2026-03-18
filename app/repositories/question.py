@@ -12,7 +12,7 @@ from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
 from app.core.handlers import repository_handler
-from app.models import Block, Question, QuestionCard, QuestionProgress, Roadmap
+from app.models import Module, Question, QuestionConcept, QuestionProgress, Roadmap
 from app.models.question_progress import QuestionStatus
 from app.repositories import BaseEntityRepository
 
@@ -43,12 +43,12 @@ class QuestionRepository(BaseEntityRepository):
         """Return questions matching filters for user."""
         stmt = (
             select(Question)
-            .join(Block, Question.block_id == Block.id)
-            .join(Roadmap, Block.roadmap_id == Roadmap.id)
+            .join(Module, Question.module_id == Module.id)
+            .join(Roadmap, Module.roadmap_id == Roadmap.id)
             .where(Roadmap.user_id == user)
         )
         if filters.get("roadmap_id") is not None:
-            stmt = stmt.where(Block.roadmap_id == filters.pop("roadmap_id"))
+            stmt = stmt.where(Module.roadmap_id == filters.pop("roadmap_id"))
         for field_name, value in filters.items():
             column = getattr(Question, field_name)
             if isinstance(value, list):
@@ -94,34 +94,34 @@ class QuestionRepository(BaseEntityRepository):
     @repository_handler
     async def create(
         self,
-        block_id: BaseIdType,
+        module_id: BaseIdType,
         data: dict,
         position: Literal["start", "end"] = "end",
         previous: BaseIdType | None = None,
     ) -> Question:
-        """Create question in block at given position."""
+        """Create question in module at given position."""
         async with transaction_manager(self.session):
             if previous is not None:
                 prev_stmt = select(Question.order_index).where(
                     Question.id == previous,
-                    Question.block_id == block_id,
+                    Question.module_id == module_id,
                 )
                 prev_index = (await self.session.execute(prev_stmt)).scalar_one_or_none()
                 if prev_index is None:
                     raise EntityNotFoundError(Question, previous)
                 await self.session.execute(
                     update(Question)
-                    .where(Question.block_id == block_id, Question.order_index > prev_index)
+                    .where(Question.module_id == module_id, Question.order_index > prev_index)
                     .values(order_index=Question.order_index + 1)
                 )
                 data["order_index"] = prev_index + 1
             elif position == "start":
                 await self.session.execute(
-                    update(Question).where(Question.block_id == block_id).values(order_index=Question.order_index + 1)
+                    update(Question).where(Question.module_id == module_id).values(order_index=Question.order_index + 1)
                 )
                 data["order_index"] = 0
             else:
-                max_stmt = select(func.max(Question.order_index)).where(Question.block_id == block_id)
+                max_stmt = select(func.max(Question.order_index)).where(Question.module_id == module_id)
                 max_index = (await self.session.execute(max_stmt)).scalar()
                 data["order_index"] = (max_index + 1) if max_index is not None else 0
             stmt = insert(Question).values(**data).returning(Question)
@@ -141,15 +141,15 @@ class QuestionRepository(BaseEntityRepository):
     @repository_handler
     async def move(
         self,
-        block_id: BaseIdType,
+        module_id: BaseIdType,
         question_id: BaseIdType,
         previous: BaseIdType | None,
     ) -> tuple[Question, list[BaseIdType]]:
-        """Move question to new position within block."""
+        """Move question to new position within module."""
         async with transaction_manager(self.session):
             stmt = select(Question).where(
                 Question.id == question_id,
-                Question.block_id == block_id,
+                Question.module_id == module_id,
             )
             row = (await self.session.execute(stmt)).scalar_one_or_none()
             if row is None:
@@ -160,7 +160,7 @@ class QuestionRepository(BaseEntityRepository):
             else:
                 prev_stmt = select(Question.order_index).where(
                     Question.id == previous,
-                    Question.block_id == block_id,
+                    Question.module_id == module_id,
                 )
                 after_index = (await self.session.execute(prev_stmt)).scalar_one_or_none()
                 if after_index is None:
@@ -170,7 +170,7 @@ class QuestionRepository(BaseEntityRepository):
                 return row, []
             if new_index < old_index:
                 affected_stmt = select(Question.id).where(
-                    Question.block_id == block_id,
+                    Question.module_id == module_id,
                     Question.order_index >= new_index,
                     Question.order_index < old_index,
                     Question.id != question_id,
@@ -178,7 +178,7 @@ class QuestionRepository(BaseEntityRepository):
                 await self.session.execute(
                     update(Question)
                     .where(
-                        Question.block_id == block_id,
+                        Question.module_id == module_id,
                         Question.order_index >= new_index,
                         Question.order_index < old_index,
                         Question.id != question_id,
@@ -187,7 +187,7 @@ class QuestionRepository(BaseEntityRepository):
                 )
             else:
                 affected_stmt = select(Question.id).where(
-                    Question.block_id == block_id,
+                    Question.module_id == module_id,
                     Question.order_index > old_index,
                     Question.order_index <= new_index,
                     Question.id != question_id,
@@ -195,7 +195,7 @@ class QuestionRepository(BaseEntityRepository):
                 await self.session.execute(
                     update(Question)
                     .where(
-                        Question.block_id == block_id,
+                        Question.module_id == module_id,
                         Question.order_index > old_index,
                         Question.order_index <= new_index,
                         Question.id != question_id,
@@ -245,20 +245,20 @@ class QuestionRepository(BaseEntityRepository):
             return row
 
     @repository_handler
-    async def create_multiple(self, questions_by_block: dict[BaseIdType, list[dict]]) -> list[Question]:
-        """Create multiple questions across blocks."""
+    async def create_multiple(self, questions_by_module: dict[BaseIdType, list[dict]]) -> list[Question]:
+        """Create multiple questions across modules."""
         async with transaction_manager(self.session):
-            block_ids = list(questions_by_block.keys())
+            module_ids = list(questions_by_module.keys())
             max_stmt = (
-                select(Question.block_id, func.max(Question.order_index))
-                .where(Question.block_id.in_(block_ids))
-                .group_by(Question.block_id)
+                select(Question.module_id, func.max(Question.order_index))
+                .where(Question.module_id.in_(module_ids))
+                .group_by(Question.module_id)
             )
             max_result = await self.session.execute(max_stmt)
-            max_by_block: dict[BaseIdType, int] = {row[0]: row[1] for row in max_result.fetchall()}
+            max_by_module: dict[BaseIdType, int] = {row[0]: row[1] for row in max_result.fetchall()}
             all_questions: list[dict] = []
-            for block_id, questions in questions_by_block.items():
-                start_index = max_by_block.get(block_id, -1) + 1
+            for module_id, questions in questions_by_module.items():
+                start_index = max_by_module.get(module_id, -1) + 1
                 for i, q in enumerate(questions):
                     q["order_index"] = start_index + i
                     all_questions.append(q)
@@ -267,21 +267,21 @@ class QuestionRepository(BaseEntityRepository):
             return list(result.scalars().all())
 
     @repository_handler
-    async def link_card(self, question: BaseIdType, card: BaseIdType) -> None:
-        """Link card to question."""
+    async def link_concept(self, question: BaseIdType, concept: BaseIdType) -> None:
+        """Link concept to question."""
         async with transaction_manager(self.session):
-            stmt = insert(QuestionCard).values(
+            stmt = insert(QuestionConcept).values(
                 question_id=question,
-                card_id=card,
+                concept_id=concept,
             )
             await self.session.execute(stmt)
 
     @repository_handler
-    async def unlink_card(self, question: BaseIdType, card: BaseIdType) -> None:
-        """Unlink card from question."""
+    async def unlink_concept(self, question: BaseIdType, concept: BaseIdType) -> None:
+        """Unlink concept from question."""
         async with transaction_manager(self.session):
-            stmt = delete(QuestionCard).where(
-                QuestionCard.question_id == question,
-                QuestionCard.card_id == card,
+            stmt = delete(QuestionConcept).where(
+                QuestionConcept.question_id == question,
+                QuestionConcept.concept_id == concept,
             )
             await self.session.execute(stmt)

@@ -53,11 +53,11 @@ class CacheConfig(BaseModel):
     roadmap_list_ttl: int = 60
     roadmap_detail_ttl: int = 60
 
-    block_list_ttl: int = 60
-    block_detail_ttl: int = 60
+    module_list_ttl: int = 60
+    module_detail_ttl: int = 60
 
-    card_list_ttl: int = 60
-    card_detail_ttl: int = 60
+    concept_list_ttl: int = 60
+    concept_detail_ttl: int = 60
 
 
 class RunConfig(BaseModel):
@@ -70,9 +70,9 @@ class ApiV1Prefix(BaseModel):
     auth: str = "/auth"
     users: str = "/users"
     roadmaps: str = "/roadmaps"
-    blocks: str = "/blocks"
+    modules: str = "/modules"
     questions: str = "/questions"
-    cards: str = "/cards"
+    concepts: str = "/concepts"
     sessions: str = "/sessions"
     ai: str = "/ai"
 

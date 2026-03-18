@@ -3,23 +3,23 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 from .mixins import (
-    BlockRelationMixin,
     IdMixin,
+    ModuleRelationMixin,
     TimestampMixin,
 )
 
 
-class Question(IdMixin, TimestampMixin, BlockRelationMixin, Base):
+class Question(IdMixin, TimestampMixin, ModuleRelationMixin, Base):
     __table_args__ = (
         UniqueConstraint(
-            "block_id",
+            "module_id",
             "order_index",
-            name="uq_question_block_order",
+            name="uq_question_module_order",
             deferrable=True,
             initially="DEFERRED",
         ),
-        UniqueConstraint("block_id", "question", name="uq_question_block_question"),
-        Index("ix_question_block_order", "block_id", "order_index"),
+        UniqueConstraint("module_id", "question", name="uq_question_module_question"),
+        Index("ix_question_module_order", "module_id", "order_index"),
     )
 
     question: Mapped[str] = mapped_column(String(500), nullable=False)

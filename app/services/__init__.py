@@ -2,8 +2,8 @@ __all__ = (
     "AIService",
     "AnswerService",
     "BaseService",
-    "BlockService",
-    "CardService",
+    "ConceptService",
+    "ModuleService",
     "QuestionService",
     "RoadmapService",
     "SessionService",
@@ -14,8 +14,8 @@ __all__ = (
 from .ai import AIService
 from .answer import AnswerService
 from .base import BaseService
-from .block import BlockService
-from .card import CardService
+from .concept import ConceptService
+from .module import ModuleService
 from .question import QuestionService
 from .roadmap import RoadmapService
 from .session import SessionService

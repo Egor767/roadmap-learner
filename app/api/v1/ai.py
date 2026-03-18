@@ -7,12 +7,12 @@ from app.core.config import settings
 from app.core.dependencies.services import get_ai_service
 from app.core.handlers import router_handler
 from app.schemas.ai import (
-    BlockDistributeRequest,
-    BlockDistributeResponse,
     ChatRequest,
     ChatResponse,
     GenerateRequest,
     GenerateResponse,
+    ModuleDistributeRequest,
+    ModuleDistributeResponse,
     QuestionDistributeRequest,
     QuestionDistributeResponse,
 )
@@ -38,14 +38,14 @@ async def chat(
     return await ai_service.chat(current_user, request)
 
 
-@router.post("/blocks/distribute", name="ai:distribute_blocks", response_model=BlockDistributeResponse)
+@router.post("/modules/distribute", name="ai:distribute_modules", response_model=ModuleDistributeResponse)
 @router_handler
-async def distribute_blocks(
-    request: BlockDistributeRequest,
+async def distribute_modules(
+    request: ModuleDistributeRequest,
     current_user: Annotated["User", Depends(current_active_user)],
     ai_service: Annotated["AIService", Depends(get_ai_service)],
-) -> BlockDistributeResponse:
-    return await ai_service.distribute_blocks(current_user, request)
+) -> ModuleDistributeResponse:
+    return await ai_service.distribute_modules(current_user, request)
 
 
 @router.post(
