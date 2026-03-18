@@ -129,11 +129,11 @@ class AIService:
         self, current_user: "User", request: ModuleDistributeRequest
     ) -> ModuleDistributeResponse:
         """Ask AI to distribute raw text into ordered module topics."""
-        roadmap_orm = await self.roadmap_repo.get_by_id(request.roadmap_id, current_user.id)
+        roadmap_orm = await self.roadmap_repo.get_by_id(request.roadmap_id)
         roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
         context = _build_roadmap_context(roadmap)
 
-        response = await self.ai_client.distribute("modules", context, request.text)
+        response = await self.ai_client.distribute("blocks", context, request.text)
         modules = _parse_ordered_topics(response)
 
         return ModuleDistributeResponse(modules=modules)
@@ -182,7 +182,7 @@ class AIService:
             if not request.roadmap_id:
                 raise ValueError("roadmap_id обязателен для генерации модулей")
 
-            roadmap_orm = await self.roadmap_repo.get_by_id(request.roadmap_id, current_user.id)
+            roadmap_orm = await self.roadmap_repo.get_by_id(request.roadmap_id)
             roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
 
             return _build_roadmap_context(roadmap)
@@ -191,10 +191,10 @@ class AIService:
             if not request.module_id:
                 raise ValueError("module_id обязателен для генерации вопросов")
 
-            module_orm = await self.module_repo.get_by_id(request.module_id, current_user.id)
+            module_orm = await self.module_repo.get_by_id(request.module_id)
             module = orm_to_schema(ModuleRead, module_orm)
 
-            roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id, current_user.id)
+            roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id)
             roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
 
             return _build_module_context(roadmap, module)
@@ -202,13 +202,13 @@ class AIService:
         if not request.question_id:
             raise ValueError("question_id обязателен для генерации концептов")
 
-        question_orm = await self.question_repo.get_by_id(request.question_id, current_user.id)
+        question_orm = await self.question_repo.get_by_id(request.question_id)
         question = orm_to_schema(QuestionRead, question_orm)
 
-        module_orm = await self.module_repo.get_by_id(question.module_id, current_user.id)
+        module_orm = await self.module_repo.get_by_id(question.module_id)
         module = orm_to_schema(ModuleRead, module_orm)
 
-        roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id, current_user.id)
+        roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id)
         roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
 
         return _build_question_context(roadmap, module, question)
