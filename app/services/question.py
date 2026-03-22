@@ -193,3 +193,12 @@ class QuestionService:
             self.verify.verify_concept(concept, current_user.id),
         )
         await self.repo.link_concept(question, concept)
+
+    @service_handler
+    async def unlink_concept(self, current_user: "User", question: BaseIdType, concept: BaseIdType) -> None:
+        """Link concept to question for current user."""
+        await asyncio.gather(
+            self.verify.verify_question(question, current_user.id),
+            self.verify.verify_concept(concept, current_user.id),
+        )
+        await self.repo.unlink_concept(question, concept)

@@ -95,7 +95,7 @@ async def link_card(
     current_user: Annotated["User", Depends(current_active_user)],
     question_service: Annotated["QuestionService", Depends(get_question_service)],
 ):
-    await question_service.link_card(current_user, question_id, card_id)
+    await question_service.link_concept(current_user, question_id, card_id)
 
 
 # -------------------------------------- UPDATE --------------------------------------
@@ -130,3 +130,17 @@ async def delete_question(
     question_service: Annotated["QuestionService", Depends(get_question_service)],
 ) -> None:
     await question_service.delete(current_user, question_id)
+
+
+@router.delete(
+    "/{question_id}/unlink-card",
+    name="questions:unlink-card",
+)
+@router_handler
+async def link_card(
+    question_id: BaseIdType,
+    card_id: BaseIdType,
+    current_user: Annotated["User", Depends(current_active_user)],
+    question_service: Annotated["QuestionService", Depends(get_question_service)],
+):
+    await question_service.unlink_concept(current_user, question_id, card_id)

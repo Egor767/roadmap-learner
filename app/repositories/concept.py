@@ -4,6 +4,7 @@ from sqlalchemy import (
     select,
     update,
 )
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
@@ -39,6 +40,10 @@ class ConceptRepository(BaseEntityRepository):
     async def get_by_filters(self, filters: dict, user: BaseIdType) -> list[Concept]:
         """Return concepts matching filters for user."""
         stmt = select(Concept).join(Roadmap, Concept.roadmap_id == Roadmap.id).where(Roadmap.user_id == user)
+        if question := filters.pop("question_id", None):
+            stmt = stmt.join(QuestionConcept, Concept.id == QuestionConcept.concept_id).where(
+                QuestionConcept.question_id == question
+            )
         for field_name, value in filters.items():
             column = getattr(Concept, field_name)
             if isinstance(value, list):
@@ -129,7 +134,7 @@ class ConceptRepository(BaseEntityRepository):
         """Upsert progress status for concept and user."""
         async with transaction_manager(self.session):
             stmt = (
-                insert(ConceptProgress)
+                postgres_insert(ConceptProgress)
                 .values(user_id=user, concept_id=concept, status=status)
                 .on_conflict_do_update(
                     index_elements=["user_id", "concept_id"],
