@@ -118,7 +118,6 @@ staticfiles/
 
 # === Python ===
 # Byte-compiled / optimized / DLL files
-__pycache__/
 *.py[cod]
 *$py.class
 
@@ -126,9 +125,6 @@ __pycache__/
 *.so
 
 # Distribution / packaging
-build/
-dist/
-*.egg-info/
 pip-wheel-metadata/
 
 # Installer logs
@@ -136,47 +132,31 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
-htmlcov/
 .tox/
 .nox/
-.coverage
-.coverage.*
-.pytest_cache/
-.cache
 coverage.xml
 
 # === Virtual environments / env files ===
-.env
 .env.*
 .venv/
-venv/
 venv*/
-ENV/
-env/
 .envrc
 .python-version
 
 # === IDEs / editors ===
-.vscode/
-.idea/
 *.sublime-project
 *.sublime-workspace
 
 # === Linters / caches ===
-.mypy_cache/
 .ruff_cache/
 .pyre/
 pytest_cache/
 __pypackages__/
 
 # === Logs / runtime files ===
-*.log
-logs/
 *.pid
 
 # === OS files ===
-.DS_Store
-Thumbs.db
 
 # === Git / misc ===
 .git
