@@ -1,8 +1,6 @@
-from typing import Literal
-
 from sqlalchemy import (
+    and_,
     delete,
-    func,
     insert,
     select,
     update,
@@ -12,42 +10,54 @@ from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from app.core.custom_exceptions import EntityNotFoundError
 from app.core.custom_types import BaseIdType
 from app.core.dependencies import transaction_manager
+from app.core.enums import QuestionStatus
 from app.core.handlers import repository_handler
 from app.models import Module, Question, QuestionConcept, QuestionProgress, Roadmap
-from app.models.question_progress import QuestionStatus
 from app.repositories import BaseEntityRepository
 
 
 class QuestionRepository(BaseEntityRepository):
-    """Repository for question data access."""
+    """Repository for question data access"""
 
     @repository_handler
-    async def get_all(self) -> list[Question]:
-        """Return all questions ordered by index."""
-        stmt = select(Question).order_by(Question.order_index)
+    async def get_all(self, user: BaseIdType) -> list[Question]:
+        stmt = (
+            select(Question)
+            .join(Module, Module.id == Question.module_id)
+            .join(Roadmap, Roadmap.id == Module.roadmap_id)
+            .where(Roadmap.user_id == user)
+            .order_by(Question.question)
+        )
         result = await self.session.execute(stmt)
-        rows = list(result.scalars().all())
-        return rows
+        return list(result.scalars().all())
 
     @repository_handler
-    async def get_by_id(self, question: BaseIdType) -> Question:
-        """Return question by id."""
-        stmt = select(Question).where(Question.id == question)
+    async def get_by_id(self, id: BaseIdType, user: BaseIdType) -> Question:
+        stmt = (
+            select(Question)
+            .join(Module, Module.id == Question.module_id)
+            .join(Roadmap, Roadmap.id == Module.roadmap_id)
+            .where(Roadmap.user_id == user, Question.id == id)
+        )
         result = await self.session.execute(stmt)
         row = result.scalar_one_or_none()
         if row is None:
-            raise EntityNotFoundError(Question, question)
+            raise EntityNotFoundError(Question, id)
         return row
 
     @repository_handler
     async def get_by_filters(self, filters: dict, user: BaseIdType) -> list[Question]:
-        """Return questions matching filters for user."""
         stmt = (
             select(Question)
             .join(Module, Question.module_id == Module.id)
             .join(Roadmap, Module.roadmap_id == Roadmap.id)
             .where(Roadmap.user_id == user)
         )
+        if status := filters.pop("status", None):
+            stmt = stmt.join(
+                QuestionProgress,
+                and_(QuestionProgress.question_id == Question.id, QuestionProgress.user_id == user),
+            ).where(QuestionProgress.status == status)
         if filters.get("roadmap_id") is not None:
             stmt = stmt.where(Module.roadmap_id == filters.pop("roadmap_id"))
         for field_name, value in filters.items():
@@ -56,177 +66,104 @@ class QuestionRepository(BaseEntityRepository):
                 stmt = stmt.where(column.in_(value))
             else:
                 stmt = stmt.where(column == value)
-        stmt = stmt.order_by(Question.order_index)
+        stmt = stmt.order_by(Question.question)
         result = await self.session.execute(stmt)
-        rows = list(result.scalars().all())
-        return rows
+        return list(result.scalars().all())
 
     @repository_handler
-    async def get_status(self, user: BaseIdType, question: BaseIdType) -> QuestionStatus:
-        """Return progress status for question and user."""
+    async def get_status(self, id: BaseIdType, user: BaseIdType) -> QuestionStatus:
+        """Return progress status for question and user"""
         stmt = select(QuestionProgress.status).where(
             QuestionProgress.user_id == user,
-            QuestionProgress.question_id == question,
+            QuestionProgress.question_id == id,
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none() or QuestionStatus.UNKNOWN
 
     @repository_handler
-    async def get_statuses(self, user: BaseIdType, questions: list[BaseIdType]) -> dict[BaseIdType, QuestionStatus]:
-        """Return progress statuses for multiple questions."""
-        stmt = select(QuestionProgress.question_id, QuestionProgress.status).where(
-            QuestionProgress.user_id == user,
-            QuestionProgress.question_id.in_(questions),
+    async def get_statuses(
+        self, user: BaseIdType, questions: list[BaseIdType]
+    ) -> dict[BaseIdType, QuestionStatus]:
+        stmt = (
+            select(QuestionProgress.question_id, QuestionProgress.status)
+            .join(Question, Question.id == QuestionProgress.question_id)
+            .join(Module, Module.id == Question.module_id)
+            .join(Roadmap, Roadmap.id == Module.roadmap_id)
+            .where(
+                QuestionProgress.user_id == user,
+                QuestionProgress.question_id.in_(questions),
+                Roadmap.user_id == user,
+            )
         )
         result = await self.session.execute(stmt)
         found = {row.question_id: row.status for row in result.all()}
         return {qid: found.get(qid, QuestionStatus.UNKNOWN) for qid in questions}
 
     @repository_handler
-    async def get_ids_by_status(self, user: BaseIdType, status: QuestionStatus) -> list[BaseIdType]:
-        """Return question ids with given progress status for user."""
-        stmt = select(QuestionProgress.question_id).where(
-            QuestionProgress.user_id == user,
-            QuestionProgress.status == status,
-        )
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
-
-    @repository_handler
-    async def create(
-        self,
-        module_id: BaseIdType,
-        data: dict,
-        position: Literal["start", "end"] = "end",
-        previous: BaseIdType | None = None,
-    ) -> Question:
-        """Create question in module at given position."""
+    async def create(self, module: BaseIdType, data: dict, user: BaseIdType) -> Question:
+        """Create and return new question verified against user through module"""
         async with transaction_manager(self.session):
-            if previous is not None:
-                prev_stmt = select(Question.order_index).where(
-                    Question.id == previous,
-                    Question.module_id == module_id,
-                )
-                prev_index = (await self.session.execute(prev_stmt)).scalar_one_or_none()
-                if prev_index is None:
-                    raise EntityNotFoundError(Question, previous)
+            owned = (
                 await self.session.execute(
-                    update(Question)
-                    .where(Question.module_id == module_id, Question.order_index > prev_index)
-                    .values(order_index=Question.order_index + 1)
+                    select(Module.id)
+                    .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                    .where(Module.id == module, Roadmap.user_id == user)
                 )
-                data["order_index"] = prev_index + 1
-            elif position == "start":
-                await self.session.execute(
-                    update(Question).where(Question.module_id == module_id).values(order_index=Question.order_index + 1)
-                )
-                data["order_index"] = 0
-            else:
-                max_stmt = select(func.max(Question.order_index)).where(Question.module_id == module_id)
-                max_index = (await self.session.execute(max_stmt)).scalar()
-                data["order_index"] = (max_index + 1) if max_index is not None else 0
+            ).scalar_one_or_none()
+            if owned is None:
+                raise EntityNotFoundError(Module, module)
+            data["module_id"] = module
             stmt = insert(Question).values(**data).returning(Question)
             return (await self.session.execute(stmt)).scalar_one()
 
     @repository_handler
-    async def create_progress(self, user: BaseIdType, question: BaseIdType) -> None:
-        """Create initial progress record for question and user."""
+    async def create_status(self, user: BaseIdType, id: BaseIdType) -> None:
+        """Create initial status record for question and user"""
         async with transaction_manager(self.session):
             stmt = insert(QuestionProgress).values(
                 user_id=user,
-                question_id=question,
+                question_id=id,
                 status=QuestionStatus.UNKNOWN,
             )
             await self.session.execute(stmt)
 
     @repository_handler
-    async def move(
-        self,
-        module_id: BaseIdType,
-        question_id: BaseIdType,
-        previous: BaseIdType | None,
-    ) -> tuple[Question, list[BaseIdType]]:
-        """Move question to new position within module."""
+    async def update(self, id: BaseIdType, data: dict, user: BaseIdType) -> Question:
+        """Update question by id verified against user and return updated entity"""
         async with transaction_manager(self.session):
-            stmt = select(Question).where(
-                Question.id == question_id,
-                Question.module_id == module_id,
+            owned = (
+                select(Module.id)
+                .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                .where(Roadmap.user_id == user)
+            )
+            stmt = (
+                update(Question)
+                .where(Question.id == id, Question.module_id.in_(owned))
+                .values(**data)
+                .returning(Question)
             )
             row = (await self.session.execute(stmt)).scalar_one_or_none()
             if row is None:
-                raise EntityNotFoundError(Question, question_id)
-            old_index = row.order_index
-            if previous is None:
-                new_index = 0
-            else:
-                prev_stmt = select(Question.order_index).where(
-                    Question.id == previous,
-                    Question.module_id == module_id,
-                )
-                after_index = (await self.session.execute(prev_stmt)).scalar_one_or_none()
-                if after_index is None:
-                    raise EntityNotFoundError(Question, previous)
-                new_index = after_index + 1 if after_index < old_index else after_index
-            if new_index == old_index:
-                return row, []
-            if new_index < old_index:
-                affected_stmt = select(Question.id).where(
-                    Question.module_id == module_id,
-                    Question.order_index >= new_index,
-                    Question.order_index < old_index,
-                    Question.id != question_id,
-                )
-                await self.session.execute(
-                    update(Question)
-                    .where(
-                        Question.module_id == module_id,
-                        Question.order_index >= new_index,
-                        Question.order_index < old_index,
-                        Question.id != question_id,
-                    )
-                    .values(order_index=Question.order_index + 1)
-                )
-            else:
-                affected_stmt = select(Question.id).where(
-                    Question.module_id == module_id,
-                    Question.order_index > old_index,
-                    Question.order_index <= new_index,
-                    Question.id != question_id,
-                )
-                await self.session.execute(
-                    update(Question)
-                    .where(
-                        Question.module_id == module_id,
-                        Question.order_index > old_index,
-                        Question.order_index <= new_index,
-                        Question.id != question_id,
-                    )
-                    .values(order_index=Question.order_index - 1)
-                )
-            affected_ids = (await self.session.execute(affected_stmt)).scalars().all()
-            result = await self.session.execute(
-                update(Question).where(Question.id == question_id).values(order_index=new_index).returning(Question)
-            )
-            return result.scalar_one(), list(affected_ids)
-
-    @repository_handler
-    async def update(self, question: BaseIdType, data: dict) -> Question:
-        """Update question by id and return updated entity."""
-        async with transaction_manager(self.session):
-            stmt = update(Question).where(Question.id == question).values(**data).returning(Question)
-            result = await self.session.execute(stmt)
-            row = result.scalar_one_or_none()
-            if row is None:
-                raise EntityNotFoundError(Question, question)
+                raise EntityNotFoundError(Question, id)
             return row
 
     @repository_handler
-    async def update_progress(self, user: BaseIdType, question: BaseIdType, status: QuestionStatus) -> None:
-        """Upsert progress status for question and user."""
+    async def update_status(self, id: BaseIdType, status: QuestionStatus, user: BaseIdType) -> None:
+        """Upsert progress status for question and user"""
         async with transaction_manager(self.session):
+            owned = (
+                await self.session.execute(
+                    select(Question.id)
+                    .join(Module, Module.id == Question.module_id)
+                    .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                    .where(Question.id == id, Roadmap.user_id == user)
+                )
+            ).scalar_one_or_none()
+            if owned is None:
+                raise EntityNotFoundError(Question, id)
             stmt = (
                 postgres_insert(QuestionProgress)
-                .values(user_id=user, question_id=question, status=status)
+                .values(user_id=user, question_id=id, status=status)
                 .on_conflict_do_update(
                     index_elements=["user_id", "question_id"],
                     set_={"status": status},
@@ -235,54 +172,82 @@ class QuestionRepository(BaseEntityRepository):
             await self.session.execute(stmt)
 
     @repository_handler
-    async def delete(self, question: BaseIdType) -> Question:
-        """Delete question by id and return deleted entity."""
+    async def delete(self, id: BaseIdType, user: BaseIdType) -> Question:
+        """Delete question by id verified against user and return deleted entity"""
         async with transaction_manager(self.session):
-            stmt = delete(Question).where(Question.id == question).returning(Question)
-            result = await self.session.execute(stmt)
-            row = result.scalar_one_or_none()
+            owned = (
+                select(Module.id)
+                .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                .where(Roadmap.user_id == user)
+            )
+            stmt = (
+                delete(Question)
+                .where(Question.id == id, Question.module_id.in_(owned))
+                .returning(Question)
+            )
+            row = (await self.session.execute(stmt)).scalar_one_or_none()
             if row is None:
-                raise EntityNotFoundError(Question, question)
+                raise EntityNotFoundError(Question, id)
             return row
 
     @repository_handler
-    async def create_multiple(self, questions_by_module: dict[BaseIdType, list[dict]]) -> list[Question]:
-        """Create multiple questions across modules."""
+    async def create_multiple(
+        self, user: BaseIdType, questions_by_module: dict[BaseIdType, list[dict]]
+    ) -> list[Question]:
+        """Create multiple questions across modules verified against user"""
         async with transaction_manager(self.session):
             module_ids = list(questions_by_module.keys())
-            max_stmt = (
-                select(Question.module_id, func.max(Question.order_index))
-                .where(Question.module_id.in_(module_ids))
-                .group_by(Question.module_id)
+            owned = (
+                select(Module.id)
+                .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                .where(Module.id.in_(module_ids), Roadmap.user_id == user)
             )
-            max_result = await self.session.execute(max_stmt)
-            max_by_module: dict[BaseIdType, int] = {row[0]: row[1] for row in max_result.fetchall()}
-            all_questions: list[dict] = []
-            for module_id, questions in questions_by_module.items():
-                start_index = max_by_module.get(module_id, -1) + 1
-                for i, q in enumerate(questions):
-                    q["order_index"] = start_index + i
-                    all_questions.append(q)
-            insert_stmt = insert(Question).values(all_questions).returning(Question)
-            result = await self.session.execute(insert_stmt)
+            result = await self.session.execute(owned)
+            valid = {row for row in result.scalars().all()}
+            invalid = set(module_ids) - valid
+            if invalid:
+                raise EntityNotFoundError(Module, next(iter(invalid)))
+            all_questions = [q for questions in questions_by_module.values() for q in questions]
+            result = await self.session.execute(
+                insert(Question).values(all_questions).returning(Question)
+            )
             return list(result.scalars().all())
 
     @repository_handler
-    async def link_concept(self, question: BaseIdType, concept: BaseIdType) -> None:
-        """Link concept to question."""
+    async def link_concept(self, id: BaseIdType, concept: BaseIdType, user: BaseIdType) -> None:
+        """Link concept to question verified against user"""
         async with transaction_manager(self.session):
-            stmt = insert(QuestionConcept).values(
-                question_id=question,
-                concept_id=concept,
+            owned = (
+                await self.session.execute(
+                    select(Question.id)
+                    .join(Module, Module.id == Question.module_id)
+                    .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                    .where(Question.id == id, Roadmap.user_id == user)
+                )
+            ).scalar_one_or_none()
+            if owned is None:
+                raise EntityNotFoundError(Question, id)
+            await self.session.execute(
+                insert(QuestionConcept).values(question_id=id, concept_id=concept)
             )
-            await self.session.execute(stmt)
 
     @repository_handler
-    async def unlink_concept(self, question: BaseIdType, concept: BaseIdType) -> None:
-        """Unlink concept from question."""
+    async def unlink_concept(self, id: BaseIdType, concept: BaseIdType, user: BaseIdType) -> None:
+        """Unlink concept from question verified against user"""
         async with transaction_manager(self.session):
-            stmt = delete(QuestionConcept).where(
-                QuestionConcept.question_id == question,
-                QuestionConcept.concept_id == concept,
+            owned = (
+                await self.session.execute(
+                    select(Question.id)
+                    .join(Module, Module.id == Question.module_id)
+                    .join(Roadmap, Roadmap.id == Module.roadmap_id)
+                    .where(Question.id == id, Roadmap.user_id == user)
+                )
+            ).scalar_one_or_none()
+            if owned is None:
+                raise EntityNotFoundError(Question, id)
+            await self.session.execute(
+                delete(QuestionConcept).where(
+                    QuestionConcept.question_id == id,
+                    QuestionConcept.concept_id == concept,
+                )
             )
-            await self.session.execute(stmt)

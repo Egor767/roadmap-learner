@@ -1,16 +1,9 @@
 from datetime import datetime
-from enum import Enum
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.core.custom_types import BaseIdType
-
-
-class QuestionStatus(str, Enum):
-    KNOWN = "known"
-    UNKNOWN = "unknown"
-    REPEAT = "repeat"
+from app.core.enums import QuestionStatus
 
 
 class BaseQuestion(BaseModel):
@@ -22,36 +15,31 @@ class BaseQuestion(BaseModel):
 
 class QuestionCreate(BaseQuestion):
     module_id: BaseIdType
-    position: Literal["start", "end"] | None = None
-    previous: BaseIdType | None = None
-
-    @model_validator(mode="after")
-    def validate_position(self):
-        if self.position is not None and self.previous is not None:
-            raise ValueError("Нельзя одновременно указывать position и previous")
-
-        if self.position is None and self.previous is None:
-            self.position = "end"
-
-        return self
 
 
 class QuestionUpdate(BaseModel):
-    question: str | None = None
+    question: str | None = Field(default=None, max_length=500)
     answer: str | None = None
-    order_index: int | None = None
     status: QuestionStatus | None = None
 
+    @model_validator(mode="after")
+    def validate(self) -> "QuestionUpdate":
+        """Ensure at least one field is provided for update"""
+        if not self.model_fields_set:
+            raise ValueError("At least one field must be provided for update")
+        return self
 
-class QuestionMove(BaseModel):
-    module_id: BaseIdType
-    previous: BaseIdType | None = None
+    def dump(self) -> dict:
+        """Return update data excluding unset and non-nullable null fields"""
+        data = self.model_dump(exclude_unset=True)
+        nullable = {"answer"}
+        result = {k: v for k, v in data.items() if v is not None or k in nullable}
+        return result
 
 
 class QuestionRead(BaseQuestion):
     id: BaseIdType
     module_id: BaseIdType
-    order_index: int
     status: QuestionStatus = QuestionStatus.UNKNOWN
     created_at: datetime
     updated_at: datetime
@@ -60,7 +48,6 @@ class QuestionRead(BaseQuestion):
 class QuestionFilters(BaseModel):
     roadmap_id: BaseIdType | None = None
     status: QuestionStatus | None = None
-    order_index: int | None = None
     question: str | None = None
 
 

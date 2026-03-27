@@ -1,16 +1,10 @@
-import enum
-
 from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.enums import QuestionStatus
+
 from .base import Base
 from .mixins import QuestionRelationMixin, TimestampMixin, UserRelationMixin
-
-
-class QuestionStatus(str, enum.Enum):
-    KNOWN = "known"
-    UNKNOWN = "unknown"
-    REPEAT = "repeat"
 
 
 class QuestionProgress(Base, TimestampMixin, UserRelationMixin, QuestionRelationMixin):

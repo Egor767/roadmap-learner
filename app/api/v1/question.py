@@ -12,7 +12,6 @@ from app.schemas.question import (
     QuestionConfirmRequest,
     QuestionCreate,
     QuestionFilters,
-    QuestionMove,
     QuestionRead,
     QuestionUpdate,
 )
@@ -29,44 +28,36 @@ router = APIRouter(
 
 
 # -------------------------------------- GET ----------------------------------------------
-@router.get("", name="questions:all_questions", response_model=list[QuestionRead])
-@router_handler
-async def get_all_questions(
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
-) -> list[QuestionRead]:
-    return await question_service.get_all()
-
-
 @router.get("/filters", name="questions:filter_questions", response_model=list[QuestionRead])
 @router_handler
 async def get_questions(
     filters: Annotated[QuestionFilters, Depends()],
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
-    module_filter: Annotated[list[BaseIdType] | None, Query()] = None,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
+    modules: Annotated[list[BaseIdType] | None, Query()] = None,
 ) -> list[QuestionRead]:
-    return await question_service.get_by_filters(current_user, filters, module_filter)
+    return await service.get_by_filters(user, filters, modules)
 
 
-@router.get("/{question_id}", name="questions:question", response_model=QuestionRead)
+@router.get("/{id}", name="questions:question", response_model=QuestionRead)
 @router_handler
 async def get_question(
-    question_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ) -> QuestionRead:
-    return await question_service.get_by_id(current_user, question_id)
+    return await service.get_by_id(user, id)
 
 
 # -------------------------------------- CREATE --------------------------------------
 @router.post("", name="questions:create_question", response_model=QuestionRead)
 @router_handler
 async def create_question(
-    question_create_data: QuestionCreate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    payload: QuestionCreate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ) -> QuestionRead:
-    return await question_service.create(current_user, question_create_data)
+    return await service.create(user, payload)
 
 
 @router.post(
@@ -77,70 +68,59 @@ async def create_question(
 )
 @router_handler
 async def confirm_questions(
-    body: QuestionConfirmRequest,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    payload: QuestionConfirmRequest,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ) -> list[QuestionRead]:
-    return await question_service.create_multiple(current_user, body)
+    return await service.create_multiple(user, payload)
 
 
 @router.post(
-    "/{question_id}/link-card",
+    "/{id}/link-card",
     name="questions:link_card",
 )
 @router_handler
 async def link_card(
-    question_id: BaseIdType,
+    id: BaseIdType,
     card_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ):
-    await question_service.link_concept(current_user, question_id, card_id)
+    await service.link_concept(user, id, card_id)
 
 
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch("/{question_id}", name="questions:patch_question", response_model=QuestionRead)
+@router.patch("/{id}", name="questions:patch_question", response_model=QuestionRead)
 @router_handler
 async def update_question(
-    question_id: BaseIdType,
-    question_update_data: QuestionUpdate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    id: BaseIdType,
+    payload: QuestionUpdate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ) -> QuestionRead:
-    return await question_service.update(current_user, question_id, question_update_data)
-
-
-@router.patch("/{question_id}/move", name="questions:move_question", response_model=QuestionRead)
-@router_handler
-async def move_question(
-    question_id: BaseIdType,
-    move_data: QuestionMove,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
-) -> QuestionRead:
-    return await question_service.move(current_user, question_id, move_data)
+    return await service.update(user, id, payload)
 
 
 # -------------------------------------- DELETE --------------------------------------
-@router.delete("/{question_id}", name="questions:delete_question")
+@router.delete("/{id}", name="questions:delete_question")
 @router_handler
 async def delete_question(
-    question_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ) -> None:
-    await question_service.delete(current_user, question_id)
+    await service.delete(user, id)
 
 
 @router.delete(
-    "/{question_id}/unlink-card",
+    "/{id}/unlink-card",
     name="questions:unlink-card",
 )
 @router_handler
-async def link_card(
-    question_id: BaseIdType,
+async def unlink_card(
+    id: BaseIdType,
     card_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    question_service: Annotated["QuestionService", Depends(get_question_service)],
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["QuestionService", Depends(get_question_service)],
 ):
-    await question_service.unlink_concept(current_user, question_id, card_id)
+    await service.unlink_concept(user, id, card_id)
