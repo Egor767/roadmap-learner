@@ -8,26 +8,12 @@ from app.repositories import (
     QuestionRepository,
     RoadmapRepository,
     SessionRepository,
-    UserRepository,
-    VerifyRepository,
 )
 
 from .db import get_db_session
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
-
-
-def get_verify_repository(
-    session: Annotated["AsyncSession", Depends(get_db_session)],
-) -> VerifyRepository:
-    return VerifyRepository(session)
-
-
-def get_user_repository(
-    session: Annotated["AsyncSession", Depends(get_db_session)],
-) -> UserRepository:
-    return UserRepository(session)
 
 
 def get_roadmap_repository(

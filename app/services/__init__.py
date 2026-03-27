@@ -8,7 +8,6 @@ __all__ = (
     "RoadmapService",
     "SessionService",
     "UserManager",
-    "UserService",
 )
 
 from .ai import AIService
@@ -19,5 +18,4 @@ from .module import ModuleService
 from .question import QuestionService
 from .roadmap import RoadmapService
 from .session import SessionService
-from .user import UserService
 from .user_manager import UserManager

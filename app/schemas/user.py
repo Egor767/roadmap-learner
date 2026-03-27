@@ -1,5 +1,4 @@
 from fastapi_users import schemas
-from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.core.custom_types import BaseIdType
 
@@ -14,12 +13,3 @@ class UserCreate(schemas.BaseUserCreate):
 
 class UserUpdate(schemas.BaseUserUpdate):
     username: str | None = None
-
-
-class UserFilters(BaseModel):
-    email: EmailStr | None = None
-    username: str | None = None
-    is_active: str | None = None
-    is_verified: str | None = None
-
-    model_config = ConfigDict(extra="forbid")

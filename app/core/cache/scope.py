@@ -29,3 +29,7 @@ class CacheScope:
         """Delete multiple cache entries by key part tuples"""
         built = list(starmap(self._build, keys))
         await self._cache.delete(*built)
+
+    async def flush(self, *parts: str) -> None:
+        """Delete all cache entries matching key prefix pattern"""
+        await self._cache.scan(self._build(*parts) + ":*")

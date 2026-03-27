@@ -7,11 +7,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class DBConfig(BaseModel):
-    host: str = "localhost"
-    port: str = "5433"
-    username: str = "postgres"
-    password: str = "postgres"
-    name: str = "roadmap"
+    host: str
+    port: str
+    username: str
+    password: str
+    name: str
     echo: bool = False
     url_prefix: str = "postgresql+asyncpg"
 
@@ -34,8 +34,8 @@ class RedisDB(BaseModel):
 
 
 class RedisConfig(BaseModel):
-    host: str = "localhost"
-    port: int = 6379
+    host: str
+    port: int
     db: RedisDB = RedisDB()
     url_prefix: str = "redis"
 
@@ -61,8 +61,8 @@ class CacheConfig(BaseModel):
 
 
 class RunConfig(BaseModel):
-    host: str = "0.0.0.0"
-    port: int = 8080
+    host: str
+    port: int
 
 
 class ApiV1Prefix(BaseModel):
@@ -95,6 +95,24 @@ class AccessToken(BaseModel):
     max_active_tokens: int = 3
 
 
+class EmailConfig(BaseModel):
+    host: str = "smtp.gmail.com"
+    port: int = 587
+    username: str
+    password: str
+
+
+class AIClientConfig(BaseModel):
+    host: str
+    port: int
+    timeout: int = 60
+    url_prefix: str = "http"
+
+    @property
+    def url(self) -> str:
+        return f"{self.url_prefix}://{self.host}:{self.port}"
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(
@@ -106,11 +124,13 @@ class Settings(BaseSettings):
         env_prefix="APP_CONFIG__",
     )
     db: DBConfig
-    run: RunConfig = RunConfig()
+    run: RunConfig
     api: ApiPrefix = ApiPrefix()
     access_token: AccessToken
-    redis: RedisConfig = RedisConfig()
+    redis: RedisConfig
     cache: CacheConfig = CacheConfig()
+    email: EmailConfig
+    ai_client: AIClientConfig
 
 
 settings = Settings()
@@ -118,3 +138,4 @@ settings = Settings()
 
 if __name__ == "__main__":
     print(settings.db.url)
+    print(settings.ai_client.url)

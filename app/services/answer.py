@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class AnswerService:
-    """Service for submitting and evaluating answers within a session."""
+    """Service for submitting and evaluating answers within a session"""
 
     def __init__(
         self,
@@ -35,15 +35,14 @@ class AnswerService:
 
     @service_handler
     async def submit_answer(
-        self, current_user: "User", session: BaseIdType, data: SessionItemCreate, background_tasks: BackgroundTasks
+        self,
+        user: "User",
+        session: BaseIdType,
+        data: SessionItemCreate,
+        background_tasks: BackgroundTasks,
     ) -> None:
-        """Record the user's answer for a question within a session.
-
-        In auto_check mode, schedules AI evaluation as a background task and does not
-        immediately update progress. In manual mode, saves result and updates progress at once.
-        Returns the ID of the next unanswered question, or None if the session is complete.
-        """
-        orm = await self.repo.get_by_id(session)
+        """Record the user's answer for a question within a session"""
+        orm = await self.repo.get_by_id(session, user.id)
         item = await self.repo.create_item(
             {
                 "id": generate_base_id(),
@@ -58,26 +57,16 @@ class AnswerService:
             background_tasks.add_task(
                 self._evaluate_answer,
                 item.id,
-                current_user.id,
+                user.id,
             )
         else:
-            await self.question_repo.update_progress(current_user.id, data.question_id, data.result)
-
-    async def _next(self, session: BaseIdType, questions: list[BaseIdType]) -> BaseIdType | None:
-        """Return the next unanswered question ID in the ordered questions list."""
-        answered_ids = await self.repo.get_answered_ids(session)
-        result = next((q for q in questions if q not in answered_ids), None)
-        return result
+            await self.question_repo.update_status(data.question_id, data.result, user.id)
 
     async def _evaluate_answer(self, item: BaseIdType, user: BaseIdType) -> None:
-        """Evaluate a submitted answer using AI and persist the result.
-
-        Fetches the session item, question, and linked term concepts, sends them to the AI
-        for evaluation, then updates the item result and the user's question progress.
-        """
+        """Evaluate a submitted answer using AI and persist the result"""
         session_item = await self.repo.get_item_by_id(item)
-        question = await self.question_repo.get_by_id(session_item.question_id)
-        concepts = await self.concept_repo.get_by_question(session_item.question_id)
+        question = await self.question_repo.get_by_id(session_item.question_id, user)
+        concepts = await self.concept_repo.get_by_question(session_item.question_id, user)
         evaluation: EvaluateAnswerResponse = await self.ai_client.evaluate_answer(
             question=question.question,
             correct_answer=question.answer,
@@ -86,4 +75,4 @@ class AnswerService:
             concepts=[ConceptContext(term=c.term, definition=c.definition) for c in concepts],
         )
         await self.repo.update_item(item, {"result": evaluation.result, "note": evaluation.note})
-        await self.question_repo.update_progress(user, session_item.question_id, evaluation.result)
+        await self.question_repo.update_status(session_item.question_id, evaluation.result, user)

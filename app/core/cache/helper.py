@@ -35,6 +35,17 @@ class CacheHelper:
         """Return a scoped cache for the given namespace and user"""
         return CacheScope(self, namespace, user_id)
 
+    async def scan(self, pattern: str) -> None:
+        """Delete all keys matching pattern"""
+        if not self._available():
+            return
+        try:
+            keys = [key async for key in self.redis.scan_iter(pattern)]
+            if keys:
+                await self.redis.delete(*keys)
+        except RedisError:
+            self._trip()
+
     async def get(self, key: KeyT):
         """Get value from cache by key"""
         if not self._available():

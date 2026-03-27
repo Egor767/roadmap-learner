@@ -11,7 +11,6 @@ from app.services import (
     QuestionService,
     RoadmapService,
     SessionService,
-    UserService,
 )
 
 from .cache import get_cache
@@ -22,8 +21,6 @@ from .repositories import (
     get_question_repository,
     get_roadmap_repository,
     get_session_repository,
-    get_user_repository,
-    get_verify_repository,
 )
 
 if TYPE_CHECKING:
@@ -35,47 +32,35 @@ if TYPE_CHECKING:
         QuestionRepository,
         RoadmapRepository,
         SessionRepository,
-        UserRepository,
-        VerifyRepository,
     )
-
-
-def get_user_service(
-    user_repo: Annotated["UserRepository", Depends(get_user_repository)],
-) -> UserService:
-    return UserService(user_repo)
 
 
 def get_roadmap_service(
     repo: Annotated["RoadmapRepository", Depends(get_roadmap_repository)],
-    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> RoadmapService:
-    return RoadmapService(repo, verify, cache)
+    return RoadmapService(repo, cache)
 
 
 def get_module_service(
     repo: Annotated["ModuleRepository", Depends(get_module_repository)],
-    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> ModuleService:
-    return ModuleService(repo, verify, cache)
+    return ModuleService(repo, cache)
 
 
 def get_concept_service(
     repo: Annotated["ConceptRepository", Depends(get_concept_repository)],
-    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> ConceptService:
-    return ConceptService(repo, verify, cache)
+    return ConceptService(repo, cache)
 
 
 def get_question_service(
     repo: Annotated["QuestionRepository", Depends(get_question_repository)],
-    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
 ) -> QuestionService:
-    return QuestionService(repo, verify, cache)
+    return QuestionService(repo, cache)
 
 
 def get_ai_service(
@@ -98,10 +83,9 @@ def get_answer_service(
 
 def get_session_service(
     repo: Annotated["SessionRepository", Depends(get_session_repository)],
-    verify: Annotated["VerifyRepository", Depends(get_verify_repository)],
     module_repo: Annotated["ModuleRepository", Depends(get_module_repository)],
     question_repo: Annotated["QuestionRepository", Depends(get_question_repository)],
     cache: Annotated["CacheHelper", Depends(get_cache)],
     ai_client: Annotated["AIClient", Depends(get_ai_client)],
 ) -> SessionService:
-    return SessionService(repo, verify, module_repo, question_repo, cache, ai_client)
+    return SessionService(repo, module_repo, question_repo, cache, ai_client)

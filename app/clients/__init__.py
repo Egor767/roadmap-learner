@@ -1,3 +1,7 @@
-__all__ = ("AIClient",)
+__all__ = (
+    "AIClient",
+    "EmailClient",
+)
 
 from .ai import AIClient
+from .email import EmailClient
