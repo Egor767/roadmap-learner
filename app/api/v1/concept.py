@@ -26,63 +26,55 @@ router = APIRouter(
 
 
 # -------------------------------------- GET ----------------------------------------------
-@router.get("", name="concepts:all_concepts", response_model=list[ConceptRead])
-@router_handler
-async def get_all_concepts(
-    concept_service: Annotated["ConceptService", Depends(get_concept_service)],
-) -> list[ConceptRead]:
-    return await concept_service.get_all()
-
-
 @router.get("/filters", name="concepts:filter_concepts", response_model=list[ConceptRead])
 @router_handler
 async def get_concepts(
     filters: Annotated[ConceptFilters, Depends()],
-    current_user: Annotated["User", Depends(current_active_user)],
-    concept_service: Annotated["ConceptService", Depends(get_concept_service)],
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ConceptService", Depends(get_concept_service)],
 ) -> list[ConceptRead]:
-    return await concept_service.get_by_filters(current_user, filters)
+    return await service.get_by_filters(user, filters)
 
 
-@router.get("/{concept_id}", name="concepts:concept", response_model=ConceptRead)
+@router.get("/{id}", name="concepts:concept", response_model=ConceptRead)
 @router_handler
 async def get_concept(
-    concept_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    concept_service: Annotated["ConceptService", Depends(get_concept_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ConceptService", Depends(get_concept_service)],
 ) -> ConceptRead:
-    return await concept_service.get_by_id(current_user, concept_id)
+    return await service.get_by_id(user, id)
 
 
 # -------------------------------------- CREATE --------------------------------------
 @router.post("", name="concepts:create_concept", response_model=ConceptRead)
 @router_handler
 async def create_concept(
-    concept_create_data: ConceptCreate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    concept_service: Annotated["ConceptService", Depends(get_concept_service)],
+    payload: ConceptCreate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ConceptService", Depends(get_concept_service)],
 ) -> ConceptRead:
-    return await concept_service.create(current_user, concept_create_data)
+    return await service.create(user, payload)
 
 
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch("/{concept_id}", name="concepts:patch_concept", response_model=ConceptRead)
+@router.patch("/{id}", name="concepts:patch_concept", response_model=ConceptRead)
 @router_handler
 async def update_concept(
-    concept_id: BaseIdType,
-    concept_update_data: ConceptUpdate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    concept_service: Annotated["ConceptService", Depends(get_concept_service)],
+    id: BaseIdType,
+    payload: ConceptUpdate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ConceptService", Depends(get_concept_service)],
 ) -> ConceptRead:
-    return await concept_service.update(current_user, concept_id, concept_update_data)
+    return await service.update(user, id, payload)
 
 
 # -------------------------------------- DELETE --------------------------------------
-@router.delete("/{concept_id}", name="concepts:delete_concept")
+@router.delete("/{id}", name="concepts:delete_concept")
 @router_handler
 async def delete_concept(
-    concept_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    concept_service: Annotated["ConceptService", Depends(get_concept_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ConceptService", Depends(get_concept_service)],
 ) -> None:
-    await concept_service.delete(current_user, concept_id)
+    await service.delete(user, id)

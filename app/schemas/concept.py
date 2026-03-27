@@ -1,15 +1,9 @@
 from datetime import datetime
-from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.core.custom_types import BaseIdType
-
-
-class ConceptStatus(str, Enum):
-    KNOWN = "known"
-    UNKNOWN = "unknown"
-    REPEAT = "repeat"
+from app.core.enums import ConceptStatus
 
 
 class BaseConcept(BaseModel):
@@ -31,6 +25,13 @@ class ConceptUpdate(BaseModel):
     example: str | None = Field(default=None, max_length=1000)
     comment: str | None = Field(default=None, max_length=500)
     status: ConceptStatus | None = None
+
+    @model_validator(mode="after")
+    def validate(self) -> "ConceptUpdate":
+        """Ensure at least one field is provided for update"""
+        if not self.model_fields_set:
+            raise ValueError("At least one field must be provided for update")
+        return self
 
 
 class ConceptRead(BaseConcept):

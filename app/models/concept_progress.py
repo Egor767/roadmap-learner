@@ -1,16 +1,10 @@
-import enum
-
 from sqlalchemy import Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.enums import ConceptStatus
+
 from .base import Base
 from .mixins import ConceptRelationMixin, TimestampMixin, UserRelationMixin
-
-
-class ConceptStatus(str, enum.Enum):
-    KNOWN = "known"
-    UNKNOWN = "unknown"
-    REPEAT = "repeat"
 
 
 class ConceptProgress(Base, TimestampMixin, UserRelationMixin, ConceptRelationMixin):
