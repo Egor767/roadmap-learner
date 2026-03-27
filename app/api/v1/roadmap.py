@@ -29,63 +29,64 @@ router = APIRouter(
 @router.get("", name="roadmaps:all_roadmaps", response_model=list[RoadmapRead])
 @router_handler
 async def get_all_roadmaps(
-    roadmap_service: Annotated["RoadmapService", Depends(get_roadmap_service)],
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["RoadmapService", Depends(get_roadmap_service)],
 ) -> list[RoadmapRead]:
-    return await roadmap_service.get_all()
+    return await service.get_all(user)
 
 
 @router.get("/filters", name="roadmaps:filter_roadmaps", response_model=list[RoadmapRead])
 @router_handler
 async def get_roadmaps(
     filters: Annotated[RoadmapFilters, Depends()],
-    current_user: Annotated["User", Depends(current_active_user)],
-    roadmap_service: Annotated["RoadmapService", Depends(get_roadmap_service)],
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["RoadmapService", Depends(get_roadmap_service)],
 ) -> list[RoadmapRead]:
-    return await roadmap_service.get_by_filters(current_user, filters)
+    return await service.get_by_filters(user, filters)
 
 
-@router.get("/{roadmap_id}", name="roadmaps:roadmap", response_model=RoadmapRead)
+@router.get("/{id}", name="roadmaps:roadmap", response_model=RoadmapRead)
 @router_handler
 async def get_roadmap(
-    roadmap_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    roadmap_service: Annotated["RoadmapService", Depends(get_roadmap_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["RoadmapService", Depends(get_roadmap_service)],
 ) -> RoadmapRead:
-    return await roadmap_service.get_by_id(current_user, roadmap_id)
+    return await service.get_by_id(user, id)
 
 
 # -------------------------------------- CREATE --------------------------------------
 @router.post("", name="roadmaps:create_roadmap", response_model=RoadmapRead)
 @router_handler
 async def create_roadmap(
-    roadmap_create_data: RoadmapCreate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    roadmap_service: Annotated["RoadmapService", Depends(get_roadmap_service)],
+    payload: RoadmapCreate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["RoadmapService", Depends(get_roadmap_service)],
 ) -> RoadmapRead:
-    return await roadmap_service.create(current_user, roadmap_create_data)
+    return await service.create(user, payload)
 
 
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch("/{roadmap_id}", name="roadmaps:patch_roadmap", response_model=RoadmapRead)
+@router.patch("/{id}", name="roadmaps:patch_roadmap", response_model=RoadmapRead)
 @router_handler
 async def update_roadmap(
-    roadmap_id: BaseIdType,
-    roadmap_update_data: RoadmapUpdate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    roadmap_service: Annotated["RoadmapService", Depends(get_roadmap_service)],
+    id: BaseIdType,
+    payload: RoadmapUpdate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["RoadmapService", Depends(get_roadmap_service)],
 ) -> RoadmapRead:
-    return await roadmap_service.update(current_user, roadmap_id, roadmap_update_data)
+    return await service.update(user, id, payload)
 
 
 # -------------------------------------- DELETE --------------------------------------
 @router.delete(
-    "/{roadmap_id}",
+    "/{id}",
     name="roadmaps:delete_roadmap",
 )
 @router_handler
 async def delete_roadmap(
-    roadmap_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    roadmap_service: Annotated["RoadmapService", Depends(get_roadmap_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["RoadmapService", Depends(get_roadmap_service)],
 ) -> None:
-    await roadmap_service.delete(current_user, roadmap_id)
+    await service.delete(user, id)
