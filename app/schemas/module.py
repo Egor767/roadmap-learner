@@ -21,7 +21,7 @@ class ModuleCreate(BaseModule):
     @model_validator(mode="after")
     def validate_position(self):
         if self.position is not None and self.previous is not None:
-            raise ValueError("Нельзя одновременно указывать position и previous")
+            raise ValueError("Cannot set both fields at the same time: position and previous")
 
         if self.position is None and self.previous is None:
             self.position = "end"
@@ -32,12 +32,23 @@ class ModuleCreate(BaseModule):
 class ModuleUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=75)
     description: str | None = Field(default=None, max_length=300)
-    order_index: int | None = None
-    roadmap_id: BaseIdType | None = None
+
+    @model_validator(mode="after")
+    def validate(self) -> "ModuleUpdate":
+        """Ensure at least one field is provided for update"""
+        if not self.model_fields_set:
+            raise ValueError("At least one field must be provided for update")
+        return self
+
+    def dump(self) -> dict:
+        """Return update data excluding unset and non-nullable null fields"""
+        data = self.model_dump(exclude_unset=True)
+        nullable = {"description"}
+        result = {k: v for k, v in data.items() if v is not None or k in nullable}
+        return result
 
 
 class ModuleMove(BaseModel):
-    roadmap_id: BaseIdType
     previous: BaseIdType | None = None
 
 

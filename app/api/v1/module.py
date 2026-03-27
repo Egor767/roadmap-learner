@@ -28,84 +28,76 @@ router = APIRouter(
 
 
 # -------------------------------------- GET ----------------------------------------------
-@router.get("", name="modules:all_modules", response_model=list[ModuleRead])
-@router_handler
-async def get_all_modules(
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
-) -> list[ModuleRead]:
-    return await module_service.get_all()
-
-
 @router.get("/filters", name="modules:filter_modules", response_model=list[ModuleRead])
 @router_handler
 async def get_modules(
     filters: Annotated[ModuleFilters, Depends()],
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> list[ModuleRead]:
-    return await module_service.get_by_filters(current_user, filters)
+    return await service.get_by_filters(user, filters)
 
 
-@router.get("/{module_id}", name="modules:module", response_model=ModuleRead)
+@router.get("/{id}", name="modules:module", response_model=ModuleRead)
 @router_handler
 async def get_module(
-    module_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> ModuleRead:
-    return await module_service.get_by_id(current_user, module_id)
+    return await service.get_by_id(user, id)
 
 
 # -------------------------------------- CREATE --------------------------------------
 @router.post("", name="modules:create_module", response_model=ModuleRead)
 @router_handler
 async def create_module(
-    module_create_data: ModuleCreate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    payload: ModuleCreate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> ModuleRead:
-    return await module_service.create(current_user, module_create_data)
+    return await service.create(user, payload)
 
 
-@router.post("/batch", name="modules:create_batch_modules", response_model=list[ModuleRead])
+@router.post("/batch", name="modules:create_modules", response_model=list[ModuleRead])
 @router_handler
 async def confirm_modules(
-    body: ModuleConfirmRequest,
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    payload: ModuleConfirmRequest,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> list[ModuleRead]:
-    return await module_service.create_multiple(current_user, body)
+    return await service.create_multiple(user, payload)
 
 
 # -------------------------------------- UPDATE --------------------------------------
-@router.patch("/{module_id}", name="modules:patch_module", response_model=ModuleRead)
+@router.patch("/{id}", name="modules:patch_module", response_model=ModuleRead)
 @router_handler
 async def update_module(
-    module_id: BaseIdType,
-    module_update_data: ModuleUpdate,
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    id: BaseIdType,
+    payload: ModuleUpdate,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> ModuleRead:
-    return await module_service.update(current_user, module_id, module_update_data)
+    return await service.update(user, id, payload)
 
 
-@router.patch("/{module_id}/move", name="modules:move_module", response_model=ModuleRead)
+@router.patch("/{id}/move", name="modules:move_module", response_model=ModuleRead)
 @router_handler
 async def move_module(
-    module_id: BaseIdType,
-    move_data: ModuleMove,
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    id: BaseIdType,
+    payload: ModuleMove,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> ModuleRead:
-    return await module_service.move(current_user, module_id, move_data)
+    return await service.move(user, id, payload)
 
 
 # -------------------------------------- DELETE --------------------------------------
-@router.delete("/{module_id}", name="modules:delete_module")
+@router.delete("/{id}", name="modules:delete_module")
 @router_handler
 async def delete_module(
-    module_id: BaseIdType,
-    current_user: Annotated["User", Depends(current_active_user)],
-    module_service: Annotated["ModuleService", Depends(get_module_service)],
+    id: BaseIdType,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["ModuleService", Depends(get_module_service)],
 ) -> None:
-    await module_service.delete(current_user, module_id)
+    await service.delete(user, id)
