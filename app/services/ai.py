@@ -20,7 +20,7 @@ from app.schemas.ai import (
 from app.schemas.module import ModuleFilters, ModuleRead
 from app.schemas.question import QuestionRead
 from app.schemas.roadmap import RoadmapRead
-from app.utils.mappers.orm_to_schema import orm_list_to_schemas, orm_to_schema
+from app.utils.mappers.orm_to_schema import orm_to_schema, orms_to_schemas
 
 if TYPE_CHECKING:
     from app.models import User
@@ -31,7 +31,10 @@ if TYPE_CHECKING:
 
 def _build_question_distribution_context(modules: list["ModuleRead"]) -> str:
     """Build context string for AI question distribution prompt."""
-    return "\n".join(f"- {module.id}: {module.title} — {module.description or 'no description'}" for module in modules)
+    return "\n".join(
+        f"- {module.id}: {module.title} — {module.description or 'no description'}"
+        for module in modules
+    )
 
 
 def _parse_ordered_topics(raw: str) -> list[LoadModule]:
@@ -96,7 +99,9 @@ def _build_module_context(roadmap: "RoadmapRead", module: "ModuleRead") -> str:
     )
 
 
-def _build_question_context(roadmap: "RoadmapRead", module: "ModuleRead", question: "QuestionRead") -> str:
+def _build_question_context(
+    roadmap: "RoadmapRead", module: "ModuleRead", question: "QuestionRead"
+) -> str:
     """Build context string from roadmap, module and question data."""
     return (
         f"Roadmap: {roadmap.title}. Description: {roadmap.description or ''}."
@@ -120,39 +125,39 @@ class AIService:
         self.module_repo = module_repo
         self.question_repo = question_repo
 
-    async def chat(self, current_user: "User", request: ChatRequest) -> ChatResponse:
+    async def chat(self, user: "User", payload: ChatRequest) -> ChatResponse:
         """Send a message to AI with optional context."""
-        response = await self.ai_client.chat(request.context, request.content)
+        response = await self.ai_client.chat(payload.context, payload.content)
         return ChatResponse(response=response)
 
     async def distribute_modules(
-        self, current_user: "User", request: ModuleDistributeRequest
+        self, user: "User", payload: ModuleDistributeRequest
     ) -> ModuleDistributeResponse:
         """Ask AI to distribute raw text into ordered module topics."""
-        roadmap_orm = await self.roadmap_repo.get_by_id(request.roadmap_id)
+        roadmap_orm = await self.roadmap_repo.get_by_id(payload.roadmap_id)
         roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
         context = _build_roadmap_context(roadmap)
 
-        response = await self.ai_client.distribute("blocks", context, request.text)
+        response = await self.ai_client.distribute("blocks", context, payload.text)
         modules = _parse_ordered_topics(response)
 
         return ModuleDistributeResponse(modules=modules)
 
     async def distribute_questions(
-        self, current_user: "User", request: QuestionDistributeRequest
+        self, user: "User", payload: QuestionDistributeRequest
     ) -> QuestionDistributeResponse:
         """Ask AI to distribute raw text questions across existing modules."""
-        filters = ModuleFilters(roadmap_id=request.roadmap_id)
+        filters = ModuleFilters(roadmap_id=payload.roadmap_id)
         filters_dict = filters.model_dump(exclude_none=True, exclude_unset=True)
 
-        modules_orm = await self.module_repo.get_by_filters(filters_dict, current_user.id)
-        modules = orm_list_to_schemas(ModuleRead, modules_orm)
+        modules_orm = await self.module_repo.get_by_filters(filters_dict, user.id)
+        modules = orms_to_schemas(ModuleRead, modules_orm)
 
         if not modules:
-            raise ValueError("Роадмап не содержит модулей")
+            raise ValueError("This roadmap did not contain any modules")
 
         context = _build_question_distribution_context(modules)
-        response = await self.ai_client.distribute("questions", context, request.text)
+        response = await self.ai_client.distribute("questions", context, payload.text)
         raw_distribution = _parse_distribution(response, modules)
 
         distribution = [
@@ -169,46 +174,43 @@ class AIService:
             undefined=raw_distribution.get("undefined", []),
         )
 
-    async def generate_entities(self, current_user: "User", request: GenerateRequest) -> GenerateResponse:
+    async def generate_entities(self, user: "User", payload: GenerateRequest) -> GenerateResponse:
         """Generate entities (modules, questions, or concepts) using AI for a given target."""
-        context = await self._build_generate_context(current_user, request)
-        raw = await self.ai_client.generate(request.target.value, context)
+        context = await self._build_generate_context(user, payload)
+        raw = await self.ai_client.generate(payload.target.value, context)
         items = _parse_generated_items(raw)
         return GenerateResponse(items=items)
 
-    async def _build_generate_context(self, current_user: "User", request: GenerateRequest) -> str:
+    async def _build_generate_context(self, user: "User", payload: GenerateRequest) -> str:
         """Build AI generation context based on target type."""
-        if request.target == GenerateTarget.modules:
-            if not request.roadmap_id:
-                raise ValueError("roadmap_id обязателен для генерации модулей")
+        if payload.target == GenerateTarget.modules:
+            if not payload.roadmap_id:
+                raise ValueError("Field 'roadmap_id' is required to generate modules")
 
-            roadmap_orm = await self.roadmap_repo.get_by_id(request.roadmap_id)
+            roadmap_orm = await self.roadmap_repo.get_by_id(payload.roadmap_id, user.id)
             roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
 
             return _build_roadmap_context(roadmap)
 
-        if request.target == GenerateTarget.questions:
-            if not request.module_id:
-                raise ValueError("module_id обязателен для генерации вопросов")
+        if payload.target == GenerateTarget.questions:
+            if not payload.module_id:
+                raise ValueError("Field 'module_id' is required to generate questions")
 
-            module_orm = await self.module_repo.get_by_id(request.module_id)
+            module_orm = await self.module_repo.get_by_id(payload.module_id, user.id)
             module = orm_to_schema(ModuleRead, module_orm)
 
-            roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id)
+            roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id, user.id)
             roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
 
             return _build_module_context(roadmap, module)
 
-        if not request.question_id:
-            raise ValueError("question_id обязателен для генерации концептов")
-
-        question_orm = await self.question_repo.get_by_id(request.question_id)
+        question_orm = await self.question_repo.get_by_id(payload.question_id, user.id)
         question = orm_to_schema(QuestionRead, question_orm)
 
-        module_orm = await self.module_repo.get_by_id(question.module_id)
+        module_orm = await self.module_repo.get_by_id(question.module_id, user.id)
         module = orm_to_schema(ModuleRead, module_orm)
 
-        roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id)
+        roadmap_orm = await self.roadmap_repo.get_by_id(module.roadmap_id, user.id)
         roadmap = orm_to_schema(RoadmapRead, roadmap_orm)
 
         return _build_question_context(roadmap, module, question)

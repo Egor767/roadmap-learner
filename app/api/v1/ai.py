@@ -31,21 +31,23 @@ router = APIRouter(
 @router.post("/chat", name="ai:chat", response_model=ChatResponse)
 @router_handler
 async def chat(
-    request: ChatRequest,
-    current_user: Annotated["User", Depends(current_active_user)],
-    ai_service: Annotated["AIService", Depends(get_ai_service)],
+    payload: ChatRequest,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["AIService", Depends(get_ai_service)],
 ) -> ChatResponse:
-    return await ai_service.chat(current_user, request)
+    return await service.chat(user, payload)
 
 
-@router.post("/modules/distribute", name="ai:distribute_modules", response_model=ModuleDistributeResponse)
+@router.post(
+    "/modules/distribute", name="ai:distribute_modules", response_model=ModuleDistributeResponse
+)
 @router_handler
 async def distribute_modules(
-    request: ModuleDistributeRequest,
-    current_user: Annotated["User", Depends(current_active_user)],
-    ai_service: Annotated["AIService", Depends(get_ai_service)],
+    payload: ModuleDistributeRequest,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["AIService", Depends(get_ai_service)],
 ) -> ModuleDistributeResponse:
-    return await ai_service.distribute_modules(current_user, request)
+    return await service.distribute_modules(user, payload)
 
 
 @router.post(
@@ -55,18 +57,18 @@ async def distribute_modules(
 )
 @router_handler
 async def distribute_questions(
-    request: QuestionDistributeRequest,
-    current_user: Annotated["User", Depends(current_active_user)],
-    ai_service: Annotated["AIService", Depends(get_ai_service)],
+    payload: QuestionDistributeRequest,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["AIService", Depends(get_ai_service)],
 ) -> QuestionDistributeResponse:
-    return await ai_service.distribute_questions(current_user, request)
+    return await service.distribute_questions(user, payload)
 
 
 @router.post("/generate", name="ai:generate_entities", response_model=GenerateResponse)
 @router_handler
 async def generate_entities(
-    request: GenerateRequest,
-    current_user: Annotated["User", Depends(current_active_user)],
-    ai_service: Annotated["AIService", Depends(get_ai_service)],
+    payload: GenerateRequest,
+    user: Annotated["User", Depends(current_active_user)],
+    service: Annotated["AIService", Depends(get_ai_service)],
 ) -> GenerateResponse:
-    return await ai_service.generate_entities(current_user, request)
+    return await service.generate_entities(user, payload)
