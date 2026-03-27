@@ -58,7 +58,7 @@ class QuestionRepository(BaseEntityRepository):
                 QuestionProgress,
                 and_(QuestionProgress.question_id == Question.id, QuestionProgress.user_id == user),
             ).where(QuestionProgress.status == status)
-        if filters.get("roadmap_id") is not None:
+        if filters.get("roadmap_id"):
             stmt = stmt.where(Module.roadmap_id == filters.pop("roadmap_id"))
         for field_name, value in filters.items():
             column = getattr(Question, field_name)

@@ -52,18 +52,14 @@ class QuestionService:
         return schema
 
     @service_handler
-    async def get_by_filters(
-        self, user: "User", filters: QuestionFilters, modules: list[BaseIdType]
-    ) -> list[QuestionRead]:
+    async def get_by_filters(self, user: "User", filters: QuestionFilters) -> list[QuestionRead]:
         """Return questions matching filters"""
         filters_dump = filters.model_dump(exclude_none=True)
         status = filters_dump.pop("status", None)
-        if modules:
-            filters_dump["module_id"] = modules
         scope = self._scope(user)
         parent = is_single_parent_filter(filters_dump, "module_id")
         if parent:
-            cache = await scope.get("module", str(filters_dump["module_id"][0]), "list")
+            cache = await scope.get("module", str(filters_dump["module_id"]), "list")
             if cache:
                 return cache_to_schemas(QuestionRead, cache)
         orms = await self.repo.get_by_filters(filters_dump, user.id)
@@ -74,7 +70,7 @@ class QuestionService:
         ]
         if parent and status is None:
             await scope.put(
-                schemas_to_cache(schemas), "module", str(filters_dump["module_id"][0]), "list"
+                schemas_to_cache(schemas), "module", str(filters_dump["module_id"]), "list"
             )
         return schemas
 

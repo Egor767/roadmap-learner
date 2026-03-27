@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from starlette import status
 
 from app.core.authentication.fastapi_users import current_active_user
@@ -34,9 +34,8 @@ async def get_questions(
     filters: Annotated[QuestionFilters, Depends()],
     user: Annotated["User", Depends(current_active_user)],
     service: Annotated["QuestionService", Depends(get_question_service)],
-    modules: Annotated[list[BaseIdType] | None, Query()] = None,
 ) -> list[QuestionRead]:
-    return await service.get_by_filters(user, filters, modules)
+    return await service.get_by_filters(user, filters)
 
 
 @router.get("/{id}", name="questions:question", response_model=QuestionRead)

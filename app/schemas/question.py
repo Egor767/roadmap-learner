@@ -47,6 +47,7 @@ class QuestionRead(BaseQuestion):
 
 class QuestionFilters(BaseModel):
     roadmap_id: BaseIdType | None = None
+    module_id: BaseIdType | None = None
     status: QuestionStatus | None = None
     question: str | None = None
 
